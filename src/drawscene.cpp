@@ -488,6 +488,11 @@ void draw_plain(Camera &camera, bool show_hud,
 		driver->setRenderTarget(image, true, true, skycolor);
 	}
 
+	// MALEK ---
+	// TODO: handle undersampling
+	begin_postprocess(driver, skycolor);
+	// --- MALEK 
+
 	// Render
 	smgr->drawAll();
 	driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
@@ -497,6 +502,13 @@ void draw_plain(Camera &camera, bool show_hud,
 			camera.drawWieldedTool();
 		}
 	}
+	
+	// MALEK ---
+	//apply_effect(driver, "");
+	apply_effect(driver, "bloom");
+	//apply_effect(driver, "blur");
+	//apply_effect(driver, "copy");
+	// --- MALEK
 
 	// Upscale lowres render
 	if (undersampling > 0) {

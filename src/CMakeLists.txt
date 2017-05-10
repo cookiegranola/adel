@@ -530,6 +530,7 @@ set(client_SRCS
 	mesh_generator_thread.cpp
 	minimap.cpp
 	particles.cpp
+	postprocess.cpp
 	shader.cpp
 	sky.cpp
 	wieldmesh.cpp

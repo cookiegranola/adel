@@ -1611,6 +1611,8 @@ bool Game::startup(bool *kill,
 	if (!createClient(playername, password, address, port))
 		return false;
 
+	init_postprocess(driver, porting::getWindowSize(), *client);
+
 	return true;
 }
 
@@ -1700,6 +1702,8 @@ void Game::run()
 
 void Game::shutdown()
 {
+	clean_postprocess(driver);
+
 #if IRRLICHT_VERSION_MAJOR == 1 && IRRLICHT_VERSION_MINOR <= 8
 	if (g_settings->get("3d_mode") == "pageflip") {
 		driver->setRenderTarget(irr::video::ERT_STEREO_BOTH_BUFFERS);
