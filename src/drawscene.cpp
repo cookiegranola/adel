@@ -504,10 +504,12 @@ void draw_plain(Camera &camera, bool show_hud,
 	}
 	
 	// MALEK ---
-	//apply_effect(driver, "");
+	
 	apply_effect(driver, "bloom");
+	//apply_effect(driver, "");
 	//apply_effect(driver, "blur");
 	//apply_effect(driver, "copy");
+	end_postprocess(driver);
 	// --- MALEK
 
 	// Upscale lowres render
