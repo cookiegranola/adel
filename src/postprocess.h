@@ -50,6 +50,10 @@ struct PostProcess
 
 	std::vector<s32> effectChain;
 	
+	PostProcess() : driver(NULL), imageScene(NULL), bufferPP(NULL), callbackPP(NULL) {
+		imagePP[0] = NULL; imagePP[1] = NULL;
+	}
+
 	static PostProcess postProcess;
 
 	static void SetThreshold(float threshold);

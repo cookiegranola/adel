@@ -1,3 +1,5 @@
+#version 120
+
 // https://code.google.com/p/processing/source/browse/trunk/processing/java/libraries/opengl/examples/Shaders/FXAA/data/fxaa.glsl?r=9668
 
 uniform sampler2D Render;

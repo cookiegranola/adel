@@ -1,4 +1,4 @@
-#version 140
+#version 120
 
 uniform float BlendFactor;
 uniform sampler2D Render;

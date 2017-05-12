@@ -1,3 +1,5 @@
+#version 120
+
 //#define THRESHOLD 0.7f
 
 uniform float Threshold;
