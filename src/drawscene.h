@@ -25,12 +25,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "minimap.h"
 #include "irrlichttypes_extrabloated.h"
 
-void init_postprocess(video::IVideoDriver *driver, const v2u32 &screensize, Client &client);
-void clean_postprocess(video::IVideoDriver *driver);
-void begin_postprocess(video::IVideoDriver *driver, video::SColor color = video::SColor(0, 0, 0, 0));
-void apply_effect(video::IVideoDriver *driver, const char* name);
-void end_postprocess(video::IVideoDriver *driver);
-
 void draw_load_screen(const std::wstring &text, IrrlichtDevice *device,
 		gui::IGUIEnvironment *guienv, ITextureSource *tsrc, float dtime = 0,
 		int percent = 0, bool clouds = true);

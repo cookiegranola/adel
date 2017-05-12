@@ -46,6 +46,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "nodedef.h"         // Needed for determining pointing to nodes
 #include "nodemetadata.h"
 #include "particles.h"
+#include "postprocess.h"
 #include "profiler.h"
 #include "quicktune_shortcutter.h"
 #include "server.h"
@@ -1611,7 +1612,8 @@ bool Game::startup(bool *kill,
 	if (!createClient(playername, password, address, port))
 		return false;
 
-	init_postprocess(driver, porting::getWindowSize(), *client);
+	PostProcess::SetDriver(driver);
+	PostProcess::Init(porting::getWindowSize(), *client);
 
 	return true;
 }
@@ -1702,7 +1704,7 @@ void Game::run()
 
 void Game::shutdown()
 {
-	clean_postprocess(driver);
+	PostProcess::Clean();
 
 #if IRRLICHT_VERSION_MAJOR == 1 && IRRLICHT_VERSION_MINOR <= 8
 	if (g_settings->get("3d_mode") == "pageflip") {

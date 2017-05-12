@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "fontengine.h"
 #include "guiscalingfilter.h"
 #include "filesys.h"
+#include "postprocess.h"
 
 typedef enum {
 	LEFT = -1,
@@ -490,7 +491,11 @@ void draw_plain(Camera &camera, bool show_hud,
 
 	// MALEK ---
 	// TODO: handle undersampling
-	begin_postprocess(driver, skycolor);
+	PostProcess::Begin(skycolor);
+	//static float test = 0.0f;
+	PostProcess::SetThreshold(0.7f);//sin(test)*0.5f + 0.5f);
+	//test += 1.0f / 60.f;
+	PostProcess::SetBlendingFactor(1.0f);
 	// --- MALEK 
 
 	// Render
@@ -505,11 +510,11 @@ void draw_plain(Camera &camera, bool show_hud,
 	
 	// MALEK ---
 	
-	apply_effect(driver, "bloom");
-	//apply_effect(driver, "");
-	//apply_effect(driver, "blur");
-	//apply_effect(driver, "copy");
-	end_postprocess(driver);
+	PostProcess::ApplyEffect("bloom");
+	//PostProcess::ApplyEffect("");
+	//PostProcess::ApplyEffect("blur");
+	//PostProcess::ApplyEffect("copy");
+	PostProcess::End();
 	// --- MALEK
 
 	// Upscale lowres render

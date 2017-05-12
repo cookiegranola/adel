@@ -1,6 +1,7 @@
 
 
 #include "drawscene.h"
+#include "postprocess.h"
 
 // duplicated ---
 std::string readFile(const std::string &path)
@@ -17,53 +18,6 @@ void init_texture(video::IVideoDriver* driver, const v2u32& screensize,
 		video::ITexture** texture, const char* name);
 // ---
 
-struct PostProcess
-{
-	struct ShaderCacheEntry {
-		std::string name;
-		s32 material;
-	};
-	static std::vector<ShaderCacheEntry> shaderCache;
-
-	struct Effect 
-	{
-		std::string name;
-		std::vector<s32> shaders;
-
-		bool addShader(const char* name) {
-			for (size_t i = 0; i < PostProcess::shaderCache.size(); i++) {
-				const ShaderCacheEntry& entry = PostProcess::shaderCache[i];
-				if (entry.name == name) {
-					shaders.push_back(entry.material);
-					return true;
-				}
-			}
-			return false;
-		}
-	};
-	std::vector<Effect> effectDB;
-
-	Effect& addNewEffect(const char* name) { 
-		Effect effect = { name };
-		size_t index = effectDB.size();
-		effectDB.push_back(effect);
-		return effectDB[index];
-	}
-
-	video::ITexture *imageScene;
-	video::ITexture *imagePP[2];
-	
-	irr::video::SMaterial materialPP;
-	irr::scene::SMeshBuffer* bufferPP;
-
-	irr::video::IShaderConstantSetCallBack* callbackPP;
-
-	std::vector<s32> effectChain;
-};
-
-std::vector<PostProcess::ShaderCacheEntry> PostProcess::shaderCache;
-static PostProcess postProcess;
-
 class IShaderDefaultPostProcessCallback : public irr::video::IShaderConstantSetCallBack
 {
 public:
@@ -73,17 +27,23 @@ public:
 
 	virtual void OnSetMaterial(const irr::video::SMaterial &material);
 
+	inline void SetThreshold(float threshold) { Threshold = threshold; }
+	inline void SetTime(float time) { Time = time; }
+	inline void SetBlendFactor(float factor) { BlendFactor = factor; }
+
 private:
 	irr::u32 NumTextures;
 	irr::core::vector2df PixelSize;
 	float Threshold;
+	float Time;
+	float BlendFactor;
 
 	irr::u32 RenderID;
 	irr::u32 TexIDs[2];
 	irr::u32 PixelSizeID;
 };
 
-IShaderDefaultPostProcessCallback::IShaderDefaultPostProcessCallback()
+IShaderDefaultPostProcessCallback::IShaderDefaultPostProcessCallback() : Threshold(0.5f), Time(0.0f), BlendFactor(1.0f)
 {
 
 }
@@ -92,17 +52,18 @@ void IShaderDefaultPostProcessCallback::OnSetConstants(video::IMaterialRendererS
 {
 	/*if (!HaveIDs)
 	{
-		RenderID = services->getPixelShaderConstantID("Render");
+	RenderID = services->getPixelShaderConstantID("Render");
 
-		for (u32 i = 0; i < 1; i++)
-			TexIDs[i] = services->getPixelShaderConstantID((irr::core::stringc("Tex") + irr::core::stringc(i)).c_str());
+	for (u32 i = 0; i < 1; i++)
+	TexIDs[i] = services->getPixelShaderConstantID((irr::core::stringc("Tex") + irr::core::stringc(i)).c_str());
 
-		PixelSizeID = services->getPixelShaderConstantID("PixelSize");
+	PixelSizeID = services->getPixelShaderConstantID("PixelSize");
 
-		HaveIDs = true;
+	HaveIDs = true;
 	}*/
 
 	irr::s32 render = 0;
+	
 	services->setPixelShaderConstant("Render"/*RenderID*/, &render, 1);
 
 	for (u32 i = 0; i < NumTextures; i++)
@@ -112,9 +73,10 @@ void IShaderDefaultPostProcessCallback::OnSetConstants(video::IMaterialRendererS
 		services->setPixelShaderConstant(TexID.c_str()/*TexIDs[i]*/, &tex, 1);
 	}
 
-	services->setPixelShaderConstant("Threshold"/*PixelSizeID*/, (irr::f32*)&Threshold, 1);
+	services->setPixelShaderConstant("BlendFactor", (irr::f32*)&BlendFactor, 1);
+	services->setPixelShaderConstant("Threshold", (irr::f32*)&Threshold, 1);
 	services->setPixelShaderConstant("PixelSizeX"/*PixelSizeID*/, (irr::f32*)&PixelSize.X, 1);
-	services->setPixelShaderConstant("PixelSizeY"/*PixelSizeID*/, (irr::f32*)&PixelSize.Y, 1);
+	services->setPixelShaderConstant("PixelSizeY", (irr::f32*)&PixelSize.Y, 1);
 }
 
 void IShaderDefaultPostProcessCallback::OnSetMaterial(const video::SMaterial &material)
@@ -132,7 +94,11 @@ void IShaderDefaultPostProcessCallback::OnSetMaterial(const video::SMaterial &ma
 	}
 }
 
-void init_postprocess_shaders(video::IVideoDriver *driver)
+// 
+PostProcess PostProcess::postProcess;
+std::vector<PostProcess::ShaderCacheEntry> PostProcess::shaderCache;
+
+void PostProcess::InitShaders()
 {
 	postProcess.callbackPP = new IShaderDefaultPostProcessCallback();
 
@@ -157,10 +123,10 @@ void init_postprocess_shaders(video::IVideoDriver *driver)
 		std::string vertex_program = readFile(vertex_path);
 		std::string pixel_program = readFile(pixel_path);
 
-		s32 shadermat = driver->getGPUProgrammingServices()->addHighLevelShaderMaterial(
+		s32 shadermat = postProcess.driver->getGPUProgrammingServices()->addHighLevelShaderMaterial(
 			vertex_program.c_str(), "main", irr::video::EVST_VS_2_0,
 			pixel_program.c_str(), "main", irr::video::EPST_PS_2_0
-		,postProcess.callbackPP);
+		, postProcess.callbackPP);
 
 		std::string name(shaders[i]);
 		size_t pos = name.find(".frag");
@@ -190,14 +156,14 @@ void init_postprocess_shaders(video::IVideoDriver *driver)
 	blur.addShader("albedo");
 }
 
-void init_postprocess(video::IVideoDriver *driver, const v2u32 &screensize, Client &client)
+void PostProcess::Init(const v2u32 &screensize, Client &client)
 {
 	if (!postProcess.imageScene)
 	{
-		init_texture(driver, screensize, &postProcess.imageScene, "pp_source");
+		init_texture(postProcess.driver, screensize, &postProcess.imageScene, "pp_source");
 		// TODO: use a viewport or dynamically recreate targets
-		init_texture(driver, screensize/2, &postProcess.imagePP[0], "pp_img1");
-		init_texture(driver, screensize/2, &postProcess.imagePP[1], "pp_img2");
+		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[0], "pp_img1");
+		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[1], "pp_img2");
 		
 		irr::scene::SMeshBuffer* bufferPP = new irr::scene::SMeshBuffer;
 		postProcess.bufferPP = bufferPP;
@@ -229,19 +195,19 @@ void init_postprocess(video::IVideoDriver *driver, const v2u32 &screensize, Clie
 		postProcess.materialPP.ZWriteEnable = false;
 		postProcess.materialPP.TextureLayer[0].TextureWrapU = irr::video::ETC_CLAMP_TO_EDGE;
 		postProcess.materialPP.TextureLayer[0].TextureWrapV = irr::video::ETC_CLAMP_TO_EDGE;
+		
+		InitShaders();
 	}
-
-	init_postprocess_shaders(driver);
 }
 
-void begin_postprocess(video::IVideoDriver *driver, video::SColor color)
+void PostProcess::Begin(video::SColor color)
 {
 	if (postProcess.imageScene) {
-		driver->setRenderTarget(postProcess.imageScene, true, true, color);
+		postProcess.driver->setRenderTarget(postProcess.imageScene, true, true, color);
 	}
 }
 
-void apply_effect(video::IVideoDriver *driver, const char* name)
+void PostProcess::ApplyEffect(const char* name)
 {
 	if (!postProcess.imageScene)
 		return;
@@ -261,20 +227,20 @@ void apply_effect(video::IVideoDriver *driver, const char* name)
 	}
 }
 
-void end_postprocess(video::IVideoDriver *driver)
+void PostProcess::End()
 {
 	if (!postProcess.imageScene)
 		return;
 
 	// maybe not required because post process shaders don't require matrices
-	driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
-	driver->setTransform(video::ETS_VIEW, core::IdentityMatrix);
-	driver->setTransform(video::ETS_PROJECTION, core::IdentityMatrix);
+	postProcess.driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
+	postProcess.driver->setTransform(video::ETS_VIEW, core::IdentityMatrix);
+	postProcess.driver->setTransform(video::ETS_PROJECTION, core::IdentityMatrix);
 
-	video::SMaterial oldmaterial = driver->getMaterial2D();
+	video::SMaterial oldmaterial = postProcess.driver->getMaterial2D();
 
 	std::vector<s32>& shaders = postProcess.effectChain;
-	s32 shaderCount = shaders.size();
+	u32 shaderCount = shaders.size();
 	s32 finalShader = shaders[shaderCount - 1];
 
 	if (shaderCount > 1)
@@ -282,21 +248,21 @@ void end_postprocess(video::IVideoDriver *driver)
 		int currentPP = 0;
 		int shadermat = shaders[0];
 		postProcess.materialPP.MaterialType = (irr::video::E_MATERIAL_TYPE)shadermat;
-		driver->setRenderTarget(postProcess.imagePP[currentPP], true, false);
+		postProcess.driver->setRenderTarget(postProcess.imagePP[currentPP], true, false);
 		postProcess.materialPP.setTexture(0, postProcess.imageScene);
-		driver->setMaterial(postProcess.materialPP);
-		driver->drawMeshBuffer(postProcess.bufferPP);
+		postProcess.driver->setMaterial(postProcess.materialPP);
+		postProcess.driver->drawMeshBuffer(postProcess.bufferPP);
 		
-		for (int i = 1; i < shaderCount; ++i) {
+		for (u32 i = 1; i < shaderCount; ++i) {
 			int shadermat = shaders[i];
 			postProcess.materialPP.MaterialType = (irr::video::E_MATERIAL_TYPE)shadermat;
 			video::ITexture* target = (i == (shaderCount - 1)) ? NULL : postProcess.imagePP[currentPP ^ 1];
-			driver->setRenderTarget(target, true, false);
+			postProcess.driver->setRenderTarget(target, true, false);
 			postProcess.materialPP.setTexture(0, postProcess.imagePP[currentPP]);
 			// for now force texture 1 to be the original scene
 			postProcess.materialPP.setTexture(1, postProcess.imageScene);
-			driver->setMaterial(postProcess.materialPP);
-			driver->drawMeshBuffer(postProcess.bufferPP);
+			postProcess.driver->setMaterial(postProcess.materialPP);
+			postProcess.driver->drawMeshBuffer(postProcess.bufferPP);
 
 			currentPP ^= 1;
 		}
@@ -306,28 +272,31 @@ void end_postprocess(video::IVideoDriver *driver)
 		int shadermat = finalShader;
 		postProcess.materialPP.MaterialType = (irr::video::E_MATERIAL_TYPE)shadermat;
 
-		driver->setRenderTarget(0, false, false);
+		postProcess.driver->setRenderTarget(0, false, false);
 		postProcess.materialPP.setTexture(0, postProcess.imageScene);
-		driver->setMaterial(postProcess.materialPP);
-		driver->drawMeshBuffer(postProcess.bufferPP);
+		postProcess.driver->setMaterial(postProcess.materialPP);
+		postProcess.driver->drawMeshBuffer(postProcess.bufferPP);
 	}
 
-	driver->setMaterial(oldmaterial);
+	postProcess.driver->setMaterial(oldmaterial);
 
 	postProcess.effectChain.clear();
 }
 
-void clean_postprocess(video::IVideoDriver *driver)
+void PostProcess::Clean()
 {
 	if (postProcess.imageScene) {
 		//driver->setRenderTarget(0);
 		delete postProcess.bufferPP;
 		postProcess.bufferPP = NULL;
-		driver->removeTexture(postProcess.imagePP[1]);
-		driver->removeTexture(postProcess.imagePP[0]);
-		driver->removeTexture(postProcess.imageScene);
+		postProcess.driver->removeTexture(postProcess.imagePP[1]);
+		postProcess.driver->removeTexture(postProcess.imagePP[0]);
+		postProcess.driver->removeTexture(postProcess.imageScene);
 		postProcess.imagePP[1] = NULL;
 		postProcess.imagePP[0] = NULL;
 		postProcess.imageScene = NULL;
 	}
 }
+
+void PostProcess::SetThreshold(float threshold) { postProcess.callbackPP->SetThreshold(threshold); }
+void PostProcess::SetBlendingFactor(float factor) { postProcess.callbackPP->SetBlendFactor(factor); }
