@@ -55,9 +55,10 @@ struct PostProcess
 	}
 
 	static PostProcess postProcess;
-
+	
 	static void SetThreshold(float threshold);
 	static void SetBlendingFactor(float factor);
+	static void SetExposure(float factor);
 
 	static void SetDriver(irr::video::IVideoDriver *irr_driver) { postProcess.driver = irr_driver; }
 	static void InitShaders(/*todo: pass list*/);

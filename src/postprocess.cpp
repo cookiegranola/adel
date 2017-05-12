@@ -30,6 +30,7 @@ public:
 	inline void SetThreshold(float threshold) { Threshold = threshold; }
 	inline void SetTime(float time) { Time = time; }
 	inline void SetBlendFactor(float factor) { BlendFactor = factor; }
+	inline void SetExposure(float factor) { Exposure = factor; }
 
 private:
 	irr::u32 NumTextures;
@@ -37,13 +38,14 @@ private:
 	float Threshold;
 	float Time;
 	float BlendFactor;
+	float Exposure;
 
 	irr::u32 RenderID;
 	irr::u32 TexIDs[2];
 	irr::u32 PixelSizeID;
 };
 
-IShaderDefaultPostProcessCallback::IShaderDefaultPostProcessCallback() : Threshold(0.5f), Time(0.0f), BlendFactor(1.0f)
+IShaderDefaultPostProcessCallback::IShaderDefaultPostProcessCallback() : Threshold(0.5f), Time(0.0f), BlendFactor(1.0f), Exposure(1.0f)
 {
 
 }
@@ -73,6 +75,7 @@ void IShaderDefaultPostProcessCallback::OnSetConstants(video::IMaterialRendererS
 		services->setPixelShaderConstant(TexID.c_str()/*TexIDs[i]*/, &tex, 1);
 	}
 
+	services->setPixelShaderConstant("Exposure", (irr::f32*)&Exposure, 1);
 	services->setPixelShaderConstant("BlendFactor", (irr::f32*)&BlendFactor, 1);
 	services->setPixelShaderConstant("Threshold", (irr::f32*)&Threshold, 1);
 	services->setPixelShaderConstant("PixelSizeX"/*PixelSizeID*/, (irr::f32*)&PixelSize.X, 1);
@@ -108,6 +111,7 @@ void PostProcess::InitShaders()
 		"blur_v.frag", 
 		"blur_h.frag", 
 		"bloom_prepass.frag", 
+		"exposure.frag",
 		"add2.frag", 
 		"albedo.frag", 
 		"blur_h_add.frag", 
@@ -127,7 +131,7 @@ void PostProcess::InitShaders()
 			vertex_program.c_str(), "main", irr::video::EVST_VS_2_0,
 			pixel_program.c_str(), "main", irr::video::EPST_PS_2_0
 		, postProcess.callbackPP);
-
+		//assert(shadermat != -1);
 		std::string name(shaders[i]);
 		size_t pos = name.find(".frag");
 		name.replace(pos, 5, "");
@@ -148,7 +152,8 @@ void PostProcess::InitShaders()
 	bloom.addShader("bloom_prepass");
 	bloom.addShader("blur_v");
 	bloom.addShader("blur_h");
-	bloom.addShader("add2");
+	//bloom.addShader("add2");
+	bloom.addShader("exposure");
 	// blur
 	PostProcess::Effect& blur = postProcess.addNewEffect("blur");
 	blur.addShader("blur_v");
@@ -162,8 +167,8 @@ void PostProcess::Init(const v2u32 &screensize, Client &client)
 	{
 		init_texture(postProcess.driver, screensize, &postProcess.imageScene, "pp_source");
 		// TODO: use a viewport or dynamically recreate targets
-		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[0], "pp_img1");
-		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[1], "pp_img2");
+		init_texture(postProcess.driver, screensize/*/2*/, &postProcess.imagePP[0], "pp_img1");
+		init_texture(postProcess.driver, screensize/*/2*/, &postProcess.imagePP[1], "pp_img2");
 		
 		irr::scene::SMeshBuffer* bufferPP = new irr::scene::SMeshBuffer;
 		postProcess.bufferPP = bufferPP;
@@ -193,8 +198,12 @@ void PostProcess::Init(const v2u32 &screensize, Client &client)
 
 		postProcess.materialPP.ZBuffer = false;
 		postProcess.materialPP.ZWriteEnable = false;
+		postProcess.materialPP.TextureLayer[0].BilinearFilter = true;
 		postProcess.materialPP.TextureLayer[0].TextureWrapU = irr::video::ETC_CLAMP_TO_EDGE;
 		postProcess.materialPP.TextureLayer[0].TextureWrapV = irr::video::ETC_CLAMP_TO_EDGE;
+		postProcess.materialPP.TextureLayer[1].BilinearFilter = true;
+		postProcess.materialPP.TextureLayer[1].TextureWrapU = irr::video::ETC_CLAMP_TO_EDGE;
+		postProcess.materialPP.TextureLayer[1].TextureWrapV = irr::video::ETC_CLAMP_TO_EDGE;
 		
 		InitShaders();
 	}
@@ -300,3 +309,4 @@ void PostProcess::Clean()
 
 void PostProcess::SetThreshold(float threshold) { postProcess.callbackPP->SetThreshold(threshold); }
 void PostProcess::SetBlendingFactor(float factor) { postProcess.callbackPP->SetBlendFactor(factor); }
+void PostProcess::SetExposure(float factor) { postProcess.callbackPP->SetExposure(factor); }
