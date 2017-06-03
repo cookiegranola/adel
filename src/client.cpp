@@ -93,6 +93,7 @@ Client::Client(
 	m_address_name(address_name),
 	m_device(device),
 	m_camera(NULL),
+	m_minimap(NULL),
 	m_minimap_disabled_by_server(false),
 	m_server_ser_ver(SER_FMT_VER_INVALID),
 	m_proto_ver(0),
@@ -103,6 +104,8 @@ Client::Client(
 	m_animation_time(0),
 	m_crack_level(-1),
 	m_crack_pos(0,0,0),
+	m_last_chat_message_sent(time(NULL)),
+	m_chat_message_allowance(5.0f),
 	m_map_seed(0),
 	m_password(password),
 	m_chosen_auth_mech(AUTH_MECHANISM_NONE),
@@ -127,7 +130,9 @@ Client::Client(
 	// Add local player
 	m_env.setLocalPlayer(new LocalPlayer(this, playername));
 
-	m_minimap = new Minimap(device, this);
+	if (g_settings->getBool("enable_minimap")) {
+		m_minimap = new Minimap(device, this);
+	}
 	m_cache_save_interval = g_settings->getU16("server_map_save_interval");
 
 	m_modding_enabled = g_settings->getBool("enable_client_modding");
@@ -168,7 +173,7 @@ void Client::initMods()
 		if (!string_allowed(mod.name, MODNAME_ALLOWED_CHARS)) {
 			throw ModError("Error loading mod \"" + mod.name +
 				"\": Mod name does not follow naming conventions: "
-					"Only chararacters [a-z0-9_] are allowed.");
+					"Only characters [a-z0-9_] are allowed.");
 		}
 		std::string script_path = mod.path + DIR_DELIM + "init.lua";
 		infostream << "  [" << padStringRight(mod.name, 12) << "] [\""
@@ -398,6 +403,14 @@ void Client::step(float dtime)
 	}
 
 	/*
+		Send pending messages on out chat queue
+	*/
+	if (!m_out_chat_queue.empty() && canSendChatMessage()) {
+		sendChatMessage(m_out_chat_queue.front());
+		m_out_chat_queue.pop();
+	}
+
+	/*
 		Handle environment
 	*/
 	// Control local player (0ms)
@@ -502,7 +515,7 @@ void Client::step(float dtime)
 				delete r.mesh;
 			}
 
-			if (do_mapper_update)
+			if (m_minimap && do_mapper_update)
 				m_minimap->addBlock(r.p, minimap_mapblock);
 
 			if (r.ack_block_to_server) {
@@ -1155,13 +1168,50 @@ void Client::sendInventoryAction(InventoryAction *a)
 	Send(&pkt);
 }
 
+bool Client::canSendChatMessage() const
+{
+	u32 now = time(NULL);
+	float time_passed = now - m_last_chat_message_sent;
+
+	float virt_chat_message_allowance = m_chat_message_allowance + time_passed *
+			(CLIENT_CHAT_MESSAGE_LIMIT_PER_10S / 8.0f);
+
+	if (virt_chat_message_allowance < 1.0f)
+		return false;
+
+	return true;
+}
+
 void Client::sendChatMessage(const std::wstring &message)
 {
-	NetworkPacket pkt(TOSERVER_CHAT_MESSAGE, 2 + message.size() * sizeof(u16));
+	const s16 max_queue_size = g_settings->getS16("max_out_chat_queue_size");
+	if (canSendChatMessage()) {
+		u32 now = time(NULL);
+		float time_passed = now - m_last_chat_message_sent;
+		m_last_chat_message_sent = time(NULL);
 
-	pkt << message;
+		m_chat_message_allowance += time_passed * (CLIENT_CHAT_MESSAGE_LIMIT_PER_10S / 8.0f);
+		if (m_chat_message_allowance > CLIENT_CHAT_MESSAGE_LIMIT_PER_10S)
+			m_chat_message_allowance = CLIENT_CHAT_MESSAGE_LIMIT_PER_10S;
 
-	Send(&pkt);
+		m_chat_message_allowance -= 1.0f;
+
+		NetworkPacket pkt(TOSERVER_CHAT_MESSAGE, 2 + message.size() * sizeof(u16));
+
+		pkt << message;
+
+		Send(&pkt);
+	} else if (m_out_chat_queue.size() < (u16) max_queue_size || max_queue_size == -1) {
+		m_out_chat_queue.push(message);
+	} else {
+		infostream << "Could not queue chat message because maximum out chat queue size ("
+				<< max_queue_size << ") is reached." << std::endl;
+	}
+}
+
+void Client::clearOutChatQueue()
+{
+	m_out_chat_queue = std::queue<std::wstring>();
 }
 
 void Client::sendChangePassword(const std::string &oldpassword,
@@ -1720,7 +1770,7 @@ float Client::getRTT()
 
 float Client::getCurRate()
 {
-	return ( m_con.getLocalStat(con::CUR_INC_RATE) +
+	return (m_con.getLocalStat(con::CUR_INC_RATE) +
 			m_con.getLocalStat(con::CUR_DL_RATE));
 }
 
@@ -1921,4 +1971,3 @@ std::string Client::getModStoragePath() const
 {
 	return porting::path_user + DIR_DELIM + "client" + DIR_DELIM + "mod_storage";
 }
-

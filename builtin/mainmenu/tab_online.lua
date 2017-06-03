@@ -17,8 +17,6 @@
 
 --------------------------------------------------------------------------------
 local function get_formspec(tabview, name, tabdata)
-	tabdata = tabdata or {}
-
 	-- Update the cached supported proto info,
 	-- it may have changed after a change by the settings menu.
 	common_update_cached_supp_proto()
@@ -34,51 +32,42 @@ local function get_formspec(tabview, name, tabdata)
 	end
 
 	local retval =
-		"size[12,6.3;true]" ..
-		"background[-0.4,-0.6;12.8,7.8;" .. defaulttexturedir .. "mainmenu_bg_solo.png]" ..
-		"image_button[-0.15,5.9;2,0.8;" .. defaulttexturedir .. "mainmenu_button.png;btn_back;"..
-			minetest.colorize("#333333", fgettext("< Back")) .. ";;false]" ..
 		-- Search
-		"field[0.15,0.35;6.05,0.27;te_search;;"..core.formspec_escape(tabdata.search_for)..";#ad934e99]"..
-		"image_button[5.8,-0.2;2,0.8;" .. defaulttexturedir .. "mainmenu_button.png;btn_mp_search;" ..
-			minetest.colorize("#333333", fgettext("Search")) .. ";;false]" ..
+		"field[0.15,0.35;6.05,0.27;te_search;;"..core.formspec_escape(tabdata.search_for).."]"..
+		"button[5.8,0.1;2,0.1;btn_mp_search;" .. fgettext("Search") .. "]" ..
 
 		-- Address / Port
-		"label[7.75,-0.25;" ..
-			minetest.colorize("#333333", fgettext("Address / Port")) .. "]" ..
+		"label[7.75,-0.25;" .. fgettext("Address / Port") .. "]" ..
 		"field[8,0.65;3.25,0.5;te_address;;" ..
-			core.formspec_escape(core.settings:get("address")) .. ";#ad934e99]" ..
+			core.formspec_escape(core.settings:get("address")) .. "]" ..
 		"field[11.1,0.65;1.4,0.5;te_port;;" ..
-			core.formspec_escape(core.settings:get("remote_port")) .. ";#ad934e99]" ..
+			core.formspec_escape(core.settings:get("remote_port")) .. "]" ..
 
 		-- Name / Password
-		"label[7.75,0.95;" ..
-			minetest.colorize("#333333", fgettext("Name / Password")) .. "]" ..
+		"label[7.75,0.95;" .. fgettext("Name / Password") .. "]" ..
 		"field[8,1.85;2.9,0.5;te_name;;" ..
-			core.formspec_escape(core.settings:get("name")) .. ";#ad934e99]" ..
-		"pwdfield[10.73,1.85;1.77,0.5;te_pwd;;#ad934e99]" ..
+			core.formspec_escape(core.settings:get("name")) .. "]" ..
+		"pwdfield[10.73,1.85;1.77,0.5;te_pwd;]" ..
 
 		-- Description Background
-		"box[7.73,2.25;4.25,2.6;#ad934e]"..
+		"box[7.73,2.25;4.25,2.6;#999999]"..
 
 		-- Connect
-		"image_button[10.1,5;2,0.8;" .. defaulttexturedir .. "mainmenu_button.png;btn_mp_connect;" ..
-			minetest.colorize("#333333", fgettext("Connect")) .. ";;false]"
+		"button[10.1,5.15;2,0.5;btn_mp_connect;" .. fgettext("Connect") .. "]"
 
-	if gamedata.fav then
-		retval = retval ..
-			"image_button[7.75,5;2.3,0.8;" .. defaulttexturedir ..
-				"mainmenu_button.png;btn_delete_favorite;" ..
-				minetest.colorize("#333333", fgettext("Del. Favorite")) .. ";;false]"
+	if tabdata.fav_selected and fav_selected then
+		if gamedata.fav then
+			retval = retval .. "button[7.75,5.15;2.3,0.5;btn_delete_favorite;" ..
+				fgettext("Del. Favorite") .. "]"
+		end
+		if fav_selected.description then
+			retval = retval .. "textarea[8.1,2.3;4.23,2.9;;" ..
+				core.formspec_escape((gamedata.serverdescription or ""), true) .. ";]"
+		end
 	end
 
-	retval = retval .. "textarea[8.1,2.3;4.23,2.9;;" ..
-		core.formspec_escape((gamedata.serverdescription or ""), true) .. ";]"
-
 	--favourites
-	retval = retval ..
-		"tableoptions[background=#00000000;color=#333333;highlight=#d5c4a1;highlight_text=#333333]" ..
-		"tablecolumns[" ..
+	retval = retval .. "tablecolumns[" ..
 		image_column(fgettext("Favorite"), "favorite") .. ";" ..
 		image_column(fgettext("Ping")) .. ",padding=0.25;" ..
 		"color,span=3;" ..
@@ -142,13 +131,7 @@ end
 
 --------------------------------------------------------------------------------
 local function main_button_handler(tabview, fields, name, tabdata)
-	tabdata = tabdata or {}
 	local serverlist = menudata.search_result or menudata.favorites
-
-	if fields["btn_back"] then
-		tabview:delete()
-		return true
-	end
 
 	if fields.te_name then
 		gamedata.playername = fields.te_name
@@ -357,13 +340,11 @@ local function on_change(type, old_tab, new_tab)
 	asyncOnlineFavourites()
 end
 
-
-function create_multi_dlg()
-	local dlg = dialog_create("multiplayer",
-				  get_formspec,
-				  main_button_handler,
-				  nil)
-
-	return dlg
-end
-
+--------------------------------------------------------------------------------
+return {
+	name = "online",
+	caption = fgettext("Play Online"),
+	cbf_formspec = get_formspec,
+	cbf_button_handler = main_button_handler,
+	on_change = on_change
+}

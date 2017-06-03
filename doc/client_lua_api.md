@@ -202,7 +202,7 @@ For helper functions see "Vector helpers".
 ### pointed_thing
 * `{type="nothing"}`
 * `{type="node", under=pos, above=pos}`
-* `{type="object", ref=ObjectRef}`
+* `{type="object", id=ObjectID}`
 
 Flag Specifier Format
 ---------------------
@@ -590,17 +590,24 @@ Helper functions
 * `math.sign(x, tolerance)`
     * Get the sign of a number.
       Optional: Also returns `0` when the absolute value is within the tolerance (default: `0`)
-* `string.split(str, separator=",", include_empty=false, max_splits=-1,
-* sep_is_pattern=false)`
+* `string.split(str, separator=",", include_empty=false, max_splits=-1, sep_is_pattern=false)`
     * If `max_splits` is negative, do not limit splits.
     * `sep_is_pattern` specifies if separator is a plain string or a pattern (regex).
     * e.g. `string:split("a,b", ",") == {"a","b"}`
 * `string:trim()`
     * e.g. `string.trim("\n \t\tfoo bar\t ") == "foo bar"`
+* `minetest.wrap_text(str, limit)`: returns a string
+    * Adds new lines to the string to keep it within the specified character limit
+    * limit: Maximal amount of characters in one line
+* `minetest.pos_to_string({x=X,y=Y,z=Z}, decimal_places))`: returns string `"(X,Y,Z)"`
+    * Convert position to a printable string
+      Optional: 'decimal_places' will round the x, y and z of the pos to the given decimal place.
+* `minetest.string_to_pos(string)`: returns a position
+    * Same but in reverse. Returns `nil` if the string can't be parsed to a position.
+* `minetest.string_to_area("(X1, Y1, Z1) (X2, Y2, Z2)")`: returns two positions
+    * Converts a string representing an area box into two positions
 * `minetest.is_yes(arg)`
     * returns whether `arg` can be interpreted as yes
-* `minetest.get_us_time()`
-    * returns time with microsecond precision. May not return wall time.
 * `table.copy(table)`: returns a table
     * returns a deep copy of `table`
 
@@ -649,6 +656,8 @@ Call these functions only at load time!
     * Return `true` to mark the message as handled, which means that it will not be sent to server
 * `minetest.register_chatcommand(cmd, chatcommand definition)`
     * Adds definition to minetest.registered_chatcommands
+* `minetest.unregister_chatcommand(name)`
+    * Unregisters a chatcommands registered with register_chatcommand.
 * `minetest.register_on_death(func())`
     * Called when the local player dies
 * `minetest.register_on_hp_modification(func(hp))`
@@ -683,6 +692,12 @@ Call these functions only at load time!
 * `minetest.after(time, func, ...)`
     * Call the function `func` after `time` seconds, may be fractional
     * Optional: Variable number of arguments that are passed to `func`
+* `minetest.get_us_time()`
+    * Returns time with microsecond precision. May not return wall time.
+* `minetest.get_day_count()`
+    * Returns number days elapsed since world was created, accounting for time changes.
+* `minetest.get_timeofday()`
+    * Returns the time of day: `0` for midnight, `0.5` for midday
 
 ### Map
 * `minetest.get_node(pos)`
@@ -691,12 +706,27 @@ Call these functions only at load time!
       for unloaded areas.
 * `minetest.get_node_or_nil(pos)`
     * Same as `get_node` but returns `nil` for unloaded areas.
+* `minetest.find_node_near(pos, radius, nodenames, [search_center])`: returns pos or `nil`
+    * `radius`: using a maximum metric
+    * `nodenames`: e.g. `{"ignore", "group:tree"}` or `"default:dirt"`
+    * `search_center` is an optional boolean (default: `false`)
+      If true `pos` is also checked for the nodes
 * `minetest.get_meta(pos)`
     * Get a `NodeMetaRef` at that position
+* `minetest.get_node_level(pos)`
+    * get level of leveled node (water, snow)
+* `minetest.get_node_max_level(pos)`
+    * get max available level for leveled node
 
 ### Player
 * `minetest.get_wielded_item()`
     * Returns the itemstack the local player is holding
+* `minetest.send_chat_message(message)`
+    * Act as if `message` was typed by the player into the terminal.
+* `minetest.run_server_chatcommand(cmd, param)`
+    * Alias for `minetest.send_chat_message("/" .. cmd .. " " .. param)`
+* `minetest.clear_out_chat_queue()`
+    * Clears the out chat queue
 * `minetest.localplayer`
     * Reference to the LocalPlayer object. See [`LocalPlayer`](#localplayer) class reference for methods.
 
@@ -710,6 +740,13 @@ Call these functions only at load time!
     * Take a screenshot.
 * `minetest.get_server_info()`
     * Returns [server info](#server-info).
+* `minetest.send_respawn()`
+    * Sends a respawn request to the server.
+
+### Storage API
+* `minetest.get_mod_storage()`:
+    * returns reference to mod private `StorageRef`
+    * must be called during mod load time
 
 ### Misc.
 * `minetest.parse_json(string[, nullvalue])`: returns something
@@ -763,10 +800,13 @@ Call these functions only at load time!
     * same as fgettext_ne(), but calls minetest.formspec_escape before returning result
 * `minetest.pointed_thing_to_face_pos(placer, pointed_thing)`: returns a position
     * returns the exact position on the surface of a pointed node
+* `minetest.global_exists(name)`
+    * Checks if a global variable has been set, without triggering a warning.
 
 ### UI
 * `minetest.ui.minimap`
     * Reference to the minimap object. See [`Minimap`](#minimap) class reference for methods.
+    * If client disabled minimap (using enable_minimap setting) this reference will be nil.
 * `minetest.camera`
     * Reference to the camera object. See [`Camera`](#camera) class reference for methods.
 * `minetest.show_formspec(formname, formspec)` : returns true on success
@@ -802,7 +842,7 @@ Please do not try to access the reference until the camera is initialized, other
     * Returns with same syntax as above
 * `get_fov()`
     * Returns:
-    
+
 ```lua
      {
          x = number,
@@ -811,7 +851,7 @@ Please do not try to access the reference until the camera is initialized, other
          actual = number
      }
 ```
-    
+
 * `get_pos()`
     * Returns position of camera with view bobbing
 * `get_offset()`
@@ -955,6 +995,96 @@ Can be obtained via `minetest.get_meta(pos)`.
     * `inventory`: `{list1 = {}, ...}}`
 
 -----------------
+### Definitions
+* `minetest.get_node_def(nodename)`
+	* Returns [node definition](#node-definition) table of `nodename`
+* `minetest.get_item_def(itemstring)`
+	* Returns item definition table of `itemstring`
+
+#### Node Definition
+
+```lua
+	{
+		has_on_construct = bool,        -- Whether the node has the on_construct callback defined
+		has_on_destruct = bool,         -- Whether the node has the on_destruct callback defined
+		has_after_destruct = bool,      -- Whether the node has the after_destruct callback defined
+		name = string,                  -- The name of the node e.g. "air", "default:dirt"
+		groups = table,                 -- The groups of the node
+		paramtype = string,             -- Paramtype of the node
+		paramtype2 = string,            -- ParamType2 of the node
+		drawtype = string,              -- Drawtype of the node
+		mesh = <string>,                -- Mesh name if existant
+		minimap_color = <Color>,        -- Color of node on minimap *May not exist*
+		visual_scale = number,          -- Visual scale of node
+		alpha = number,                 -- Alpha of the node. Only used for liquids
+		color = <Color>,                -- Color of node *May not exist*
+		palette_name = <string>,        -- Filename of palette *May not exist*
+		palette = <{                    -- List of colors
+			Color,
+			Color
+		}>,
+		waving = number,                -- 0 of not waving, 1 if waving
+		connect_sides = number,         -- Used for connected nodes
+		connects_to = {                 -- List of nodes to connect to
+			"node1",
+			"node2"
+		},
+		post_effect_color = Color,      -- Color overlayed on the screen when the player is in the node
+		leveled = number,               -- Max level for node
+		sunlight_propogates = bool,     -- Whether light passes through the block
+		light_source = number,          -- Light emitted by the block
+		is_ground_content = bool,       -- Whether caves should cut through the node
+		walkable = bool,                -- Whether the player collides with the node
+		pointable = bool,               -- Whether the player can select the node
+		diggable = bool,                -- Whether the player can dig the node
+		climbable = bool,               -- Whether the player can climb up the node
+		buildable_to = bool,            -- Whether the player can replace the node by placing a node on it
+		rightclickable = bool,          -- Whether the player can place nodes pointing at this node
+		damage_per_second = number,     -- HP of damage per second when the player is in the node
+		liquid_type = <string>,         -- A string containing "none", "flowing", or "source" *May not exist*
+		liquid_alternative_flowing = <string>, -- Alternative node for liquid *May not exist*
+		liquid_alternative_source = <string>, -- Alternative node for liquid *May not exist*
+		liquid_viscosity = <number>,    -- How fast the liquid flows *May not exist*
+		liquid_renewable = <boolean>,   -- Whether the liquid makes an infinite source *May not exist*
+		liquid_range = <number>,        -- How far the liquid flows *May not exist*
+		drowning = bool,                -- Whether the player will drown in the node
+		floodable = bool,               -- Whether nodes will be replaced by liquids (flooded)
+		node_box = table,               -- Nodebox to draw the node with
+		collision_box = table,          -- Nodebox to set the collision area
+		selection_box = table,          -- Nodebox to set the area selected by the player
+		sounds = {                      -- Table of sounds that the block makes
+			sound_footstep = SimpleSoundSpec,
+			sound_dig = SimpleSoundSpec,
+			sound_dug = SimpleSoundSpec
+		},
+		legacy_facedir_simple = bool,   -- Whether to use old facedir
+		legacy_wallmounted = bool       -- Whether to use old wallmounted
+	}
+```
+
+#### Item Definition
+
+```lua
+	{
+		name = string,                  -- Name of the item e.g. "default:stone"
+		description = string,           -- Description of the item e.g. "Stone"
+		type = string,                  -- Item type: "none", "node", "craftitem", "tool"
+		inventory_image = string,       -- Image in the inventory
+		wield_image = string,           -- Image in wieldmesh
+		palette_image = string,         -- Image for palette
+		color = Color,                  -- Color for item
+		wield_scale = Vector,           -- Wieldmesh scale
+		stack_max = number,             -- Number of items stackable together
+		usable = bool,                  -- Has on_use callback defined
+		liquids_pointable = bool,       -- Whether you can point at liquids with the item
+		tool_capabilities = <table>,    -- If the item is a tool, tool capabiltites of the item
+		groups = table,                 -- Groups of the item
+		sound_place = SimpleSoundSpec,  -- Sound played when placed
+		sound_place_failed = SimpleSoundSpec, -- Sound played when placement failed
+		node_placement_prediction = string -- Node placed in client until server catches up
+	}
+```
+-----------------
 
 ### Chat command definition (`register_chatcommand`)
 
@@ -980,7 +1110,7 @@ Most text can contain escape sequences, that can for example color the text.
 There are a few exceptions: tab headers, dropdowns and vertical labels can't.
 The following functions provide escape sequences:
 * `minetest.get_color_escape_sequence(color)`:
-    * `color` is a ColorString
+    * `color` is a [ColorString](#colorstring)
     * The escape sequence sets the text color to `color`
 * `minetest.colorize(color, message)`:
     * Equivalent to:
@@ -988,7 +1118,7 @@ The following functions provide escape sequences:
        message ..
        minetest.get_color_escape_sequence("#ffffff")`
 * `color.get_background_escape_sequence(color)`
-    * `color` is a ColorString
+    * `color` is a [ColorString](#colorstring)
     * The escape sequence sets the background of the whole text element to
       `color`. Only defined for item descriptions and tooltips.
 * `color.strip_foreground_colors(str)`
@@ -1013,3 +1143,7 @@ Named colors are also supported and are equivalent to
 To specify the value of the alpha channel, append `#AA` to the end of the color name
 (e.g. `colorname#08`). For named colors the hexadecimal string representing the alpha
 value must (always) be two hexadecimal digits.
+
+`Color`
+-------------
+`{a = alpha, r = red, g = green, b = blue}` defines an ARGB8 color.

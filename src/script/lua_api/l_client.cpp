@@ -30,6 +30,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "mainmenumanager.h"
 #include "map.h"
 #include "util/string.h"
+#include "nodedef.h"
 
 extern MainGameCallback *g_gamecallback;
 
@@ -63,6 +64,15 @@ int ModApiClient::l_set_last_run_mod(lua_State *L)
 	return 1;
 }
 
+// print(text)
+int ModApiClient::l_print(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	std::string text = luaL_checkstring(L, 1);
+	rawstream << text << std::endl;
+	return 0;
+}
+
 // display_chat_message(message)
 int ModApiClient::l_display_chat_message(lua_State *L)
 {
@@ -73,6 +83,23 @@ int ModApiClient::l_display_chat_message(lua_State *L)
 	getClient(L)->pushToChatQueue(utf8_to_wide(message));
 	lua_pushboolean(L, true);
 	return 1;
+}
+
+// send_chat_message(message)
+int ModApiClient::l_send_chat_message(lua_State *L)
+{
+	if (!lua_isstring(L, 1))
+		return 0;
+	std::string message = luaL_checkstring(L, 1);
+	getClient(L)->sendChatMessage(utf8_to_wide(message));
+	return 0;
+}
+
+// clear_out_chat_queue()
+int ModApiClient::l_clear_out_chat_queue(lua_State *L)
+{
+	getClient(L)->clearOutChatQueue();
+	return 0;
 }
 
 // get_player_names()
@@ -251,6 +278,50 @@ int ModApiClient::l_get_server_info(lua_State *L)
 	return 1;
 }
 
+// get_item_def(itemstring)
+int ModApiClient::l_get_item_def(lua_State *L)
+{
+	IGameDef *gdef = getGameDef(L);
+	assert(gdef);
+
+	IItemDefManager *idef = gdef->idef();
+	assert(idef);
+
+	if (!lua_isstring(L, 1))
+		return 0;
+
+	const std::string &name(lua_tostring(L, 1));
+	if (!idef->isKnown(name))
+		return 0;
+	const ItemDefinition &def = idef->get(name);
+
+	push_item_definition_full(L, def);
+
+	return 1;
+}
+
+// get_node_def(nodename)
+int ModApiClient::l_get_node_def(lua_State *L)
+{
+	IGameDef *gdef = getGameDef(L);
+	assert(gdef);
+
+	INodeDefManager *ndef = gdef->ndef();
+	assert(ndef);
+
+	if (!lua_isstring(L, 1))
+		return 0;
+
+	const std::string &name = lua_tostring(L, 1);
+	const ContentFeatures &cf = ndef->get(ndef->getId(name));
+	if (cf.name != name) // Unknown node. | name = <whatever>, cf.name = ignore
+		return 0;
+
+	push_content_features(L, cf);
+
+	return 1;
+}
+
 int ModApiClient::l_take_screenshot(lua_State *L)
 {
 	Client *client = getClient(L);
@@ -261,7 +332,10 @@ int ModApiClient::l_take_screenshot(lua_State *L)
 void ModApiClient::Initialize(lua_State *L, int top)
 {
 	API_FCT(get_current_modname);
+	API_FCT(print);
 	API_FCT(display_chat_message);
+	API_FCT(send_chat_message);
+	API_FCT(clear_out_chat_queue);
 	API_FCT(get_player_names);
 	API_FCT(set_last_run_mod);
 	API_FCT(get_last_run_mod);
@@ -276,5 +350,7 @@ void ModApiClient::Initialize(lua_State *L, int top)
 	API_FCT(sound_play);
 	API_FCT(sound_stop);
 	API_FCT(get_server_info);
+	API_FCT(get_item_def);
+	API_FCT(get_node_def);
 	API_FCT(take_screenshot);
 }

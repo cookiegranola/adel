@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <iomanip>
 #include "camera.h"
 #include "client.h"
+#include "client/inputhandler.h"
 #include "client/tile.h"     // For TextureSource
 #include "client/keys.h"
 #include "client/joystick_controller.h"
@@ -51,26 +52,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "quicktune_shortcutter.h"
 #include "server.h"
 #include "settings.h"
-#include "shader.h"          // For ShaderSource
 #include "sky.h"
 #include "subgame.h"
 #include "tool.h"
+#include "util/basic_macros.h"
 #include "util/directiontables.h"
 #include "util/pointedthing.h"
 #include "irrlicht_changes/static_text.h"
 #include "version.h"
-#include "minimap.h"
-#include "mapblock_mesh.h"
 #include "script/scripting_client.h"
-
-#include "sound.h"
 
 #if USE_SOUND
 	#include "sound_openal.h"
-#endif
-
-#ifdef HAVE_TOUCHSCREENGUI
-	#include "touchscreengui.h"
 #endif
 
 extern Settings *g_settings;
@@ -723,16 +716,19 @@ public:
 		m_eye_position_pixel.set(eye_position_array, services);
 		m_eye_position_vertex.set(eye_position_array, services);
 
-		float minimap_yaw_array[3];
-		v3f minimap_yaw = m_client->getMinimap()->getYawVec();
+		if (m_client->getMinimap()) {
+			float minimap_yaw_array[3];
+			v3f minimap_yaw = m_client->getMinimap()->getYawVec();
 #if (IRRLICHT_VERSION_MAJOR == 1 && IRRLICHT_VERSION_MINOR < 8)
-		minimap_yaw_array[0] = minimap_yaw.X;
-		minimap_yaw_array[1] = minimap_yaw.Y;
-		minimap_yaw_array[2] = minimap_yaw.Z;
+			minimap_yaw_array[0] = minimap_yaw.X;
+			minimap_yaw_array[1] = minimap_yaw.Y;
+			minimap_yaw_array[2] = minimap_yaw.Z;
 #else
-		minimap_yaw.getAs3Values(minimap_yaw_array);
+			minimap_yaw.getAs3Values(minimap_yaw_array);
 #endif
-		m_minimap_yaw.set(minimap_yaw_array, services);
+			m_minimap_yaw.set(minimap_yaw_array, services);
+
+		}
 
 		SamplerLayer_t base_tex = 0,
 				normal_tex = 1,
@@ -1711,6 +1707,8 @@ void Game::shutdown()
 		driver->setRenderTarget(irr::video::ERT_STEREO_BOTH_BUFFERS);
 	}
 #endif
+	if (current_formspec)
+		current_formspec->quitMenu();
 
 	showOverlayMessage(wgettext("Shutting down..."), 0, 0, false);
 
@@ -1961,7 +1959,8 @@ bool Game::createClient(const std::string &playername,
 	}
 
 	mapper = client->getMinimap();
-	mapper->setMinimapMode(MINIMAP_MODE_OFF);
+	if (mapper)
+		mapper->setMinimapMode(MINIMAP_MODE_OFF);
 
 	return true;
 }
@@ -1984,8 +1983,10 @@ bool Game::initGui()
 	// Object infos are shown in this
 	guitext_info = addStaticText(guienv,
 			L"",
-			core::rect<s32>(0, 0, 400, g_fontengine->getTextHeight() * 5 + 5) + v2s32(100, 200),
+			core::rect<s32>(0, 0, driver->getScreenSize().Width, 2 * driver->getScreenSize().Height / 3),
 			false, true, guiroot);
+
+	guitext_info->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 
 	// Status text (displays info when showing and hiding GUI stuff, etc.)
 	guitext_status = addStaticText(guienv,
@@ -2439,7 +2440,7 @@ void Game::updateStats(RunStats *stats, const FpsControl &draw_times,
 void Game::processUserInput(f32 dtime)
 {
 	// Reset input if window not active or some menu is active
-	if (!device->isWindowActive() || !noMenuActive() || guienv->hasFocus(gui_chat_console)) {
+	if (!device->isWindowActive() || isMenuActive() || guienv->hasFocus(gui_chat_console)) {
 		input->clear();
 #ifdef HAVE_TOUCHSCREENGUI
 		g_touchscreengui->hide();
@@ -2794,7 +2795,7 @@ void Game::toggleHud()
 
 void Game::toggleMinimap(bool shift_pressed)
 {
-	if (!flags.show_hud || !g_settings->getBool("enable_minimap"))
+	if (!mapper || !flags.show_hud || !g_settings->getBool("enable_minimap"))
 		return;
 
 	if (shift_pressed) {
@@ -2969,7 +2970,8 @@ void Game::toggleFullViewRange()
 
 void Game::updateCameraDirection(CameraOrientation *cam, float dtime)
 {
-	if ((device->isWindowActive() && noMenuActive()) || random_input) {
+	if ((device->isWindowActive() && device->isWindowFocused()
+			&& !isMenuActive()) || random_input) {
 
 #ifndef __ANDROID__
 		if (!random_input) {
@@ -2994,8 +2996,7 @@ void Game::updateCameraDirection(CameraOrientation *cam, float dtime)
 			device->getCursorControl()->setVisible(true);
 #endif
 
-		if (!m_first_loop_after_window_activation)
-			m_first_loop_after_window_activation = true;
+		m_first_loop_after_window_activation = true;
 
 	}
 }
@@ -3457,7 +3458,15 @@ void Game::updateSound(f32 dtime)
 			      v3f(0, 0, 0), // velocity
 			      camera->getDirection(),
 			      camera->getCameraNode()->getUpVector());
-	sound->setListenerGain(g_settings->getFloat("sound_volume"));
+
+	// Check if volume is in the proper range, else fix it.
+	float old_volume = g_settings->getFloat("sound_volume");
+	float new_volume = rangelim(old_volume, 0.0f, 1.0f);
+	sound->setListenerGain(new_volume);
+
+	if (old_volume != new_volume) {
+		g_settings->setFloat("sound_volume", new_volume);
+	}
 
 	LocalPlayer *player = client->getEnv().getLocalPlayer();
 
@@ -3714,12 +3723,9 @@ PointedThing Game::updatePointedThing(
 		float sin_r = 0.08 * sin(timerf);
 		float sin_g = 0.08 * sin(timerf + irr::core::PI * 0.5);
 		float sin_b = 0.08 * sin(timerf + irr::core::PI);
-		c.setRed(
-			core::clamp(core::round32(c.getRed() * (0.8 + sin_r)), 0, 255));
-		c.setGreen(
-			core::clamp(core::round32(c.getGreen() * (0.8 + sin_g)), 0, 255));
-		c.setBlue(
-			core::clamp(core::round32(c.getBlue() * (0.8 + sin_b)), 0, 255));
+		c.setRed(core::clamp(core::round32(c.getRed() * (0.8 + sin_r)), 0, 255));
+		c.setGreen(core::clamp(core::round32(c.getGreen() * (0.8 + sin_g)), 0, 255));
+		c.setBlue(core::clamp(core::round32(c.getBlue() * (0.8 + sin_b)), 0, 255));
 
 		// Set mesh final color
 		hud->setSelectionMeshColor(c);
@@ -3748,6 +3754,13 @@ void Game::handlePointingAtNode(const PointedThing &pointed, const ItemDefinitio
 	*/
 
 	ClientMap &map = client->getEnv().getClientMap();
+
+	if (runData.nodig_delay_timer <= 0.0 && isLeftPressed()
+			&& client->checkPrivilege("interact")) {
+		handleDigging(pointed, nodepos, playeritem_toolcap, dtime);
+	}
+
+	// This should be done after digging handling
 	NodeMetadata *meta = map.getNodeMetadata(nodepos);
 
 	if (meta) {
@@ -3759,11 +3772,6 @@ void Game::handlePointingAtNode(const PointedThing &pointed, const ItemDefinitio
 			infotext = L"Unknown node: ";
 			infotext += utf8_to_wide(nodedef_manager->get(n).name);
 		}
-	}
-
-	if (runData.nodig_delay_timer <= 0.0 && isLeftPressed()
-			&& client->checkPrivilege("interact")) {
-		handleDigging(pointed, nodepos, playeritem_toolcap, dtime);
 	}
 
 	if ((getRightClicked() ||
@@ -3907,16 +3915,6 @@ void Game::handleDigging(const PointedThing &pointed, const v3s16 &nodepos,
 			params = getDigParams(nodedef_manager->get(n).groups, tp);
 	}
 
-	if (!runData.digging) {
-		infostream << "Started digging" << std::endl;
-		runData.dig_instantly = params.time == 0;
-		if (client->moddingEnabled() && client->getScript()->on_punchnode(nodepos, n))
-			return;
-		client->interact(0, pointed);
-		runData.digging = true;
-		runData.ldown_for_dig = true;
-	}
-
 	if (!params.diggable) {
 		// I guess nobody will wait for this long
 		runData.dig_time_complete = 10000000.0;
@@ -3929,6 +3927,16 @@ void Game::handleDigging(const PointedThing &pointed, const v3s16 &nodepos,
 			client->getParticleManager()->addPunchingParticles(client, smgr,
 					player, nodepos, n, features);
 		}
+	}
+
+	if (!runData.digging) {
+		infostream << "Started digging" << std::endl;
+		runData.dig_instantly = runData.dig_time_complete == 0;
+		if (client->moddingEnabled() && client->getScript()->on_punchnode(nodepos, n))
+			return;
+		client->interact(0, pointed);
+		runData.digging = true;
+		runData.ldown_for_dig = true;
 	}
 
 	if (!runData.dig_instantly) {
@@ -3981,10 +3989,9 @@ void Game::handleDigging(const PointedThing &pointed, const v3s16 &nodepos,
 		bool is_valid_position;
 		MapNode wasnode = map.getNodeNoEx(nodepos, &is_valid_position);
 		if (is_valid_position) {
-			if (client->moddingEnabled()) {
-				if (client->getScript()->on_dignode(nodepos, wasnode)) {
-					return;
-				}
+			if (client->moddingEnabled() && 
+			    		client->getScript()->on_dignode(nodepos, wasnode)) {
+				return;
 			}
 			client->removeNode(nodepos);
 		}
@@ -4188,7 +4195,7 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
 		if (current_formspec->getReferenceCount() == 1) {
 			current_formspec->drop();
 			current_formspec = NULL;
-		} else if (!noMenuActive()) {
+		} else if (isMenuActive()) {
 			guiroot->bringToFront(current_formspec);
 		}
 	}
@@ -4202,7 +4209,7 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
 	TimeTaker tt_draw("mainloop: draw");
 	driver->beginScene(true, true, skycolor);
 
-	draw_scene(driver, smgr, *camera, *client, player, *hud, *mapper,
+	draw_scene(driver, smgr, *camera, *client, player, *hud, mapper,
 			guienv, screensize, skycolor, flags.show_hud,
 			flags.show_minimap);
 
@@ -4237,7 +4244,7 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
 	/*
 		Update minimap pos and rotation
 	*/
-	if (flags.show_minimap && flags.show_hud) {
+	if (mapper && flags.show_minimap && flags.show_hud) {
 		mapper->setPos(floatToInt(player->getPosition(), BS));
 		mapper->setAngle(player->getYaw());
 	}
@@ -4340,6 +4347,12 @@ void Game::updateGui(const RunStats &stats, f32 dtime, const CameraOrientation &
 
 	setStaticText(guitext_info, infotext.c_str());
 	guitext_info->setVisible(flags.show_hud && g_menumgr.menuCount() == 0);
+
+	const core::rect<s32> guitext_info_rect(0, 0, screensize.X, 2 * screensize.Y / 3);
+	if (guitext_info->isVisible()) {
+		guitext_info->setRelativePosition(guitext_info_rect);
+	}
+
 
 	float statustext_time_max = 1.5;
 
@@ -4510,6 +4523,7 @@ void Game::extendedResourceCleanup()
 		       << " (note: irrlicht doesn't support removing renderers)" << std::endl;
 }
 
+#define GET_KEY_NAME(KEY) gettext(getKeySetting(#KEY).name())
 void Game::showPauseMenu()
 {
 #ifdef __ANDROID__
@@ -4527,21 +4541,41 @@ void Game::showPauseMenu()
 		" --> place single item to slot\n"
 		);
 #else
-	static const std::string control_text = strgettext("Default Controls:\n"
-		"- WASD: move\n"
-		"- Space: jump/climb\n"
-		"- Shift: sneak/go down\n"
-		"- Q: drop item\n"
-		"- I: inventory\n"
+	static const std::string control_text_template = strgettext("Controls:\n"
+		"- %s: move forwards\n"
+		"- %s: move backwards\n"
+		"- %s: move left\n"
+		"- %s: move right\n"
+		"- %s: jump/climb\n"
+		"- %s: sneak/go down\n"
+		"- %s: drop item\n"
+		"- %s: inventory\n"
 		"- Mouse: turn/look\n"
 		"- Mouse left: dig/punch\n"
 		"- Mouse right: place/use\n"
 		"- Mouse wheel: select item\n"
-		"- T: chat\n"
+		"- %s: chat\n"
 	);
+
+	 char control_text_buf[600];
+
+	 snprintf(control_text_buf, ARRLEN(control_text_buf), control_text_template.c_str(),
+			GET_KEY_NAME(keymap_forward),
+			GET_KEY_NAME(keymap_backward),
+			GET_KEY_NAME(keymap_left),
+			GET_KEY_NAME(keymap_right),
+			GET_KEY_NAME(keymap_jump),
+			GET_KEY_NAME(keymap_sneak),
+			GET_KEY_NAME(keymap_drop),
+			GET_KEY_NAME(keymap_inventory),
+			GET_KEY_NAME(keymap_chat)
+			);
+
+	std::string control_text = std::string(control_text_buf);
+	str_formspec_escape(control_text);
 #endif
 
-	float ypos = simple_singleplayer_mode ? 0.5 : 0.1;
+	float ypos = simple_singleplayer_mode ? 0.7f : 0.1f;
 	std::ostringstream os;
 
 	os << FORMSPEC_VERSION_STRING  << SIZE_TAG
@@ -4551,6 +4585,8 @@ void Game::showPauseMenu()
 	if (!simple_singleplayer_mode) {
 		os << "button_exit[4," << (ypos++) << ";3,0.5;btn_change_password;"
 			<< strgettext("Change Password") << "]";
+	} else {
+		os << "field[4.95,0;5,1.5;;" << strgettext("Game paused") << ";]";
 	}
 
 #ifndef __ANDROID__
@@ -4564,10 +4600,43 @@ void Game::showPauseMenu()
 	os		<< "button_exit[4," << (ypos++) << ";3,0.5;btn_exit_os;"
 		<< strgettext("Exit to OS")   << "]"
 		<< "textarea[7.5,0.25;3.9,6.25;;" << control_text << ";]"
-		<< "textarea[0.4,0.25;3.5,6;;" << PROJECT_NAME_C "\n"
-		<< g_build_info << "\n"
-		<< "path_user = " << wrap_rows(porting::path_user, 20)
-		<< "\n;]";
+		<< "textarea[0.4,0.25;3.9,6.25;;" << PROJECT_NAME_C " " VERSION_STRING "\n"
+		<< "\n"
+		<<  strgettext("Game info:") << "\n";
+	const std::string &address = client->getAddressName();
+	static const std::string mode = strgettext("- Mode: ");
+	if (!simple_singleplayer_mode) {
+		Address serverAddress = client->getServerAddress();
+		if (address != "") {
+			os << mode << strgettext("Remote server") << "\n"
+					<< strgettext("- Address: ") << address;
+		} else {
+			os << mode << strgettext("Hosting server");
+		}
+		os << "\n" << strgettext("- Port: ") << serverAddress.getPort() << "\n";
+	} else {
+		os << mode << strgettext("Singleplayer") << "\n";
+	}
+	if (simple_singleplayer_mode || address == "") {
+		static const std::string on = strgettext("On");
+		static const std::string off = strgettext("Off");
+		const std::string &damage = g_settings->getBool("enable_damage") ? on : off;
+		const std::string &creative = g_settings->getBool("creative_mode") ? on : off;
+		const std::string &announced = g_settings->getBool("server_announce") ? on : off;
+		os << strgettext("- Damage: ") << damage << "\n"
+				<< strgettext("- Creative Mode: ") << creative << "\n";
+		if (!simple_singleplayer_mode) {
+			const std::string &pvp = g_settings->getBool("enable_pvp") ? on : off;
+			os << strgettext("- PvP: ") << pvp << "\n"
+					<< strgettext("- Public: ") << announced << "\n";
+			std::string server_name = g_settings->get("server_name");
+			str_formspec_escape(server_name);
+			if (announced == on && server_name != "")
+				os << strgettext("- Server Name: ") << server_name;
+
+		}
+	}
+	os << ";]";
 
 	/* Create menu */
 	/* Note: FormspecFormSource and LocalFormspecHandler  *
