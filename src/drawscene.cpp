@@ -491,15 +491,19 @@ void draw_plain(Camera &camera, bool show_hud,
 
 	// MALEK ---
 	// TODO: handle undersampling
+	//const irr::core::matrix4 viewMatrix = driver->getTransform(video::ETS_VIEW);
+	//const irr::core::matrix4 projectionMatrix = driver->getTransform(video::ETS_PROJECTION);
 	PostProcess::Begin(skycolor);
 	//static float test = 0.0f;
-	PostProcess::SetThreshold(0.7f);//sin(test)*0.5f + 0.5f);
+	//PostProcess::SetThreshold(sin(test)*0.5f + 0.5f);
 	//test += 1.0f / 60.f;
+	PostProcess::SetThreshold(0.7f);
 	PostProcess::SetBlendingFactor(1.0f);
 	// --- MALEK 
 
 	// Render
 	smgr->drawAll();
+
 	driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
 	if (show_hud) {
 		hud.drawSelectionMesh();
@@ -507,14 +511,15 @@ void draw_plain(Camera &camera, bool show_hud,
 			camera.drawWieldedTool();
 		}
 	}
-	
+
 	// MALEK ---
-	
 	PostProcess::ApplyEffect("bloom");
-	//PostProcess::ApplyEffect("");
-	//PostProcess::ApplyEffect("blur");
-	//PostProcess::ApplyEffect("copy");
+	//PostProcess::ApplyEffect("depth");
 	PostProcess::End();
+	
+	//driver->setTransform(video::ETS_PROJECTION, projectionMatrix);
+	//driver->setTransform(video::ETS_VIEW, viewMatrix);
+	//driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
 	// --- MALEK
 
 	// Upscale lowres render

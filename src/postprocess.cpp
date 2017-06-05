@@ -111,11 +111,12 @@ void PostProcess::InitShaders()
 		"blur_v.frag", 
 		"blur_h.frag", 
 		"bloom_prepass.frag", 
-		"exposure.frag",
+		"bloom_add.frag",
 		"add2.frag", 
 		"albedo.frag", 
 		"blur_h_add.frag", 
 		"fxaa.frag",
+		"debug_depth.frag",
 		NULL
 	};
 
@@ -152,13 +153,15 @@ void PostProcess::InitShaders()
 	bloom.addShader("bloom_prepass");
 	bloom.addShader("blur_v");
 	bloom.addShader("blur_h");
-	//bloom.addShader("add2");
-	bloom.addShader("exposure");
+	bloom.addShader("bloom_add");	
 	// blur
 	PostProcess::Effect& blur = postProcess.addNewEffect("blur");
 	blur.addShader("blur_v");
 	blur.addShader("blur_h");
 	blur.addShader("albedo");
+	// debug depth
+	PostProcess::Effect& depth = postProcess.addNewEffect("depth");
+	depth.addShader("debug_depth");
 }
 
 void PostProcess::Init(const v2u32 &screensize, Client &client)
@@ -167,8 +170,8 @@ void PostProcess::Init(const v2u32 &screensize, Client &client)
 	{
 		init_texture(postProcess.driver, screensize, &postProcess.imageScene, "pp_source");
 		// TODO: use a viewport or dynamically recreate targets
-		init_texture(postProcess.driver, screensize/*/2*/, &postProcess.imagePP[0], "pp_img1");
-		init_texture(postProcess.driver, screensize/*/2*/, &postProcess.imagePP[1], "pp_img2");
+		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[0], "pp_img1");
+		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[1], "pp_img2");
 		
 		irr::scene::SMeshBuffer* bufferPP = new irr::scene::SMeshBuffer;
 		postProcess.bufferPP = bufferPP;
@@ -252,12 +255,15 @@ void PostProcess::End()
 	u32 shaderCount = shaders.size();
 	s32 finalShader = shaders[shaderCount - 1];
 
+	bool clearRT = true;
+
 	if (shaderCount > 1)
 	{
 		int currentPP = 0;
 		int shadermat = shaders[0];
 		postProcess.materialPP.MaterialType = (irr::video::E_MATERIAL_TYPE)shadermat;
-		postProcess.driver->setRenderTarget(postProcess.imagePP[currentPP], true, false);
+		postProcess.driver->setRenderTarget(postProcess.imagePP[currentPP], clearRT, false);
+
 		postProcess.materialPP.setTexture(0, postProcess.imageScene);
 		postProcess.driver->setMaterial(postProcess.materialPP);
 		postProcess.driver->drawMeshBuffer(postProcess.bufferPP);
@@ -266,7 +272,7 @@ void PostProcess::End()
 			int shadermat = shaders[i];
 			postProcess.materialPP.MaterialType = (irr::video::E_MATERIAL_TYPE)shadermat;
 			video::ITexture* target = (i == (shaderCount - 1)) ? NULL : postProcess.imagePP[currentPP ^ 1];
-			postProcess.driver->setRenderTarget(target, true, false);
+			postProcess.driver->setRenderTarget(target, clearRT, false);
 			postProcess.materialPP.setTexture(0, postProcess.imagePP[currentPP]);
 			// for now force texture 1 to be the original scene
 			postProcess.materialPP.setTexture(1, postProcess.imageScene);
