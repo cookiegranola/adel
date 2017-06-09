@@ -494,7 +494,10 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
 		}
 
 		MeshBufList &list = *i;
-
+		
+		// shadow map
+		list.m.setTexture(3, depthTexture);
+		
 		driver->setMaterial(list.m);
 
 		for (std::vector<scene::IMeshBuffer*>::iterator j = list.bufs.begin();

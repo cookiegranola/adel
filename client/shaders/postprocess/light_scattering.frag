@@ -2,8 +2,8 @@
 
 const float exposure = 0.0034;
 const float decay = 1.0;
-const float density = 0.84;
-const float weight = 5.65;
+const float density = 1.84;
+const float weight = 2.65;
 #define NUM_SAMPLES 100
 
 const vec2 lightPositionOnScreen = vec2(0.5, 0.5);

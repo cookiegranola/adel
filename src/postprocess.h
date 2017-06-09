@@ -88,7 +88,7 @@ struct PostProcess
 	static void End();
 	static void Clean();
 
-	static bool BeginOffScreen();
+	static bool BeginOffScreen(video::SColor color);
 	static void EndOffScreen();
 	static bool BeginShadowPass();
 	static void EndShadowPass(video::ITexture** depthTexture, bool debugDisplay = false);

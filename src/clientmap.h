@@ -106,6 +106,8 @@ public:
 	*/
 
 	virtual void OnRegisterSceneNode();
+	
+	video::ITexture* depthTexture;
 
 	virtual void render()
 	{

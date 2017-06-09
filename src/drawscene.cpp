@@ -513,7 +513,7 @@ void draw_plain(Camera &camera, bool show_hud,
 	PostProcess::SetSunPosition(projectedSunPosition[0] * 0.5f + 0.5f, projectedSunPosition[1] * 0.5f + 0.5f);
 
 
-	//client.getEnv().getClientMap().depthTexture = NULL;
+	client.getEnv().getClientMap().depthTexture = NULL;
 #if 0
 	if (PostProcess::BeginShadowPass()) {
 		// Render
@@ -541,9 +541,10 @@ void draw_plain(Camera &camera, bool show_hud,
 #endif
 
 #if 1
-	if (PostProcess::BeginOffScreen()) {
+	if (PostProcess::BeginOffScreen(skycolor)) {
 		// Render
-		if (abs(projectedSunPosition[0]) >= 0.0f && abs(projectedSunPosition[1]) >= 0.0f && projectedSunPosition[2] < 0.0f)
+		if (abs(projectedSunPosition[0]) <= 2.0f && abs(projectedSunPosition[1]) <= 2.0f 
+			&& projectedSunPosition[2] <= 0.0f)
 		{
 			//client.getCamera()->getCameraNode()->OnAnimate(porting::getTimeMs());
 			client.getCamera()->getCameraNode()->render();
@@ -552,8 +553,8 @@ void draw_plain(Camera &camera, bool show_hud,
 
 			//client.getEnv().getClientMap().OnAnimate(porting::getTimeMs());
 			//client.getEnv().getClientMap().depthTexture = NULL;
-			//driver->setTransform(video::ETS_WORLD, client.getEnv().getClientMap().getAbsoluteTransformation());
-			//client.getEnv().getClientMap().renderMap(driver, scene::ESNRP_SOLID);
+			driver->setTransform(video::ETS_WORLD, client.getEnv().getClientMap().getAbsoluteTransformation());
+			client.getEnv().getClientMap().renderMap(driver, scene::ESNRP_SOLID);
 			//client.getEnv().getClientMap().renderMap(driver, scene::ESNRP_TRANSPARENT);
 
 

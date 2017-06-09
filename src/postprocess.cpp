@@ -32,13 +32,13 @@ void init_texture(video::IVideoDriver* driver, const v2u32& screensize,
 #include <windows.h>
 #define GL_GLEXT_LEGACY 1
 #include <GL/gl.h>
-#define GLX_GLXEXT_LEGACY 1
 #include "glext.h"
 #ifdef _MSC_VER
 #pragma comment(lib, "OpenGL32.lib")
 #endif
 #elif defined(_IRR_COMPILE_WITH_X11_DEVICE_)
 #define GL_GLEXT_LEGACY 1
+#define GLX_GLEXT_LEGACY 1
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include "glext.h"
@@ -740,17 +740,15 @@ void PostProcess::SetExposure(float factor) { postProcess.callbackPP->SetExposur
 
 // ---
 
-bool PostProcess::BeginOffScreen()
+bool PostProcess::BeginOffScreen(video::SColor color)
 {
 	if (!postProcess.tempScene)
 		return false;
 	postProcess.tempScene->bindRTT(true, true);
-	postProcess.imageScene->bindRTT(true, true);
-	/*irr::core::matrix4 projectionMatrix, viewMatrix;
-	viewMatrix.buildCameraLookAtMatrixLH(irr::core::vector3df(0.f, 0.f, 0.f), irr::core::vector3df(-136, 16, -126), irr::core::vector3df(0.0f, 1.f, 0.0f));
-	projectionMatrix.buildProjectionMatrixPerspectiveFovLH(0.71f, 1.0f, 0.1f, 10000.0f);
-	postProcess.driver->setTransform(video::ETS_PROJECTION,projectionMatrix);
-	postProcess.driver->setTransform(video::ETS_VIEW, viewMatrix);*/
+	postProcess.imageScene->bindRTT(true, true, color);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 	return true;
 }
 
