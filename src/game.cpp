@@ -4210,7 +4210,7 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
 	driver->beginScene(true, true, skycolor);
 
 	draw_scene(driver, smgr, *camera, *client, player, *hud, mapper,
-			guienv, screensize, skycolor, flags.show_hud,
+			guienv, screensize, *sky/*skycolor*/, *clouds, flags.show_hud,
 			flags.show_minimap);
 
 	/*

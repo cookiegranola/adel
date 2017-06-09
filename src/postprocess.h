@@ -13,6 +13,16 @@ struct PostProcess
 	};
 	static std::vector<ShaderCacheEntry> shaderCache;
 
+	s32 getShader(const char* name) {
+		for (size_t i = 0; i < PostProcess::shaderCache.size(); i++) {
+			const ShaderCacheEntry& entry = PostProcess::shaderCache[i];
+			if (entry.name == name) {
+				return entry.material;
+			}
+		}
+		return -1;
+	}
+
 	struct Effect 
 	{
 		std::string name;
@@ -39,10 +49,19 @@ struct PostProcess
 	}
 
 	irr::video::IVideoDriver *driver;
+	v2u32 screenSize;
+	irr::scene::ICameraSceneNode* lightCamera;
 
+#if 0
 	irr::video::ITexture *imageScene;
 	irr::video::ITexture *imagePP[2];
-	
+#else
+	class COpenGLRenderTarget *imageScene;
+	class COpenGLRenderTarget *imagePP[2];
+	class COpenGLRenderTarget *lightScene;
+	class COpenGLRenderTarget *tempScene;
+#endif
+
 	irr::video::SMaterial materialPP;
 	irr::scene::SMeshBuffer* bufferPP;
 
@@ -56,6 +75,7 @@ struct PostProcess
 
 	static PostProcess postProcess;
 	
+	static void SetSunPosition(float x, float y);
 	static void SetThreshold(float threshold);
 	static void SetBlendingFactor(float factor);
 	static void SetExposure(float factor);
@@ -67,6 +87,11 @@ struct PostProcess
 	static void ApplyEffect(const char* name);
 	static void End();
 	static void Clean();
+
+	static bool BeginOffScreen();
+	static void EndOffScreen();
+	static bool BeginShadowPass();
+	static void EndShadowPass(video::ITexture** depthTexture, bool debugDisplay = false);
 };
 
 #endif // POSTPROCESS_H_

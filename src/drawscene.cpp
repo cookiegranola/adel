@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "guiscalingfilter.h"
 #include "filesys.h"
 #include "postprocess.h"
+#include "sky.h"
 
 typedef enum {
 	LEFT = -1,
@@ -470,8 +471,13 @@ void draw_plain(Camera &camera, bool show_hud,
 		Hud &hud, video::IVideoDriver *driver,
 		scene::ISceneManager *smgr, const v2u32 &screensize,
 		bool draw_wield_tool, Client &client, gui::IGUIEnvironment *guienv,
-		video::SColor skycolor)
+		Sky &sky, Clouds &clouds)//video::SColor skycolor)
 {
+	const video::SColor skycolor = sky.getSkyColor();
+
+	irr::core::matrix4 viewMatrix = driver->getTransform(video::ETS_VIEW);
+	irr::core::matrix4 projectionMatrix = driver->getTransform(video::ETS_PROJECTION);
+
 	// Undersampling-specific stuff
 	static video::ITexture *image = NULL;
 	static v2u32 last_pixelated_size = v2u32(0, 0);
@@ -489,10 +495,81 @@ void draw_plain(Camera &camera, bool show_hud,
 		driver->setRenderTarget(image, true, true, skycolor);
 	}
 
+
 	// MALEK ---
+	v3f sunPosition = sky.getSunPosition();
+	float projectedSunPosition[4];
+	viewMatrix = smgr->getActiveCamera()->getViewMatrix();
+	projectionMatrix = smgr->getActiveCamera()->getProjectionMatrix();
+	viewMatrix.transformVect(sunPosition);
+	projectionMatrix.transformVect(projectedSunPosition, sunPosition);
+	float rhw = 1.0f / projectedSunPosition[3];
+	projectedSunPosition[0] *= rhw;
+	projectedSunPosition[1] *= rhw;
+	projectedSunPosition[2] *= rhw;
+	/*float rhz = 1.0f / projectedSunPosition[2];
+	projectedSunPosition[0] *= rhz;
+	projectedSunPosition[1] *= rhz;*/
+	PostProcess::SetSunPosition(projectedSunPosition[0] * 0.5f + 0.5f, projectedSunPosition[1] * 0.5f + 0.5f);
+
+
+	//client.getEnv().getClientMap().depthTexture = NULL;
+#if 0
+	if (PostProcess::BeginShadowPass()) {
+		// Render
+		client.getCamera()->getCameraNode()->OnAnimate(porting::getTimeMs());
+		client.getEnv().getClientMap().OnAnimate(porting::getTimeMs());
+		client.getEnv().getClientMap().depthTexture = NULL;
+
+		v3f sunPosition = sky.getSunPosition();
+		sunPosition = client.getEnv().getLocalPlayer()->getEyePosition();
+		sunPosition.Y = sunPosition.Y;//*10.0f;// +900.0f;
+		v3f sunDirection = v3f(0.0f, -1.0f, 0.0f).normalize();
+		sunPosition += sunDirection * -300.f;
+		irr::core::matrix4 projectionMatrix, viewMatrix;
+		//viewMatrix.buildCameraLookAtMatrixLH(irr::core::vector3df(-1000, 300, 1394), irr::core::vector3df(-581, 32, 1394), irr::core::vector3df(0.0f, 1.f, 0.0f));
+		viewMatrix.buildCameraLookAtMatrixLH(sunPosition, sunPosition + sunDirection, irr::core::vector3df(0.0f, 0.f, 1.0f));
+		//projectionMatrix.buildProjectionMatrixPerspectiveFovLH(0.71f, 1.0f, 1.f, 10000.0f);
+		projectionMatrix.buildProjectionMatrixOrthoLH(1024.0f, 1024.0f, 1.0f, 10000.0f);
+		driver->setTransform(video::ETS_PROJECTION, projectionMatrix);
+		driver->setTransform(video::ETS_VIEW, viewMatrix);
+
+		driver->setTransform(video::ETS_WORLD, client.getEnv().getClientMap().getAbsoluteTransformation());
+		client.getEnv().getClientMap().renderMap(driver, scene::ESNRP_SOLID);
+		PostProcess::EndShadowPass(&client.getEnv().getClientMap().depthTexture, false);
+	}
+#endif
+
+#if 1
+	if (PostProcess::BeginOffScreen()) {
+		// Render
+		if (abs(projectedSunPosition[0]) >= 0.0f && abs(projectedSunPosition[1]) >= 0.0f && projectedSunPosition[2] < 0.0f)
+		{
+			//client.getCamera()->getCameraNode()->OnAnimate(porting::getTimeMs());
+			client.getCamera()->getCameraNode()->render();
+			//sky.OnAnimate(porting::getTimeMs());
+			sky.render();
+
+			//client.getEnv().getClientMap().OnAnimate(porting::getTimeMs());
+			//client.getEnv().getClientMap().depthTexture = NULL;
+			//driver->setTransform(video::ETS_WORLD, client.getEnv().getClientMap().getAbsoluteTransformation());
+			//client.getEnv().getClientMap().renderMap(driver, scene::ESNRP_SOLID);
+			//client.getEnv().getClientMap().renderMap(driver, scene::ESNRP_TRANSPARENT);
+
+
+			//clouds.OnAnimate(porting::getTimeMs());
+			clouds.m_ForceRender = true;
+			clouds.render();
+			clouds.m_ForceRender = false;
+
+			PostProcess::EndOffScreen();
+		}
+	}
+#endif
+
+#if 1
 	// TODO: handle undersampling
-	//const irr::core::matrix4 viewMatrix = driver->getTransform(video::ETS_VIEW);
-	//const irr::core::matrix4 projectionMatrix = driver->getTransform(video::ETS_PROJECTION);
+
 	PostProcess::Begin(skycolor);
 	//static float test = 0.0f;
 	//PostProcess::SetThreshold(sin(test)*0.5f + 0.5f);
@@ -505,21 +582,20 @@ void draw_plain(Camera &camera, bool show_hud,
 	smgr->drawAll();
 
 	driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
+
+	// MALEK ---
+	PostProcess::ApplyEffect("bloom");
+	//PostProcess::ApplyEffect("copy");
+	//PostProcess::ApplyEffect("depth");
+	PostProcess::End();
+	
 	if (show_hud) {
 		hud.drawSelectionMesh();
 		if (draw_wield_tool) {
 			camera.drawWieldedTool();
 		}
 	}
-
-	// MALEK ---
-	PostProcess::ApplyEffect("bloom");
-	//PostProcess::ApplyEffect("depth");
-	PostProcess::End();
-	
-	//driver->setTransform(video::ETS_PROJECTION, projectionMatrix);
-	//driver->setTransform(video::ETS_VIEW, viewMatrix);
-	//driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
+#endif
 	// --- MALEK
 
 	// Upscale lowres render
@@ -534,9 +610,11 @@ void draw_plain(Camera &camera, bool show_hud,
 void draw_scene(video::IVideoDriver *driver, scene::ISceneManager *smgr,
 		Camera &camera, Client &client, LocalPlayer *player, Hud &hud,
 		Minimap *mapper, gui::IGUIEnvironment *guienv,
-		const v2u32 &screensize, const video::SColor &skycolor,
+		const v2u32 &screensize, Sky &sky, Clouds &clouds,//const video::SColor &skycolor,
 		bool show_hud, bool show_minimap)
 {
+	const video::SColor skycolor = sky.getSkyColor();
+
 	TimeTaker timer("smgr");
 
 	bool draw_wield_tool = (show_hud &&
@@ -588,7 +666,7 @@ void draw_scene(video::IVideoDriver *driver, scene::ISceneManager *smgr,
 	}
 	else {
 		draw_plain(camera, show_hud, hud, driver,
-				smgr, screensize, draw_wield_tool, client, guienv, skycolor);
+				smgr, screensize, draw_wield_tool, client, guienv, sky, clouds);//color);
 	}
 
 	/*

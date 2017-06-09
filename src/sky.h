@@ -52,7 +52,7 @@ public:
 
 	void update(float m_time_of_day, float time_brightness, float direct_brightness,
 			bool sunlight_seen, CameraMode cam_mode, float yaw, float pitch);
-
+	const v3f& getSunPosition() const { return m_sunPosition; }
 	float getBrightness() { return m_brightness; }
 
 	const video::SColor &getBgColor() const
@@ -134,6 +134,7 @@ private:
 	video::SColor m_bgcolor;
 	video::SColor m_skycolor;
 	video::SColorf m_cloudcolor_f;
+	v3f m_sunPosition;
 	v3f m_stars[SKY_STAR_COUNT];
 	video::S3DVertex m_star_vertices[SKY_STAR_COUNT * 4];
 	video::ITexture *m_sun_texture;

@@ -48,7 +48,8 @@ Clouds::Clouds(
 	m_camera_pos(0.0f, 0.0f),
 	m_origin(0.0f, 0.0f),
 	m_camera_offset(0.0f, 0.0f, 0.0f),
-	m_color(1.0f, 1.0f, 1.0f, 1.0f)
+	m_color(1.0f, 1.0f, 1.0f, 1.0f),
+	m_ForceRender(false)
 {
 	m_material.setFlag(video::EMF_LIGHTING, false);
 	//m_material.setFlag(video::EMF_BACK_FACE_CULLING, false);
@@ -100,7 +101,7 @@ void Clouds::render()
 
 	video::IVideoDriver* driver = SceneManager->getVideoDriver();
 
-	if(SceneManager->getSceneNodeRenderPass() != scene::ESNRP_TRANSPARENT)
+	if(SceneManager->getSceneNodeRenderPass() != scene::ESNRP_TRANSPARENT && !m_ForceRender)
 	//if(SceneManager->getSceneNodeRenderPass() != scene::ESNRP_SOLID)
 		return;
 

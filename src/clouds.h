@@ -117,7 +117,7 @@ public:
 		m_params.thickness = thickness;
 		updateBox();
 	}
-
+	bool m_ForceRender;
 private:
 	void updateBox()
 	{
