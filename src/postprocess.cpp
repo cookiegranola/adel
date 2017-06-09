@@ -32,6 +32,7 @@ void init_texture(video::IVideoDriver* driver, const v2u32& screensize,
 #include <windows.h>
 #define GL_GLEXT_LEGACY 1
 #include <GL/gl.h>
+#define GLX_GLXEXT_LEGACY 1
 #include "glext.h"
 #ifdef _MSC_VER
 #pragma comment(lib, "OpenGL32.lib")
@@ -85,7 +86,7 @@ PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2DEXT;
 // choose the proper symbol
 // In case you still have problems please enable the
 // next line by uncommenting it
-// #define _IRR_GETPROCADDRESS_WORKAROUND_
+#define _IRR_GETPROCADDRESS_WORKAROUND_
 
 #ifndef _IRR_GETPROCADDRESS_WORKAROUND_
 __GLXextFuncPtr(*IRR_OGL_LOAD_EXTENSION_FUNCP)(const GLubyte*) = 0;
@@ -503,7 +504,9 @@ void PostProcess::Init(const v2u32 &screensize, Client &client)
 		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[0], "pp_img1");
 		init_texture(postProcess.driver, screensize/2, &postProcess.imagePP[1], "pp_img2");
 #else
+#ifdef _IRR_WINDOWS_API_
 		glActiveTexture = (PFNGLACTIVETEXTUREPROC)IRR_OGL_LOAD_EXTENSION("glActiveTexture");
+#endif
 		// ARB FrameBufferObjects
 		glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)IRR_OGL_LOAD_EXTENSION("glBindFramebuffer");
 		glDeleteFramebuffers = (PFNGLDELETEFRAMEBUFFERSPROC)IRR_OGL_LOAD_EXTENSION("glDeleteFramebuffers");
