@@ -36,6 +36,11 @@ void init_texture(video::IVideoDriver* driver, const v2u32& screensize,
 #ifdef _MSC_VER
 #pragma comment(lib, "OpenGL32.lib")
 #endif
+#elif defined(_IRR_COMPILE_WITH_X11_DEVICE_)
+#define GL_GLEXT_LEGACY 1
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include "glext.h"
 #elif defined(_IRR_OSX_PLATFORM_)
 #include <OpenGL/gl.h>
 #elif defined(_IRR_COMPILE_WITH_SDL_DEVICE_)
@@ -51,7 +56,9 @@ void init_texture(video::IVideoDriver* driver, const v2u32& screensize,
 #endif
 
 #if !defined(_IRR_OSX_PLATFORM_)
+#ifdef _IRR_WINDOWS_API_
 PFNGLACTIVETEXTUREPROC glActiveTexture;
+#endif
 // ARB framebuffer object
 PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
 PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
