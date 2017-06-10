@@ -246,7 +246,7 @@ COpenGLRenderTarget::COpenGLRenderTarget(const core::dimension2d<u32>& size, con
 	irr::video::IVideoDriver* driver, irr::video::ECOLOR_FORMAT format)
 {
 	Driver = driver;
-	ColorFrameBuffer = NULL;
+	ColorFrameBuffer = 0;
 	ColorTexture = NULL;
 	DepthTexture = NULL;
 
@@ -277,8 +277,8 @@ COpenGLRenderTarget::COpenGLRenderTarget(const core::dimension2d<u32>& size, con
 			0);
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
-	GLenum check = glCheckFramebufferStatus(GL_FRAMEBUFFER_EXT);
-	assert(check == GL_FRAMEBUFFER_COMPLETE);
+	//GLenum check = glCheckFramebufferStatus(GL_FRAMEBUFFER_EXT);
+	//assert(check == GL_FRAMEBUFFER_COMPLETE);
 
 	unbindRTT(size);
 }
@@ -612,7 +612,7 @@ void PostProcess::ApplyEffect(const char* name)
 
 	PostProcess::Effect& effect = postProcess.effectDB[currentEffect];
 	int shaderCount = effect.shaders.size();
-	for (size_t i = 0; i < shaderCount; ++i) {
+	for (int i = 0; i < shaderCount; ++i) {
 		postProcess.effectChain.push_back(effect.shaders[i]);
 	}
 }
@@ -633,7 +633,7 @@ void PostProcess::End()
 	u32 shaderCount = shaders.size();
 	s32 finalShader = shaders[shaderCount - 1];
 
-	bool clearRT = true;
+	//bool clearRT = true;
 
 	if (shaderCount > 1)
 	{
