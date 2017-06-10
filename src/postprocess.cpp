@@ -40,8 +40,8 @@ void init_texture(video::IVideoDriver* driver, const v2u32& screensize,
 #define GL_GLEXT_LEGACY 1
 #define GLX_GLEXT_LEGACY 1
 #include <GL/gl.h>
-#include <GL/glx.h>
 #include "glext.h"
+#include <GL/glx.h>
 #elif defined(_IRR_OSX_PLATFORM_)
 #include <OpenGL/gl.h>
 #elif defined(_IRR_COMPILE_WITH_SDL_DEVICE_)
