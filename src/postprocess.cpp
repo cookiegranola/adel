@@ -369,7 +369,7 @@ private:
 	irr::u32 PixelSizeID;
 };
 
-IShaderDefaultPostProcessCallback::IShaderDefaultPostProcessCallback() : Threshold(0.5f), Time(0.0f), BlendFactor(1.0f), Exposure(1.0f)
+IShaderDefaultPostProcessCallback::IShaderDefaultPostProcessCallback() : Threshold(0.5f), Time(0.0f), BlendFactor(1.0f), Exposure(0.25f)
 {
 	SunPositionX = 0.5f; SunPositionY = 0.5f;
 }
@@ -404,7 +404,8 @@ void IShaderDefaultPostProcessCallback::OnSetConstants(video::IMaterialRendererS
 	services->setPixelShaderConstant("Threshold", (irr::f32*)&Threshold, 1);
 	services->setPixelShaderConstant("PixelSizeX"/*PixelSizeID*/, (irr::f32*)&PixelSize.X, 1);
 	services->setPixelShaderConstant("PixelSizeY", (irr::f32*)&PixelSize.Y, 1);
-	services->setPixelShaderConstant("SunPosition", (irr::f32*)&SunPositionX, 2);
+	services->setPixelShaderConstant("SunPositionX", (irr::f32*)&SunPositionX, 2);
+	services->setPixelShaderConstant("SunPositionY", (irr::f32*)&SunPositionY, 2);
 }
 
 void IShaderDefaultPostProcessCallback::OnSetMaterial(const video::SMaterial &material)
