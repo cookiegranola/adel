@@ -87,6 +87,12 @@ public:
 		return s_singleton->m_device;
 	}
 
+	static EffectHandler *get_effect()
+	{
+		sanity_check(s_singleton && s_singleton->m_effect);
+		return s_singleton->m_effect;
+	}
+
 	static u32 get_timer_time()
 	{
 		sanity_check(s_singleton && s_singleton->m_device &&
@@ -183,5 +189,6 @@ private:
 
 	irr::IrrlichtDevice *m_device = nullptr;
 	EffectHandler *m_effect = nullptr;
+	scene::ISceneManager *m_smgr = nullptr;
 	static RenderingEngine *s_singleton;
 };

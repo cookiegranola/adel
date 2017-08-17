@@ -102,7 +102,7 @@ RenderingEngine::RenderingEngine(IEventReceiver *receiver)
 	m_device = createDeviceEx(params);
 	s_singleton = this;
 
-	m_effect = new EffectHandler(m_device, getVideoDriver()->getScreenSize(), false, true);
+	m_effect = new EffectHandler(m_device, getVideoDriver()->getScreenSize(), true, true, true);
 
 	//m_effect->addPostProcessingEffectFromFile(core::stringc("xeffects/Bin/shaders/BrightPass.glsl"));
 	m_effect->addPostProcessingEffectFromFile(core::stringc("src/client/xeffects/Bin/shaders/BlurHP.glsl"));
@@ -496,6 +496,28 @@ void RenderingEngine::_draw_scene(Camera *camera, Client *client, LocalPlayer *p
 		*/
 
 		m_effect->setClearColour(skycolor);
+		scene::ISceneManager *smgr = m_device->getSceneManager();
+
+		E_FILTER_TYPE filterType = (E_FILTER_TYPE)core::clamp<u32>((u32)'5' - '1', 0, 4);
+
+		scene::ISceneNode* map = smgr->getSceneNodeFromId(666);
+
+	//	map->setScale(v3f(3.0f, 2.0f, 3.0f));
+	//	map->setPosition(v3f(4.5f, 0.5f, 4.0f));
+		map->getMaterial(0).Lighting = false;
+
+		m_effect->addShadowToNode(map);
+
+		//scene::ILightSceneNode* light = smgr->addLightSceneNode();
+		//light->addAnimator(smgr->createFlyCircleAnimator(v3f(5, 20, 5), 38));
+
+		m_effect->addShadowLight(
+			SShadowLight(512, v3f(-50, 200, -50), v3f(5, 0, 5), 
+			video::SColor(0, 255, 0, 0), 20.0f, 60.0f, 70.0f));
+
+		//m_effect->getShadowLight(0).setPosition(light->getPosition());
+		//m_effect->getShadowLight(0).setTarget(v3f(5, 0, 5));
+
 		m_effect->update();
 	}
 

@@ -17,7 +17,7 @@ const char* LIGHT_MODULATE_P[ESE_COUNT] = {"uniform sampler2D ColorMapSampler;\n
 "	vec4 finalCol = texture2D(ColorMapSampler, gl_TexCoord[0].xy);\n"
 "	vec4 lightCol = texture2D(ScreenMapSampler, gl_TexCoord[0].xy);\n"
 ""
-"	gl_FragColor = finalCol * (lightCol * 0.92);\n"
+"	gl_FragColor = finalCol * (lightCol * 0.91);\n"
 "}"
 ,
 "sampler2D ColorMapSampler : register(s0);\n"
