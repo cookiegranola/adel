@@ -4245,7 +4245,7 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
 	const video::SColor &skycolor = sky->getSkyColor();
 
 	TimeTaker tt_draw("mainloop: draw");
-	driver->beginScene(true, true, skycolor);
+//	driver->beginScene(true, true, skycolor);
 
 	RenderingEngine::draw_scene(camera, client, player, hud, mapper,
 			guienv, screensize, skycolor, flags.show_hud,

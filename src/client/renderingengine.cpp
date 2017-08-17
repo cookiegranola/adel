@@ -101,6 +101,13 @@ RenderingEngine::RenderingEngine(IEventReceiver *receiver)
 
 	m_device = createDeviceEx(params);
 	s_singleton = this;
+
+	m_effect = new EffectHandler(m_device, getVideoDriver()->getScreenSize(), false, true);
+
+	//m_effect->addPostProcessingEffectFromFile(core::stringc("xeffects/Bin/shaders/BrightPass.glsl"));
+	m_effect->addPostProcessingEffectFromFile(core::stringc("src/client/xeffects/Bin/shaders/BlurHP.glsl"));
+	m_effect->addPostProcessingEffectFromFile(core::stringc("src/client/xeffects/Bin/shaders/BlurVP.glsl"));	
+	m_effect->addPostProcessingEffectFromFile(core::stringc("src/client/xeffects/Bin/shaders/BloomP.glsl"));
 }
 
 RenderingEngine::~RenderingEngine()
@@ -483,8 +490,13 @@ void RenderingEngine::_draw_scene(Camera *camera, Client *client, LocalPlayer *p
 		draw_crosshair = false;
 		show_hud = false;
 	} else {
+		/*
 		draw_plain(camera, show_hud, hud, screensize, draw_wield_tool, client,
 				guienv, skycolor);
+		*/
+
+		m_effect->setClearColour(skycolor);
+		m_effect->update();
 	}
 
 	/*

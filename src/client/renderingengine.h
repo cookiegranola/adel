@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <string>
 #include "irrlichttypes_extrabloated.h"
 #include "debug.h"
+#include "xeffects/Source/XEffects.h"
 
 class ITextureSource;
 class Camera;
@@ -181,5 +182,6 @@ private:
 			Camera *camera);
 
 	irr::IrrlichtDevice *m_device = nullptr;
+	EffectHandler *m_effect = nullptr;
 	static RenderingEngine *s_singleton;
 };

@@ -4,6 +4,8 @@ set(client_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/inputhandler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/tile.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/joystick_controller.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/xeffects/Source/EffectHandler.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/xeffects/Source/CShaderPre.cpp
 	PARENT_SCOPE
 )
 
