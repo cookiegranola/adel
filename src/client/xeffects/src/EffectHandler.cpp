@@ -15,9 +15,10 @@ using namespace core;
 EffectHandler::EffectHandler(IrrlichtDevice* dev, const irr::core::dimension2du& screenRTTSize,
 	const bool useVSMShadows, const bool useRoundSpotLights, const bool use32BitDepthBuffers)
 : device(dev), smgr(dev->getSceneManager()), driver(dev->getVideoDriver()),
+depthMC(0), shadowMC(0), DepthRTT(0),
 ScreenRTTSize(screenRTTSize.getArea() == 0 ? dev->getVideoDriver()->getScreenSize() : screenRTTSize),
-ClearColour(0x0), shadowsUnsupported(false), DepthRTT(0), DepthPass(false), depthMC(0), shadowMC(0),
-AmbientColour(0x0), use32BitDepth(use32BitDepthBuffers), useVSM(useVSMShadows)
+ClearColour(0x0), AmbientColour(0x0), shadowsUnsupported(false),
+use32BitDepth(use32BitDepthBuffers), useVSM(useVSMShadows), DepthPass(false)
 {
 	bool tempTexFlagMipMaps = driver->getTextureCreationFlag(ETCF_CREATE_MIP_MAPS);
 	bool tempTexFlag32 = driver->getTextureCreationFlag(ETCF_ALWAYS_32_BIT);
@@ -519,7 +520,7 @@ EffectHandler::SPostProcessingPair EffectHandler::obtainScreenQuadMaterialFromFi
 	video::E_VERTEX_SHADER_TYPE VertexLevel = driver->queryFeature(video::EVDF_VERTEX_SHADER_3_0) ? EVST_VS_3_0 : EVST_VS_2_0;
 	video::E_PIXEL_SHADER_TYPE PixelLevel = driver->queryFeature(video::EVDF_PIXEL_SHADER_3_0) ? EPST_PS_3_0 : EPST_PS_2_0;
 
-	E_SHADER_EXTENSION shaderExt = (driver->getDriverType() == EDT_DIRECT3D9) ? ESE_HLSL : ESE_GLSL;
+	E_SHADER_EXTENSION shaderExt = ESE_GLSL;
 
 	video::IGPUProgrammingServices* gpu = driver->getGPUProgrammingServices();
 

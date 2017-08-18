@@ -24,7 +24,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <string>
 #include "irrlichttypes_extrabloated.h"
 #include "debug.h"
-#include "xeffects/Source/XEffects.h"
+#include "xeffects/src/XEffects.h"
+#include "postprocess.h"
 
 class ITextureSource;
 class Camera;
@@ -85,12 +86,6 @@ public:
 	{
 		sanity_check(s_singleton && s_singleton->m_device);
 		return s_singleton->m_device;
-	}
-
-	static EffectHandler *get_effect()
-	{
-		sanity_check(s_singleton && s_singleton->m_effect);
-		return s_singleton->m_effect;
 	}
 
 	static u32 get_timer_time()
@@ -189,6 +184,5 @@ private:
 
 	irr::IrrlichtDevice *m_device = nullptr;
 	EffectHandler *m_effect = nullptr;
-	scene::ISceneManager *m_smgr = nullptr;
 	static RenderingEngine *s_singleton;
 };

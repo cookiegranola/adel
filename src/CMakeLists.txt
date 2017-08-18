@@ -429,6 +429,7 @@ set(common_SRCS
 	pathfinder.cpp
 	player.cpp
 	porting.cpp
+	postprocess.cpp
 	profiler.cpp
 	quicktune.cpp
 	raycast.cpp
@@ -530,6 +531,7 @@ set(client_SRCS
 	mesh_generator_thread.cpp
 	minimap.cpp
 	particles.cpp
+	postprocess.cpp
 	shader.cpp
 	sky.cpp
 	wieldmesh.cpp

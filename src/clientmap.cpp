@@ -87,6 +87,7 @@ void ClientMap::OnRegisterSceneNode()
 	if(IsVisible)
 	{
 		SceneManager->registerNodeForRendering(this, scene::ESNRP_SOLID);
+		SceneManager->registerNodeForRendering(this, scene::ESNRP_SHADOW);
 		SceneManager->registerNodeForRendering(this, scene::ESNRP_TRANSPARENT);
 	}
 

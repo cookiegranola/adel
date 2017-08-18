@@ -151,9 +151,9 @@ private:
 			irr::core::vector3df(0.0f, 0.0f, 1.0f) : irr::core::vector3df(0.0f, 1.0f, 0.0f)); 
 	}
 
-	irr::video::SColorf diffuseColour;
 	irr::core::vector3df pos, tar;
 	irr::f32 farPlane;
+	irr::video::SColorf diffuseColour;
 	irr::core::matrix4 viewMat, projMat;
 	irr::u32 mapRes;
 };
@@ -167,6 +167,7 @@ class IPostProcessingRenderCallback
 public:
 	virtual void OnPreRender(EffectHandler* effect) = 0;
 	virtual void OnPostRender(EffectHandler* effect) = 0;
+	virtual ~IPostProcessingRenderCallback();
 };
 
 // Shader callback prototypes.
@@ -445,17 +446,17 @@ private:
 			return materialType < other.materialType;
 		}
 
+		irr::s32 materialType;
 		ScreenQuadCB* callback;
 		IPostProcessingRenderCallback* renderCallback;
-		irr::s32 materialType;
 	};
 
 	SPostProcessingPair obtainScreenQuadMaterialFromFile(const irr::core::stringc& filename, 
 		irr::video::E_MATERIAL_TYPE baseMaterial = irr::video::EMT_SOLID);
 
 	irr::IrrlichtDevice* device;
-	irr::video::IVideoDriver* driver;
 	irr::scene::ISceneManager* smgr;
+	irr::video::IVideoDriver* driver;
 	irr::core::dimension2du mapRes;
 	
 	irr::s32 Depth;
