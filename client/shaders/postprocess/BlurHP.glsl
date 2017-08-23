@@ -20,8 +20,8 @@ void main()
 
 	for(int i = 0;i < 11;++i)
 		BlurCol += texture2D(ColorMapSampler,
-			gl_TexCoord[0].xy + offsetArray[i] * 3.0,
-				vec2(0.01, 0.001), vec2(0.999, 0.999)));
+			clamp(gl_TexCoord[0].xy + offsetArray[i] * 3.0,
+				vec2(0.001, 0.01), vec2(0.999, 0.999)));
 	
 	BlurCol /= 11.0;
 	
