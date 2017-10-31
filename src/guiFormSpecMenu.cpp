@@ -150,14 +150,17 @@ namespace gui
 
 		//! only for internal use by CGUIImageTabControl
 		void refreshSkinColors();
-
-	private:
+		
 
 		s32 Number;
 		video::SColor BackColor;
 		bool OverrideTextColorEnabled;
 		video::SColor TextColor;
 		bool DrawBackground;
+	
+	
+		void drawImage(const irr::core::rect<s32>& frameRect);
+		
 		video::ITexture *Texture;
 	};
 
@@ -330,7 +333,7 @@ void CGUIImageTab::draw()
 
 	if (skin && DrawBackground)
 		skin->draw2DRectangle(this, BackColor, AbsoluteRect, &AbsoluteClippingRect);
-
+	
 	IGUIElement::draw();
 }
 
@@ -415,6 +418,26 @@ void CGUIImageTab::deserializeAttributes(io::IAttributes* in, io::SAttributeRead
 	}
 }
 
+
+void CGUIImageTab::drawImage(
+	const irr::core::rect<s32>& frameRect
+	)
+{
+	if (Texture)
+	{
+		video::IVideoDriver* driver = Environment->getVideoDriver();
+		driver->draw2DImage(
+			Texture,
+			irr::core::position2d<s32>(frameRect.UpperLeftCorner.X, frameRect.UpperLeftCorner.Y), // irr::core::position2d<s32>(0, 200),
+			irr::core::rect<s32>(
+				frameRect.UpperLeftCorner.X, 
+				frameRect.UpperLeftCorner.Y, 
+				frameRect.LowerRightCorner.X, 
+				frameRect.LowerRightCorner.Y), // irr::core::rect<s32>(0, 200, 400, 800), 
+			0,
+			irr::video::SColor(255, 255, 255, 255), true);
+	}
+}
 
 // ------------------------------------------------------------------
 // Tabcontrol
@@ -909,6 +932,8 @@ void CGUIImageTabControl::draw()
 			textClipRect.clipAgainst(AbsoluteClippingRect);
 			font->draw(text, frameRect, Tabs[i]->getTextColor(),
 				true, true, &textClipRect);
+				
+			Tabs[i]->drawImage(frameRect);
 		}
 	}
 
@@ -963,6 +988,8 @@ void CGUIImageTabControl::draw()
 			tr.LowerRightCorner.X = AbsoluteRect.LowerRightCorner.X;
 			driver->draw2DRectangle(skin->getColor(EGDC_3D_DARK_SHADOW), tr, &AbsoluteClippingRect);
 		}
+		
+		activeTab->drawImage(frameRect);
 	}
 	else
 	{
