@@ -75,7 +75,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 	}
 
 
-
+// :PATCH::
 
 
 #include "IrrCompileConfig.h"
@@ -93,6 +93,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "rect.h"
 //#include "os.h"
 
+static video::ITexture *imageTabTexture=0;
 
 namespace irr
 {
@@ -109,7 +110,7 @@ namespace gui
 		//! constructor
 		CGUIImageTab(s32 number, IGUIEnvironment* environment,
 			IGUIElement* parent, const core::rect<s32>& rectangle,
-			s32 id);
+			s32 id, video::ITexture *texture);
 
 		//! destructor
 		//virtual ~CGUIImageTab();
@@ -157,6 +158,7 @@ namespace gui
 		bool OverrideTextColorEnabled;
 		video::SColor TextColor;
 		bool DrawBackground;
+		video::ITexture *Texture;
 	};
 
 
@@ -281,10 +283,10 @@ namespace gui
 //! constructor
 CGUIImageTab::CGUIImageTab(s32 number, IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	s32 id)
+	s32 id, video::ITexture *texture)
 	: IGUITab(environment, parent, id, rectangle), Number(number),
 		BackColor(0,0,0,0), OverrideTextColorEnabled(false), TextColor(255,0,0,0),
-		DrawBackground(false)
+		DrawBackground(false), Texture(texture)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTab");
@@ -510,7 +512,7 @@ void CGUIImageTabControl::refreshSprites()
 //! Adds a tab
 IGUITab* CGUIImageTabControl::addTab(const wchar_t* caption, s32 id)
 {
-	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id);
+	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, imageTabTexture);
 
 	tab->setText(caption);
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
@@ -573,7 +575,7 @@ IGUITab* CGUIImageTabControl::insertTab(s32 idx, const wchar_t* caption, s32 id)
 	if ( idx < 0 || idx > (s32)Tabs.size() )	// idx == Tabs.size() is indeed ok here as core::array can handle that
 		return NULL;
 
-	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcTabPos(), id);
+	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcTabPos(), id, imageTabTexture);
 
 	tab->setText(caption);
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
@@ -1299,7 +1301,7 @@ void CGUIImageTabControl::deserializeAttributes(io::IAttributes* in, io::SAttrib
 #include <IGUIEnvironment.h>
 
 //! Adds a tab control to the environment.
-IGUITabControl* AddImageTabControl(IGUIEnvironment* environment,
+IGUITabControl* addImageTabControl(IGUIEnvironment* environment,
 	const core::rect<s32>& rectangle, IGUIElement* parent, bool fillbackground, 
 	bool border, s32 id)
 {
@@ -1311,14 +1313,72 @@ IGUITabControl* AddImageTabControl(IGUIEnvironment* environment,
 
 
 //! Adds tab to the environment.
-IGUITab* AddImageTab(IGUIEnvironment* environment,
+IGUITab* addImageTab(IGUIEnvironment* environment,
 	const core::rect<s32>& rectangle, IGUIElement* parent, s32 id)
 {
 	IGUITab* t = new CGUIImageTab(-1, environment, parent ? parent : environment->getRootGUIElement(),
-		rectangle, id);
+		rectangle, id, imageTabTexture);
 	t->drop();
 	return t;
 }
+
+
+// ::PATCH:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2770,8 +2830,13 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
 
+		/* :PATCH
 		gui::IGUITabControl *e = Environment->addTabControl(rect, this,
 				show_background, show_border, spec.fid);
+		*/
+		gui::IGUITabControl *e = addImageTabControl(Environment, rect, this,
+				show_background, show_border, spec.fid);
+				
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
 				irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
 		e->setTabHeight(m_btn_height*2);
@@ -2783,6 +2848,8 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		e->setNotClipped(true);
 
 		for (const std::string &button : buttons) {
+			imageTabTexture = m_tsrc->getTexture(button);
+			
 			e->addTab(unescape_translate(unescape_string(
 				utf8_to_wide(button))).c_str(), -1);
 		}
