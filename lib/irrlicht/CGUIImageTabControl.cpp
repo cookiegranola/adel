@@ -7,11 +7,11 @@ namespace gui
 //! constructor
 CGUIImageTab::CGUIImageTab(s32 number, IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	s32 id, video::ITexture *texture, float xscaling, float yscaling)
+	s32 id, video::ITexture *texture, f32 scaling)
 	: IGUITab(environment, parent, id, rectangle), Number(number),
 		BackColor(0,0,0,0), OverrideTextColorEnabled(false), TextColor(255,0,0,0),
 		DrawBackground(false), 
-		Texture(texture), XScaling(xscaling),YScaling(yscaling)
+		Texture(texture), Scaling(scaling)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTab");
@@ -163,10 +163,10 @@ void CGUIImageTab::drawImage(
 //! constructor
 CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	bool fillbackground, bool border, s32 id)
+	bool fillbackground, bool border, s32 id, s32 tab_height, bool vertical)
 	: IGUITabControl(environment, parent, id, rectangle), ActiveTab(-1),
-	Border(border), FillBackground(fillbackground), ScrollControl(false), TabHeight(0), VerticalAlignment(EGUIA_UPPERLEFT),
-	UpButton(0), DownButton(0), TabMaxWidth(0), CurrentScrollTabIndex(0), TabExtraWidth(20)
+	Border(border), FillBackground(fillbackground), ScrollControl(false), TabHeight(tab_height), VerticalAlignment(EGUIA_UPPERLEFT),
+	UpButton(0), DownButton(0), TabMaxWidth(0), CurrentScrollTabIndex(0), TabExtraWidth(20), Vertical(vertical)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTabControl");
@@ -175,13 +175,18 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUISkin* skin = Environment->getSkin();
 	IGUISpriteBank* sprites = 0;
 
-	TabHeight = 32;
-
-	if (skin)
+	if (TabHeight == 0)
 	{
-		sprites = skin->getSpriteBank();
-		TabHeight = skin->getSize(gui::EGDS_BUTTON_HEIGHT) + 2;
+		TabHeight = 32;
+
+		if (skin)
+		{
+			sprites = skin->getSpriteBank();
+			TabHeight = skin->getSize(gui::EGDS_BUTTON_HEIGHT) + 2;
+		}
 	}
+
+	printf("=============== %d\n", TabHeight);
 
 	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
@@ -256,19 +261,15 @@ IGUITab* CGUIImageTabControl::addTab(const wchar_t* caption, s32 id)
 }
 
 //! Adds an image tab
-CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id, video::ITexture *texture,
-	float xscaling, float yscaling)
+CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id, 
+	video::ITexture *texture, f32 scaling)
 {
 	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, 
-		texture, xscaling, yscaling);
+		texture, scaling);
 
-	if (texture == 0)
+	if (!texture)
 	{
 		tab->setText(caption);
-	}
-	else
-	{
-		setTabExtraWidth( TabHeight );
 	}
 	
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
@@ -471,12 +472,19 @@ void CGUIImageTabControl::scrollRight()
 	recalculateScrollBar();
 }
 
-s32 CGUIImageTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl) const
+s32 CGUIImageTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
+	CGUIImageTab* tab) const
 {
 	if ( !font )
 		return 0;
 
 	s32 len = font->getDimension(text).Width + TabExtraWidth;
+	
+	if ( tab->Texture )
+	{
+		len = TabHeight * tab->Scaling * tab->Texture->getSize().Width / tab->Texture->getSize().Height + TabExtraWidth;
+	}
+	
 	if ( TabMaxWidth > 0 && len > TabMaxWidth )
 		len = TabMaxWidth;
 
@@ -527,7 +535,7 @@ bool CGUIImageTabControl::needScrollControl(s32 startIndex, bool withScrollContr
 			text = Tabs[i]->getText();
 
 		// get text length
-		s32 len = calcTabWidth(pos, font, text, false);	// always without withScrollControl here or len would be shortened
+		s32 len = calcTabWidth(pos, font, text, false, Tabs[i]);	// always without withScrollControl here or len would be shortened
 
 		frameRect.LowerRightCorner.X += len;
 
@@ -633,7 +641,7 @@ void CGUIImageTabControl::draw()
 			text = Tabs[i]->getText();
 
 		// get text length
-		s32 len = calcTabWidth(pos, font, text, true);
+		s32 len = calcTabWidth(pos, font, text, true, Tabs[i]);
 		if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
 		{
 			needRightScroll = true;
@@ -918,7 +926,7 @@ s32 CGUIImageTabControl::getTabAt(s32 xpos, s32 ypos) const
 			text = Tabs[i]->getText();
 
 		// get text length
-		s32 len = calcTabWidth(pos, font, text, true);
+		s32 len = calcTabWidth(pos, font, text, true, Tabs[i]);
 		if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
 			return -1;
 

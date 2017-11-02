@@ -75,8 +75,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 	}
 
 
-// :PATCH::
-
 #include "../lib/irrlicht/CGUIImageTabControl.h"
 #include "../lib/irrlicht/CGUIImageTabControl.cpp"
 
@@ -1483,8 +1481,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 {
 	std::vector<std::string> parts = split(element,';');
 
-	if (((parts.size() == 4) || (parts.size() == 6)) ||
-		((parts.size() > 6) && (m_formspec_version > FORMSPEC_API_VERSION)))
+	if ((parts.size() == 4) || (parts.size() >= 6))
 	{
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::string name = parts[1];
@@ -1493,15 +1490,34 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		bool show_background = true;
 		bool show_border = true;
 		int tab_index = stoi(str_index) -1;
+        s32 minimum_tab_height = 0;
+        bool vertical = false;
 
 		MY_CHECKPOS("tabheader",0);
 
-		if (parts.size() == 6) {
-			if (parts[4] == "true")
-				show_background = false;
-			if (parts[5] == "false")
-				show_border = false;
+		if (parts.size() > 4 && parts[4] == "true") {
+            show_background = false;
+        }
+        
+        if (parts.size() > 5 && parts[5] == "false") {
+            show_border = false;
 		}
+        
+        if (parts.size() > 6) {
+            minimum_tab_height = stoi(parts[6]);
+        }
+        
+        if (parts.size() > 7 && parts[7] == "vertical") {
+            vertical = true;
+        }
+        
+        s32 tab_height = m_btn_height*2;
+
+        if (tab_height < minimum_tab_height) {
+            tab_height = minimum_tab_height;
+        }
+        
+        printf("************* %d\n", minimum_tab_height);
 
 		FieldSpec spec(
 			name,
@@ -1514,22 +1530,23 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 
 		v2s32 pos = pos_offset * spacing;
 		pos.X += stof(v_pos[0]) * (float)spacing.X;
-		pos.Y += stof(v_pos[1]) * (float)spacing.Y - m_btn_height * 2;
+		pos.Y += stof(v_pos[1]) * (float)spacing.Y - tab_height;
 		v2s32 geom;
 		geom.X = DesiredRect.getWidth();
-		geom.Y = m_btn_height*2;
+		geom.Y = tab_height;
 
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
 
+        
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
-			rect, show_background, show_border, spec.fid); // :PATCH:
-		e->drop(); // :PATCH:
+			rect, show_background, show_border, spec.fid, tab_height, vertical);
+		e->drop();
         
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
 				irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
-		e->setTabHeight(m_btn_height*2);
-
+        e->setTabHeight(tab_height);
+                
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
 		}
@@ -1537,28 +1554,23 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		e->setNotClipped(true);
 
 		for (const std::string &button : buttons) {
-            // :PATCH::
             std::string tab_name = button;
-            float xscaling = 1.0f, yscaling = 1.0f;
+            float scaling = 1.0f;
 			video::ITexture *texture = 0;
 			
 			if (tab_name.find(".png", 0) != std::string::npos ) {
                 std::vector<std::string> parts = split(tab_name,'@');
                 
                 if (parts.size() == 2) {
-                    std::string tab_name = parts[0];
-                    std::vector<std::string> scalings = split(parts[1],',');
-                    
-                    if (scalings.size() >= 1) xscaling = stof(scalings[0]);
-                    if (scalings.size() >= 2) yscaling = stof(scalings[0]);
+                    tab_name = parts[0];
+                    scaling = stof(parts[1]);
                 }
                 
 				texture = m_tsrc->getTexture(tab_name);
 			}
 			
 			e->addImageTab(unescape_translate(unescape_string(utf8_to_wide(tab_name))).c_str(), 
-				-1, texture, xscaling, yscaling);        
-            // ::PATCH:
+				-1, texture, scaling);        
 		}
 
 		if ((tab_index >= 0) &&

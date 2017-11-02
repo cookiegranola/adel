@@ -26,7 +26,7 @@ namespace gui
 		CGUIImageTab(s32 number, IGUIEnvironment* environment,
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			s32 id, 
-			video::ITexture *texture=0, float xscaling=1.0f, float yscaling=1.0f);
+			video::ITexture *texture=0, f32 scaling=1.0f);
 
 		//! destructor
 		//virtual ~CGUIImageTab();
@@ -78,7 +78,7 @@ namespace gui
 		void drawImage(const irr::core::rect<s32>& frameRect);
 		
 		video::ITexture *Texture;
-		float XScaling, YScaling;
+		f32 Scaling;
 	};
 
 
@@ -90,7 +90,8 @@ namespace gui
 		//! destructor
 		CGUIImageTabControl(IGUIEnvironment* environment,
 			IGUIElement* parent, const core::rect<s32>& rectangle,
-			bool fillbackground=true, bool border=true, s32 id=-1);
+			bool fillbackground=true, bool border=true, s32 id=-1, 
+			s32 tab_height=0, bool vertical=false);
 
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -100,7 +101,7 @@ namespace gui
 		
 		//! Adds an image tab
 		virtual CGUIImageTab* addImageTab(const wchar_t* caption, s32 id=-1, 
-			video::ITexture* texture=0, float xscaling=1.0f, float yscaling=1.0f);
+			video::ITexture* texture=0, f32 scaling=1.0f);
 
 		//! Adds a tab that has already been created
 		virtual void addTab(CGUIImageTab* tab);
@@ -179,7 +180,8 @@ namespace gui
 		void scrollLeft();
 		void scrollRight();
 		bool needScrollControl( s32 startIndex=0, bool withScrollControl=false );
-		s32 calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl ) const;
+		s32 calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
+			CGUIImageTab* tab) const;
 		core::rect<s32> calcTabPos();
 
 		void recalculateScrollButtonPlacement();
@@ -198,6 +200,7 @@ namespace gui
 		s32 TabMaxWidth;
 		s32 CurrentScrollTabIndex;
 		s32 TabExtraWidth;
+		bool Vertical;
 	};
 } // end namespace gui
 } // end namespace irr
