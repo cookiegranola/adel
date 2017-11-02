@@ -532,7 +532,15 @@ IGUITab* CGUIImageTabControl::addTab(const wchar_t* caption, s32 id)
 {
 	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, imageTabTexture);
 
-	tab->setText(caption);
+    if (imageTabTexture == 0)
+    {
+        tab->setText(caption);
+    }
+    else
+    {
+        setTabExtraWidth( TabHeight );
+    }
+    
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
 	tab->setVisible(false);
 	Tabs.push_back(tab);
