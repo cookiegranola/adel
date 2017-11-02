@@ -1503,7 +1503,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
             show_border = false;
 		}
         
-        if (parts.size() > 6) {
+        if (parts.size() > 6 && parts[6].length() > 0) {
             tab_height = stoi(parts[6]);
         }
         
