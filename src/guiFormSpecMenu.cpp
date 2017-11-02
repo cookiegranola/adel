@@ -1491,7 +1491,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		bool show_border = true;
 		int tab_index = stoi(str_index) -1;
         s32 tab_height = m_btn_height*2;
-        bool vertical = false;
+        s32 side = 0;
 
 		MY_CHECKPOS("tabheader",0);
 
@@ -1507,8 +1507,12 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
             tab_height = stoi(parts[6]);
         }
         
-        if (parts.size() > 7 && parts[7] == "vertical") {
-            vertical = true;
+        if (parts.size() > 7)
+        {
+            if (parts[7] == "top") side = 0;
+            if (parts[7] == "bottom") side = 1;
+            if (parts[7] == "left") side = 2;
+            if (parts[7] == "right") side = 3;
         }
 
 		FieldSpec spec(
@@ -1531,7 +1535,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 				pos.Y+geom.Y);
 
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
-			rect, show_background, show_border, spec.fid, tab_height, vertical);
+			rect, show_background, show_border, spec.fid, tab_height, side);
 		e->drop();
         
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,

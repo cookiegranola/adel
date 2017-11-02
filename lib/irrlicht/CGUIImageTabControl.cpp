@@ -7,11 +7,11 @@ namespace gui
 //! constructor
 CGUIImageTab::CGUIImageTab(s32 number, IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	s32 id, video::ITexture *texture, f32 scaling)
+	s32 id, video::ITexture *texture, f32 scaling, s32 side)
 	: IGUITab(environment, parent, id, rectangle), Number(number),
 		BackColor(0,0,0,0), OverrideTextColorEnabled(false), TextColor(255,0,0,0),
 		DrawBackground(false), 
-		Texture(texture), Scaling(scaling)
+		Texture(texture), Scaling(scaling), Side(side)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTab");
@@ -147,10 +147,10 @@ void CGUIImageTab::drawImage(
 {
 	if (Texture)
 	{
-		f32 border_size = 4;
+		f32 margin = 4;
 		
-		f32 max_width = ( frameRect.LowerRightCorner.X - frameRect.UpperLeftCorner.X - 2 * border_size ) * Scaling;
-		f32 max_height = ( frameRect.LowerRightCorner.Y - frameRect.UpperLeftCorner.Y - 2 * border_size ) * Scaling;
+		f32 max_width = ( frameRect.LowerRightCorner.X - frameRect.UpperLeftCorner.X - 2 * margin ) * Scaling;
+		f32 max_height = ( frameRect.LowerRightCorner.Y - frameRect.UpperLeftCorner.Y - 2 * margin ) * Scaling;
 		
 		f32 tab_height = max_height;
 		f32 tab_width = tab_height * Texture->getSize().Width / Texture->getSize().Height;
@@ -187,10 +187,10 @@ void CGUIImageTab::drawImage(
 //! constructor
 CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	bool fillbackground, bool border, s32 id, s32 tab_height, bool vertical)
+	bool fillbackground, bool border, s32 id, s32 tab_height, s32 side)
 	: IGUITabControl(environment, parent, id, rectangle), ActiveTab(-1),
 	Border(border), FillBackground(fillbackground), ScrollControl(false), TabHeight(tab_height), VerticalAlignment(EGUIA_UPPERLEFT),
-	UpButton(0), DownButton(0), TabMaxWidth(0), CurrentScrollTabIndex(0), TabExtraWidth(20), Vertical(vertical)
+	UpButton(0), DownButton(0), TabMaxWidth(0), CurrentScrollTabIndex(0), TabExtraWidth(20), Side(side)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTabControl");

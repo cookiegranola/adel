@@ -26,7 +26,7 @@ namespace gui
 		CGUIImageTab(s32 number, IGUIEnvironment* environment,
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			s32 id, 
-			video::ITexture *texture=0, f32 scaling=1.0f);
+			video::ITexture *texture=0, f32 scaling=1.0f, s32 side=0);
 
 		//! destructor
 		//virtual ~CGUIImageTab();
@@ -79,6 +79,7 @@ namespace gui
 		
 		video::ITexture *Texture;
 		f32 Scaling;
+		s32 Side;
 	};
 
 
@@ -91,7 +92,7 @@ namespace gui
 		CGUIImageTabControl(IGUIEnvironment* environment,
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground=true, bool border=true, s32 id=-1, 
-			s32 tab_height=0, bool vertical=false);
+			s32 tab_height=0, s32 side=0);
 
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -200,7 +201,7 @@ namespace gui
 		s32 TabMaxWidth;
 		s32 CurrentScrollTabIndex;
 		s32 TabExtraWidth;
-		bool Vertical;
+		s32 Side;
 	};
 } // end namespace gui
 } // end namespace irr
