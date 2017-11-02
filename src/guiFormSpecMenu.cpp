@@ -83,30 +83,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <IGUIElement.h>
 #include <IGUIEnvironment.h>
 
-//! Adds a tab control to the environment.
-IGUITabControl* addImageTabControl(IGUIEnvironment* environment,
-	const core::rect<s32>& rectangle, IGUIElement* parent, bool fillbackground, 
-	bool border, s32 id)
-{
-	IGUITabControl* t = new CGUIImageTabControl(environment, parent ? parent : environment->getRootGUIElement(),
-		rectangle, fillbackground, border, id);
-	t->drop();
-	return t;
-}
-
-
-//! Adds tab to the environment.
-IGUITab* addImageTab(IGUIEnvironment* environment,
-	const core::rect<s32>& rectangle, IGUIElement* parent, s32 id)
-{
-	IGUITab* t = new CGUIImageTab(-1, environment, parent ? parent : environment->getRootGUIElement(),
-		rectangle, id, imageTabTexture);
-	t->drop();
-	return t;
-}
-
-// ::PATCH:
-
 
 /*
 	GUIFormSpecMenu
@@ -1550,9 +1526,11 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		gui::IGUITabControl *e = Environment->addTabControl(rect, this,
 				show_background, show_border, spec.fid);
 		*/
-		gui::IGUITabControl *e = addImageTabControl(Environment, rect, this,
-				show_background, show_border, spec.fid);
-				
+        
+        CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
+            rect, show_background, show_border, spec.fid);
+        e->drop();
+        				
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
 				irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
 		e->setTabHeight(m_btn_height*2);
@@ -1564,11 +1542,18 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		e->setNotClipped(true);
 
 		for (const std::string &button : buttons) {
-			imageTabTexture = m_tsrc->getTexture(button);
-			
+            
+            if (button.find(".png", 0) != std::string::npos ) {
+                std::string::size_type arosabe_position = button.find("@", 0);
+                imageTabTexture = m_tsrc->getTexture(button);
+			}
+            else imageTabTexture = 0;
+            
 			e->addTab(unescape_translate(unescape_string(
 				utf8_to_wide(button))).c_str(), -1);
 		}
+        
+        imageTabTexture = 0;
 
 		if ((tab_index >= 0) &&
 				(buttons.size() < INT_MAX) &&

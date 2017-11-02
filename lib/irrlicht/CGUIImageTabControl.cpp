@@ -150,8 +150,8 @@ void CGUIImageTab::drawImage(
 	{
 		video::IVideoDriver* driver = Environment->getVideoDriver();
 		driver->draw2DImage(Texture,
-			irr::core::rect<s32>(frameRect.UpperLeftCorner.X, frameRect.UpperLeftCorner.Y, 
-				frameRect.LowerRightCorner.X, frameRect.LowerRightCorner.Y), 
+			irr::core::rect<s32>(frameRect.UpperLeftCorner.X + 4, frameRect.UpperLeftCorner.Y + 4, 
+				frameRect.LowerRightCorner.X - 4, frameRect.LowerRightCorner.Y - 4), 
             irr::core::rect<s32>(0, 0, Texture->getSize().Width, Texture->getSize().Height), 
 			0, 0, true);
 	}
