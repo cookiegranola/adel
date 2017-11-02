@@ -7,10 +7,11 @@ namespace gui
 //! constructor
 CGUIImageTab::CGUIImageTab(s32 number, IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	s32 id, video::ITexture *texture)
+	s32 id, video::ITexture *texture, float xscaling, float yscaling)
 	: IGUITab(environment, parent, id, rectangle), Number(number),
 		BackColor(0,0,0,0), OverrideTextColorEnabled(false), TextColor(255,0,0,0),
-		DrawBackground(false), Texture(texture)
+		DrawBackground(false), 
+		Texture(texture), XScaling(xscaling),YScaling(yscaling)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTab");
@@ -255,9 +256,11 @@ IGUITab* CGUIImageTabControl::addTab(const wchar_t* caption, s32 id)
 }
 
 //! Adds an image tab
-CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id, video::ITexture *texture)
+CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id, video::ITexture *texture,
+	float xscaling, float yscaling)
 {
-	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, texture);
+	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, 
+		texture, xscaling, yscaling);
 
 	if (texture == 0)
 	{
@@ -328,7 +331,7 @@ IGUITab* CGUIImageTabControl::insertTab(s32 idx, const wchar_t* caption, s32 id)
 	if ( idx < 0 || idx > (s32)Tabs.size() )	// idx == Tabs.size() is indeed ok here as core::array can handle that
 		return NULL;
 
-	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcTabPos(), id, 0);
+	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcTabPos(), id);
 
 	tab->setText(caption);
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);

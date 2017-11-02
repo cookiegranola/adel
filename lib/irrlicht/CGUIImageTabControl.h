@@ -25,7 +25,8 @@ namespace gui
 		//! constructor
 		CGUIImageTab(s32 number, IGUIEnvironment* environment,
 			IGUIElement* parent, const core::rect<s32>& rectangle,
-			s32 id, video::ITexture *texture);
+			s32 id, 
+			video::ITexture *texture=0, float xscaling=1.0f, float yscaling=1.0f);
 
 		//! destructor
 		//virtual ~CGUIImageTab();
@@ -77,6 +78,7 @@ namespace gui
 		void drawImage(const irr::core::rect<s32>& frameRect);
 		
 		video::ITexture *Texture;
+		float XScaling, YScaling;
 	};
 
 
@@ -97,7 +99,8 @@ namespace gui
 		virtual IGUITab * addTab(const wchar_t* caption, s32 id=-1);
 		
 		//! Adds an image tab
-		virtual CGUIImageTab* addImageTab(const wchar_t* caption, s32 id=-1, video::ITexture* texture=0); // :PATCH:
+		virtual CGUIImageTab* addImageTab(const wchar_t* caption, s32 id=-1, 
+			video::ITexture* texture=0, float xscaling=1.0f, float yscaling=1.0f);
 
 		//! Adds a tab that has already been created
 		virtual void addTab(CGUIImageTab* tab);

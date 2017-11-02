@@ -1538,16 +1538,26 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 
 		for (const std::string &button : buttons) {
             // :PATCH::
+            std::string tab_name = button;
+            float xscaling = 1.0f, yscaling = 1.0f;
 			video::ITexture *texture = 0;
 			
-			if (button.find(".png", 0) != std::string::npos ) {
-				std::string::size_type arosabe_position = button.find("@", 0);
-				texture = m_tsrc->getTexture(button);
+			if (tab_name.find(".png", 0) != std::string::npos ) {
+                std::vector<std::string> parts = split(tab_name,'@');
+                
+                if (parts.size() == 2) {
+                    std::string tab_name = parts[0];
+                    std::vector<std::string> scalings = split(parts[1],',');
+                    
+                    if (scalings.size() >= 1) xscaling = stof(scalings[0]);
+                    if (scalings.size() >= 2) yscaling = stof(scalings[0]);
+                }
+                
+				texture = m_tsrc->getTexture(tab_name);
 			}
-			else texture = 0;
 			
-			e->addImageTab(unescape_translate(unescape_string(utf8_to_wide(button))).c_str(), 
-				-1, texture);
+			e->addImageTab(unescape_translate(unescape_string(utf8_to_wide(tab_name))).c_str(), 
+				-1, texture, xscaling, yscaling);        
             // ::PATCH:
 		}
 
