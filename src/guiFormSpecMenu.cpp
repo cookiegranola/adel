@@ -1490,7 +1490,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		bool show_background = true;
 		bool show_border = true;
 		int tab_index = stoi(str_index) -1;
-        s32 minimum_tab_height = 0;
+        s32 tab_height = m_btn_height*2;
         bool vertical = false;
 
 		MY_CHECKPOS("tabheader",0);
@@ -1504,20 +1504,12 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		}
         
         if (parts.size() > 6) {
-            minimum_tab_height = stoi(parts[6]);
+            tab_height = stoi(parts[6]);
         }
         
         if (parts.size() > 7 && parts[7] == "vertical") {
             vertical = true;
         }
-        
-        s32 tab_height = m_btn_height*2;
-
-        if (tab_height < minimum_tab_height) {
-            tab_height = minimum_tab_height;
-        }
-        
-        printf("************* %d\n", minimum_tab_height);
 
 		FieldSpec spec(
 			name,
@@ -1538,7 +1530,6 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
 
-        
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
 			rect, show_background, show_border, spec.fid, tab_height, vertical);
 		e->drop();
@@ -1555,7 +1546,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 
 		for (const std::string &button : buttons) {
             std::string tab_name = button;
-            float scaling = 1.0f;
+            f32 scaling = 1.0f;
 			video::ITexture *texture = 0;
 			
 			if (tab_name.find(".png", 0) != std::string::npos ) {
@@ -1564,6 +1555,10 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
                 if (parts.size() == 2) {
                     tab_name = parts[0];
                     scaling = stof(parts[1]);
+                    
+                    if (scaling > 1.0f) {
+                        scaling = 1.0f;
+                    }
                 }
                 
 				texture = m_tsrc->getTexture(tab_name);

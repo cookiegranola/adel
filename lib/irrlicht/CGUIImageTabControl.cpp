@@ -147,10 +147,34 @@ void CGUIImageTab::drawImage(
 {
 	if (Texture)
 	{
+		f32 border_size = 4;
+		
+		f32 max_width = ( frameRect.LowerRightCorner.X - frameRect.UpperLeftCorner.X - 2 * border_size ) * Scaling;
+		f32 max_height = ( frameRect.LowerRightCorner.Y - frameRect.UpperLeftCorner.Y - 2 * border_size ) * Scaling;
+		
+		f32 tab_height = max_height;
+		f32 tab_width = tab_height * Texture->getSize().Width / Texture->getSize().Height;
+		
+		if ( tab_width > max_width )
+		{
+			tab_height *= max_width / tab_width;
+			tab_width = max_width;
+		}
+		
+		f32 middle_x = ( frameRect.LowerRightCorner.X + frameRect.UpperLeftCorner.X ) * 0.5f;
+		f32 middle_y = ( frameRect.LowerRightCorner.Y + frameRect.UpperLeftCorner.Y ) * 0.5f;
+		
 		video::IVideoDriver* driver = Environment->getVideoDriver();
+		/*
 		driver->draw2DImage(Texture,
 			irr::core::rect<s32>(frameRect.UpperLeftCorner.X + 4, frameRect.UpperLeftCorner.Y + 4, 
 				frameRect.LowerRightCorner.X - 4, frameRect.LowerRightCorner.Y - 4), 
+			irr::core::rect<s32>(0, 0, Texture->getSize().Width, Texture->getSize().Height), 
+			0, 0, true);
+		*/
+		driver->draw2DImage(Texture,
+			irr::core::rect<s32>(middle_x - tab_width * 0.5f, middle_y - tab_height * 0.5f, 
+				middle_x + tab_width * 0.5f, middle_y + tab_height * 0.5f ), 
 			irr::core::rect<s32>(0, 0, Texture->getSize().Width, Texture->getSize().Height), 
 			0, 0, true);
 	}
@@ -185,8 +209,6 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 			TabHeight = skin->getSize(gui::EGDS_BUTTON_HEIGHT) + 2;
 		}
 	}
-
-	printf("=============== %d\n", TabHeight);
 
 	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
