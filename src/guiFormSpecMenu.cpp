@@ -1549,7 +1549,10 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
             f32 scaling = 1.0f;
 			video::ITexture *texture = 0;
 			
-			if (tab_name.find(".png", 0) != std::string::npos ) {
+			if (tab_name.find(".bmp", 0) != std::string::npos
+                || tab_name.find(".jpg", 0) != std::string::npos
+                || tab_name.find(".png", 0) != std::string::npos
+                || tab_name.find(".tga", 0) != std::string::npos) {
                 std::vector<std::string> parts = split(tab_name,'@');
                 
                 if (parts.size() == 2) {
