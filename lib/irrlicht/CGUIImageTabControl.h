@@ -94,7 +94,10 @@ namespace gui
 		virtual ~CGUIImageTabControl();
 
 		//! Adds a tab
-		virtual IGUITab* addTab(const wchar_t* caption, s32 id=-1);
+		virtual IGUITab * addTab(const wchar_t* caption, s32 id=-1);
+		
+		//! Adds an image tab
+		virtual CGUIImageTab* addImageTab(const wchar_t* caption, s32 id=-1, video::ITexture* texture=0); // :PATCH:
 
 		//! Adds a tab that has already been created
 		virtual void addTab(CGUIImageTab* tab);

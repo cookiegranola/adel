@@ -60,18 +60,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "intlGUIEditBox.h"
 #endif
 
-#define MY_CHECKPOS(a,b)													\
-	if (v_pos.size() != 2) {												\
-		errorstream<< "Invalid pos for element " << a << "specified: \""	\
-			<< parts[b] << "\"" << std::endl;								\
-			return;															\
+#define MY_CHECKPOS(a,b)                                                    \
+	if (v_pos.size() != 2) {                                                \
+		errorstream<< "Invalid pos for element " << a << "specified: \""    \
+			<< parts[b] << "\"" << std::endl;                               \
+			return;                                                         \
 	}
 
-#define MY_CHECKGEOM(a,b)													\
-	if (v_geom.size() != 2) {												\
-		errorstream<< "Invalid pos for element " << a << "specified: \""	\
-			<< parts[b] << "\"" << std::endl;								\
-			return;															\
+#define MY_CHECKGEOM(a,b)                                                   \
+	if (v_geom.size() != 2) {                                               \
+		errorstream<< "Invalid pos for element " << a << "specified: \""    \
+			<< parts[b] << "\"" << std::endl;                               \
+			return;                                                         \
 	}
 
 
@@ -1522,15 +1522,10 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
 
-		/* :PATCH
-		gui::IGUITabControl *e = Environment->addTabControl(rect, this,
-				show_background, show_border, spec.fid);
-		*/
+		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
+			rect, show_background, show_border, spec.fid); // :PATCH:
+		e->drop(); // :PATCH:
         
-        CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
-            rect, show_background, show_border, spec.fid);
-        e->drop();
-        				
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
 				irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
 		e->setTabHeight(m_btn_height*2);
@@ -1542,18 +1537,19 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		e->setNotClipped(true);
 
 		for (const std::string &button : buttons) {
-            
-            if (button.find(".png", 0) != std::string::npos ) {
-                std::string::size_type arosabe_position = button.find("@", 0);
-                imageTabTexture = m_tsrc->getTexture(button);
+            // :PATCH::
+			video::ITexture *texture = 0;
+			
+			if (button.find(".png", 0) != std::string::npos ) {
+				std::string::size_type arosabe_position = button.find("@", 0);
+				texture = m_tsrc->getTexture(button);
 			}
-            else imageTabTexture = 0;
-            
-			e->addTab(unescape_translate(unescape_string(
-				utf8_to_wide(button))).c_str(), -1);
+			else texture = 0;
+			
+			e->addImageTab(unescape_translate(unescape_string(utf8_to_wide(button))).c_str(), 
+				-1, texture);
+            // ::PATCH:
 		}
-        
-        imageTabTexture = 0;
 
 		if ((tab_index >= 0) &&
 				(buttons.size() < INT_MAX) &&
@@ -2241,9 +2237,9 @@ void GUIFormSpecMenu::regenerateGui(v2u32 screensize)
 		// Everything else is scaled in proportion to the
 		// inventory image size.  The inventory slot spacing
 		// is 5/4 image size horizontally and 15/13 image size
-		// vertically.	The padding around the form (incorporating
+		// vertically.  The padding around the form (incorporating
 		// the border of the outer inventory slots) is 3/8
-		// image size.	Font height (baseline to baseline)
+		// image size.  Font height (baseline to baseline)
 		// is 2/5 vertical inventory slot spacing, and button
 		// half-height is 7/8 of font height.
 		imgsize = v2s32(use_imgsize, use_imgsize);
@@ -3047,7 +3043,7 @@ void GUIFormSpecMenu::acceptInput(FormspecQuitMode quitmode=quit_mode_no)
 							fields[name] = "CHG:" + os.str();
 						else
 							fields[name] = "VAL:" + os.str();
- 					}
+					}
 				}
 				else
 				{
@@ -3535,7 +3531,7 @@ bool GUIFormSpecMenu::OnEvent(const SEvent& event)
 			// Some mouse button has been pressed
 
 			//infostream<<"Mouse button "<<button<<" pressed at p=("
-			//	<<p.X<<","<<p.Y<<")"<<std::endl;
+			//  <<p.X<<","<<p.Y<<")"<<std::endl;
 
 			m_selected_dragging = false;
 
@@ -3603,7 +3599,7 @@ bool GUIFormSpecMenu::OnEvent(const SEvent& event)
 			// Some mouse button has been released
 
 			//infostream<<"Mouse button "<<button<<" released at p=("
-			//	<<p.X<<","<<p.Y<<")"<<std::endl;
+			//  <<p.X<<","<<p.Y<<")"<<std::endl;
 
 			if (m_selected_item != NULL && m_selected_dragging && s.isValid()) {
 				if (!identical) {

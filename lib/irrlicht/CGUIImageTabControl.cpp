@@ -4,8 +4,6 @@ namespace irr
 {
 namespace gui
 {
-static video::ITexture *imageTabTexture=0;
-
 //! constructor
 CGUIImageTab::CGUIImageTab(s32 number, IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
@@ -152,7 +150,7 @@ void CGUIImageTab::drawImage(
 		driver->draw2DImage(Texture,
 			irr::core::rect<s32>(frameRect.UpperLeftCorner.X + 4, frameRect.UpperLeftCorner.Y + 4, 
 				frameRect.LowerRightCorner.X - 4, frameRect.LowerRightCorner.Y - 4), 
-            irr::core::rect<s32>(0, 0, Texture->getSize().Width, Texture->getSize().Height), 
+			irr::core::rect<s32>(0, 0, Texture->getSize().Width, Texture->getSize().Height), 
 			0, 0, true);
 	}
 }
@@ -253,17 +251,23 @@ void CGUIImageTabControl::refreshSprites()
 //! Adds a tab
 IGUITab* CGUIImageTabControl::addTab(const wchar_t* caption, s32 id)
 {
-	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, imageTabTexture);
+	return addImageTab(caption, id, 0);
+}
 
-    if (imageTabTexture == 0)
-    {
-        tab->setText(caption);
-    }
-    else
-    {
-        setTabExtraWidth( TabHeight );
-    }
-    
+//! Adds an image tab
+CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id, video::ITexture *texture)
+{
+	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, texture);
+
+	if (texture == 0)
+	{
+		tab->setText(caption);
+	}
+	else
+	{
+		setTabExtraWidth( TabHeight );
+	}
+	
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
 	tab->setVisible(false);
 	Tabs.push_back(tab);
@@ -324,7 +328,7 @@ IGUITab* CGUIImageTabControl::insertTab(s32 idx, const wchar_t* caption, s32 id)
 	if ( idx < 0 || idx > (s32)Tabs.size() )	// idx == Tabs.size() is indeed ok here as core::array can handle that
 		return NULL;
 
-	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcTabPos(), id, imageTabTexture);
+	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcTabPos(), id, 0);
 
 	tab->setText(caption);
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
