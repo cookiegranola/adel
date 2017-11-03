@@ -55,8 +55,6 @@ void CGUIImageTab::draw()
 
 	if (skin && DrawBackground)
 		skin->draw2DRectangle(this, BackColor, AbsoluteRect, &AbsoluteClippingRect);
-		
-	printf("TAB : AbsoluteRect %d %d %d %d\n", AbsoluteRect.UpperLeftCorner.X, AbsoluteRect.UpperLeftCorner.Y, AbsoluteRect.LowerRightCorner.X, AbsoluteRect.LowerRightCorner.Y);
 	
 	IGUIElement::draw();
 }
@@ -643,61 +641,26 @@ void CGUIImageTabControl::draw()
 	core::rect<s32> tr;
 	s32 pos;
 
-	if ( Side == 0 )
+	if ( Side < 2 )
 	{
-		if ( VerticalAlignment == EGUIA_UPPERLEFT )
-		{
-			frameRect.UpperLeftCorner.Y += 2;
-			frameRect.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y + TabHeight;
-		}
-		else
-		{
-			frameRect.UpperLeftCorner.Y = frameRect.LowerRightCorner.Y - TabHeight - 1;
-			frameRect.LowerRightCorner.Y -= 2;
-		}
-		
-		pos = frameRect.UpperLeftCorner.X + 2;
-	}
-	else if ( Side == 1 )
-	{
-		frameRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X;
-		frameRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y + ViewWidth;
-		frameRect.LowerRightCorner.X = ViewRect.LowerRightCorner.X;
-		frameRect.LowerRightCorner.Y = ViewRect.UpperLeftCorner.Y + ViewWidth;
-		
-		pos = frameRect.UpperLeftCorner.X + 2;
-		
-		printf("View %d %d\n", ViewWidth, ViewHeight);
-		printf("ViewRect %d %d %d %d\n", ViewRect.UpperLeftCorner.X, ViewRect.UpperLeftCorner.Y, ViewRect.LowerRightCorner.X, ViewRect.LowerRightCorner.Y);
-		printf("AbsoluteRect %d %d %d %d\n", AbsoluteRect.UpperLeftCorner.X, AbsoluteRect.UpperLeftCorner.Y, AbsoluteRect.LowerRightCorner.X, AbsoluteRect.LowerRightCorner.Y);
-		printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLeftCorner.Y, frameRect.LowerRightCorner.X, frameRect.LowerRightCorner.Y);
-	}
-	else if ( Side == 2 )
-	{
-		frameRect.UpperLeftCorner.Y += 2;
-		frameRect.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y + TabHeight;
-		
-		pos = frameRect.UpperLeftCorner.Y + 2;
+		pos = ViewRect.UpperLeftCorner.X;
 	}
 	else
 	{
-		frameRect.UpperLeftCorner.Y += 2;
-		frameRect.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y + TabHeight;
-		
-		pos = frameRect.UpperLeftCorner.Y + 2;
+		pos = ViewRect.UpperLeftCorner.Y;
 	}
+
+		
+printf("View %d %d\n", ViewWidth, ViewHeight);
+printf("ViewRect %d %d %d %d\n", ViewRect.UpperLeftCorner.X, ViewRect.UpperLeftCorner.Y, ViewRect.LowerRightCorner.X, ViewRect.LowerRightCorner.Y);
+printf("AbsoluteRect %d %d %d %d\n", AbsoluteRect.UpperLeftCorner.X, AbsoluteRect.UpperLeftCorner.Y, AbsoluteRect.LowerRightCorner.X, AbsoluteRect.LowerRightCorner.Y);
 
 	bool needLeftScroll = CurrentScrollTabIndex > 0;
 	bool needRightScroll = false;
 
-	// pos of the active tab
-	s32 left = -1;
-	s32 right = -1;
-	s32 top = -1;
-	s32 bottom = -1;
 
-	//const wchar_t* activetext = 0;
 	CGUIImageTab *activeTab = 0;
+	core::rect<s32> activeRect;
 
 	for (u32 i=CurrentScrollTabIndex; i<Tabs.size(); ++i)
 	{
@@ -710,37 +673,54 @@ void CGUIImageTabControl::draw()
 		}
 
 		// get text length
-		if ( Side < 2 ) 
+		s32 len = calcTabWidth(pos, font, text, true, Tabs[i]);
+				
+		if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
 		{
-			s32 len = calcTabWidth(pos, font, text, true, Tabs[i]);
-					
-			if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
-			{
-				needRightScroll = true;
-				break;
-			}
+			needRightScroll = true;
+			break;
+		}
 
-			frameRect.LowerRightCorner.X += len;
-			frameRect.UpperLeftCorner.X = pos;
-			frameRect.LowerRightCorner.X = frameRect.UpperLeftCorner.X + len;
-
+		if ( Side < 2 )
+		{
+			frameRect.UpperLeftCorner.X = pos + 1;
 			pos += len;
 		}
 		else
 		{
+			frameRect.UpperLeftCorner.Y = pos + 1;			
+			pos += TabHeight;
 		}
 
+		if ( Side == 0 )
+		{
+			frameRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y - TabHeight + 1;
+		}
+		else if ( Side == 1 )
+		{
+			frameRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y + 1;
+		}
+		else if ( Side == 2 )
+		{
+			frameRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X - len + 1;
+		}
+		else
+		{
+			frameRect.UpperLeftCorner.X = ViewRect.LowerRightCorner.X + 1;
+		}
+		
+		frameRect.LowerRightCorner.X = frameRect.UpperLeftCorner.X + len - 1;
+		frameRect.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y + TabHeight - 1;
+		
 		if ( text )
 			Tabs[i]->refreshSkinColors();
+printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLeftCorner.Y, frameRect.LowerRightCorner.X, frameRect.LowerRightCorner.Y);
 
 		if ( (s32)i == ActiveTab )
 		{
-			left = frameRect.UpperLeftCorner.X;
-			right = frameRect.LowerRightCorner.X;
-			top = frameRect.UpperLeftCorner.Y;
-			bottom = frameRect.LowerRightCorner.Y;
-			//activetext = text;
 			activeTab = Tabs[i];
+			activeRect = frameRect;
+			//activetext = text;
 		}
 		else
 		{
@@ -757,84 +737,43 @@ void CGUIImageTabControl::draw()
 	}
 
 	// draw active tab
-	if ( left != -1 && right != -1 && top != -1 && bottom != -1 && activeTab != 0 )
+	if ( activeTab != 0 )
 	{
-		if ( Side < 2 )
-		{
-			// draw upper highlight frame
-			if ( VerticalAlignment == EGUIA_UPPERLEFT )
-			{
-				frameRect.UpperLeftCorner.X = left-2;
-				frameRect.LowerRightCorner.X = right+2;
-				frameRect.UpperLeftCorner.Y -= 2;
+		activeRect.UpperLeftCorner.X -= 2;
+		activeRect.UpperLeftCorner.Y -= 2;
+		activeRect.LowerRightCorner.X += 2;
+		activeRect.LowerRightCorner.Y += 2;
+	
+		// draw upper highlight frame
 
-				skin->draw3DTabButton(this, true, frameRect, &AbsoluteClippingRect, VerticalAlignment);
+		skin->draw3DTabButton(this, true, activeRect, &AbsoluteClippingRect, VerticalAlignment);
 
-				// draw text
-				core::rect<s32> textClipRect(frameRect);	// TODO: exact size depends on borders in draw3DTabButton which we don't get with current interface
-				textClipRect.clipAgainst(AbsoluteClippingRect);
-				font->draw(activeTab->getText(), frameRect, activeTab->getTextColor(),
-					true, true, &textClipRect);
+		// draw text
+		core::rect<s32> textClipRect(activeRect);	// TODO: exact size depends on borders in draw3DTabButton which we don't get with current interface
+		textClipRect.clipAgainst(AbsoluteClippingRect);
+		font->draw(activeTab->getText(), activeRect, activeTab->getTextColor(),
+			true, true, &textClipRect);
 
-				tr.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
-				tr.LowerRightCorner.X = left - 1;
-				tr.UpperLeftCorner.Y = frameRect.LowerRightCorner.Y - 1;
-				tr.LowerRightCorner.Y = frameRect.LowerRightCorner.Y;
-				driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
+		tr.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
+		tr.LowerRightCorner.X = activeRect.UpperLeftCorner.X - 1;
+		tr.UpperLeftCorner.Y = activeRect.LowerRightCorner.Y - 1;
+		tr.LowerRightCorner.Y = activeRect.LowerRightCorner.Y;
+		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
 
-				tr.UpperLeftCorner.X = right;
-				tr.LowerRightCorner.X = AbsoluteRect.LowerRightCorner.X;
-				driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
-			}
-			else
-			{
-
-				frameRect.UpperLeftCorner.X = left-2;
-				frameRect.LowerRightCorner.X = right+2;
-				frameRect.LowerRightCorner.Y += 2;
-
-				skin->draw3DTabButton(this, true, frameRect, &AbsoluteClippingRect, VerticalAlignment);
-
-				// draw text
-				font->draw(activeTab->getText(), frameRect, activeTab->getTextColor(),
-					true, true, &frameRect);
-
-				tr.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
-				tr.LowerRightCorner.X = left - 1;
-				tr.UpperLeftCorner.Y = frameRect.UpperLeftCorner.Y - 1;
-				tr.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y;
-				driver->draw2DRectangle(skin->getColor(EGDC_3D_DARK_SHADOW), tr, &AbsoluteClippingRect);
-
-				tr.UpperLeftCorner.X = right;
-				tr.LowerRightCorner.X = AbsoluteRect.LowerRightCorner.X;
-				driver->draw2DRectangle(skin->getColor(EGDC_3D_DARK_SHADOW), tr, &AbsoluteClippingRect);
-			}
-		}
+		tr.UpperLeftCorner.X = activeRect.LowerRightCorner.X;
+		tr.LowerRightCorner.X = AbsoluteRect.LowerRightCorner.X;
+		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
 		
-		activeTab->drawImage(frameRect);
+		activeTab->drawImage(activeRect);
 	}
-	else
-	{
-		if ( Side == 0 )
-		{
-			if ( VerticalAlignment == EGUIA_UPPERLEFT )
-			{
+
+	/*
 				tr.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
 				tr.LowerRightCorner.X = AbsoluteRect.LowerRightCorner.X;
 				tr.UpperLeftCorner.Y = frameRect.LowerRightCorner.Y - 1;
 				tr.LowerRightCorner.Y = frameRect.LowerRightCorner.Y;
 				driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
-			}
-			else
-			{
-				tr.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
-				tr.LowerRightCorner.X = 1000;
-				tr.UpperLeftCorner.Y = frameRect.UpperLeftCorner.Y - 1;
-				tr.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y;
-				driver->draw2DRectangle(skin->getColor(EGDC_3D_DARK_SHADOW), tr, &AbsoluteClippingRect);
-			}
-		}
-	}
+	*/
 
 	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, &AbsoluteClippingRect, TabHeight, VerticalAlignment);
 
