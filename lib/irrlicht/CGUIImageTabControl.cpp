@@ -11,7 +11,8 @@ CGUIImageTab::CGUIImageTab(s32 number, IGUIEnvironment* environment,
 	: IGUITab(environment, parent, id, rectangle), Number(number),
 		BackColor(0,0,0,0), OverrideTextColorEnabled(false), TextColor(255,0,0,0),
 		DrawBackground(false), 
-		Texture(texture), Scaling(scaling), Side(side)
+		Texture(texture), Scaling(scaling), Side(side), Active(false), Drawn(false),
+		DrawnRect(rectangle)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTab");
@@ -141,6 +142,7 @@ void CGUIImageTab::deserializeAttributes(io::IAttributes* in, io::SAttributeRead
 }
 
 
+//! Draws the tab image
 void CGUIImageTab::drawImage(
 	const irr::core::rect<s32>& frameRect
 	)
@@ -613,6 +615,109 @@ core::rect<s32> CGUIImageTabControl::calcTabPos()
 	return r;
 }
 
+void CGUIImageTabControl::placeTabs()
+{
+	/*
+	s32 pos;
+
+	if ( Side < 2 )
+	{
+		pos = ViewRect.UpperLeftCorner.X;
+	}
+	else
+	{
+		pos = ViewRect.UpperLeftCorner.Y;
+	}
+	
+	bool needLeftScroll = CurrentScrollTabIndex > 0;
+	bool needRightScroll = false;
+
+	for (u32 i=CurrentScrollTabIndex; i<Tabs.size(); ++i)
+	{
+		Tabs[i].Active = false;
+		Tabs[i].Drawn = false;
+	}
+	
+	CGUIImageTab *activeTab = 0;
+	core::rect<s32> activeRect;
+
+	for (u32 i=CurrentScrollTabIndex; i<Tabs.size(); ++i)
+	{
+		// get Text
+		const wchar_t* text = 0;
+		
+		if ( Tabs[i] )
+		{
+			text = Tabs[i]->getText();
+		}
+
+		// get text length
+		s32 len = calcTabWidth(pos, font, text, true, Tabs[i]);
+				
+		if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
+		{
+			needRightScroll = true;
+			break;
+		}
+
+		if ( Side < 2 )
+		{
+			frameRect.UpperLeftCorner.X = pos + 1;
+			pos += len;
+		}
+		else
+		{
+			frameRect.UpperLeftCorner.Y = pos + 1;			
+			pos += TabHeight;
+		}
+
+		if ( Side == 0 )
+		{
+			frameRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y - TabHeight + 1;
+		}
+		else if ( Side == 1 )
+		{
+			frameRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y - TabHeight + 1;
+		}
+		else if ( Side == 2 )
+		{
+			frameRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X - len + 1;
+		}
+		else
+		{
+			frameRect.UpperLeftCorner.X = ViewRect.LowerRightCorner.X + 1;
+		}
+		
+		frameRect.LowerRightCorner.X = frameRect.UpperLeftCorner.X + len - 1;
+		frameRect.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y + TabHeight - 1;
+		
+		if ( text )
+			Tabs[i]->refreshSkinColors();
+			
+		if ( (s32)i == ActiveTab )
+		{
+			activeTab = Tabs[i];
+			activeRect = frameRect;
+			//activetext = text;
+		}
+		else
+		{
+			Tabs[i]->drawnRect = frameRect;
+		}
+	}
+
+	// draw active tab
+	if ( activeTab != 0 )
+	{
+		activeRect.UpperLeftCorner.X -= 2;
+		activeRect.UpperLeftCorner.Y -= 2;
+		activeRect.LowerRightCorner.X += 2;
+		activeRect.LowerRightCorner.Y += 2;
+	
+		activeTab->drawnRect = activeRect;
+	}
+	*/
+}
 
 //! draws the element and its children
 void CGUIImageTabControl::draw()
@@ -632,13 +737,16 @@ void CGUIImageTabControl::draw()
 
 	if ( Tabs.empty() )
 	{
-		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), frameRect, &AbsoluteClippingRect);
+		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), frameRect, 0/*&AbsoluteClippingRect*/);
 	}
 	
 	if ( !font )
 		return;
 
 	core::rect<s32> tr;
+	
+	placeTabs();
+	
 	s32 pos;
 
 	if ( Side < 2 )
@@ -698,7 +806,7 @@ printf("AbsoluteRect %d %d %d %d\n", AbsoluteRect.UpperLeftCorner.X, AbsoluteRec
 		}
 		else if ( Side == 1 )
 		{
-			frameRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y + 1;
+			frameRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y - TabHeight + 1;
 		}
 		else if ( Side == 2 )
 		{
@@ -724,13 +832,13 @@ printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLe
 		}
 		else
 		{
-			skin->draw3DTabButton(this, false, frameRect, &AbsoluteClippingRect, VerticalAlignment);
+			skin->draw3DTabButton(this, false, frameRect, 0/*&AbsoluteClippingRect*/, VerticalAlignment);
 
 			if ( text )
 			{
 				// draw text
 				core::rect<s32> textClipRect(frameRect);	// TODO: exact size depends on borders in draw3DTabButton which we don't get with current interface
-				textClipRect.clipAgainst(AbsoluteClippingRect);
+				//textClipRect.clipAgainst(AbsoluteClippingRect);
 				font->draw(text, frameRect, Tabs[i]->getTextColor(),
 					true, true, &textClipRect);
 			}
@@ -749,11 +857,11 @@ printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLe
 	
 		// draw upper highlight frame
 
-		skin->draw3DTabButton(this, true, activeRect, &AbsoluteClippingRect, VerticalAlignment);
+		skin->draw3DTabButton(this, true, activeRect, 0/*&AbsoluteClippingRect*/, VerticalAlignment);
 
 		// draw text
 		core::rect<s32> textClipRect(activeRect);	// TODO: exact size depends on borders in draw3DTabButton which we don't get with current interface
-		textClipRect.clipAgainst(AbsoluteClippingRect);
+		//textClipRect.clipAgainst(AbsoluteClippingRect);
 		font->draw(activeTab->getText(), activeRect, activeTab->getTextColor(),
 			true, true, &textClipRect);
 
@@ -761,11 +869,11 @@ printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLe
 		tr.LowerRightCorner.X = activeRect.UpperLeftCorner.X - 1;
 		tr.UpperLeftCorner.Y = activeRect.LowerRightCorner.Y - 1;
 		tr.LowerRightCorner.Y = activeRect.LowerRightCorner.Y;
-		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
+		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, 0); //&AbsoluteClippingRect);
 
 		tr.UpperLeftCorner.X = activeRect.LowerRightCorner.X;
 		tr.LowerRightCorner.X = AbsoluteRect.LowerRightCorner.X;
-		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
+		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, 0); //&AbsoluteClippingRect);
 		
 		activeTab->drawImage(activeRect);
 	}
@@ -778,7 +886,7 @@ printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLe
 				driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), tr, &AbsoluteClippingRect);
 	*/
 
-	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, &AbsoluteClippingRect, TabHeight, VerticalAlignment);
+	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, 0/*&AbsoluteClippingRect*/, TabHeight, VerticalAlignment);
 
 	// enable scrollcontrols on need
 	if ( UpButton )

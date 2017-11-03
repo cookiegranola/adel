@@ -76,7 +76,10 @@ namespace gui
 		bool DrawBackground;
 		video::ITexture *Texture;
 		f32 Scaling;
-		s32 Side;	
+		s32 Side;
+		bool Active;
+		bool Drawn;
+		core::rect<s32> DrawnRect;
 	};
 
 
@@ -135,6 +138,9 @@ namespace gui
 		//! called if an event happened.
 		virtual bool OnEvent(const SEvent& event);
 
+		//! place the visible tabs
+		virtual void placeTabs();
+		
 		//! draws the element and its children
 		virtual void draw();
 
