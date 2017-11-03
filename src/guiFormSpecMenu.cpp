@@ -1530,12 +1530,13 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		v2s32 geom;
 		geom.X = DesiredRect.getWidth();
 		geom.Y = tab_height;
-
+		
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
 
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
-			rect, show_background, show_border, spec.fid, tab_height, side);
+			rect, show_background, show_border, spec.fid, tab_height, 
+			side, DesiredRect.getWidth(), DesiredRect.getHeight());
 		e->drop();
         
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,

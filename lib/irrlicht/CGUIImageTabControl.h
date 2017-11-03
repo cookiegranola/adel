@@ -67,19 +67,16 @@ namespace gui
 		//! only for internal use by CGUIImageTabControl
 		void refreshSkinColors();
 		
-
+		void drawImage(const irr::core::rect<s32>& frameRect);
+		
 		s32 Number;
 		video::SColor BackColor;
 		bool OverrideTextColorEnabled;
 		video::SColor TextColor;
 		bool DrawBackground;
-	
-	
-		void drawImage(const irr::core::rect<s32>& frameRect);
-		
 		video::ITexture *Texture;
 		f32 Scaling;
-		s32 Side;
+		s32 Side;	
 	};
 
 
@@ -92,7 +89,8 @@ namespace gui
 		CGUIImageTabControl(IGUIEnvironment* environment,
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground=true, bool border=true, s32 id=-1, 
-			s32 tab_height=0, s32 side=0);
+			s32 tab_height=0, 
+			s32 side=0, s32 view_width=0, s32 view_height=0);
 
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -202,6 +200,9 @@ namespace gui
 		s32 CurrentScrollTabIndex;
 		s32 TabExtraWidth;
 		s32 Side;
+		s32 ViewWidth;
+		s32 ViewHeight;
+		core::rect<s32> ViewRect;
 	};
 } // end namespace gui
 } // end namespace irr
