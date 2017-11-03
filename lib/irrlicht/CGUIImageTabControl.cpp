@@ -209,9 +209,9 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	}
 
 	ViewRect.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
-	ViewRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y;
+	ViewRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y + TabHeight;
 	ViewRect.LowerRightCorner.X = ViewRect.UpperLeftCorner.X + ViewWidth;
-	ViewRect.LowerRightCorner.Y = ViewRect.UpperLeftCorner.Y + ViewHeight;
+	ViewRect.LowerRightCorner.Y = ViewRect.UpperLeftCorner.Y + TabHeight + ViewHeight;
 
 	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
@@ -661,9 +661,9 @@ void CGUIImageTabControl::draw()
 	else if ( Side == 1 )
 	{
 		frameRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X;
-		frameRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y;
+		frameRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y + ViewWidth;
 		frameRect.LowerRightCorner.X = ViewRect.LowerRightCorner.X;
-		frameRect.LowerRightCorner.Y = ViewRect.LowerRightCorner.Y + TabHeight * 2 + 1;
+		frameRect.LowerRightCorner.Y = ViewRect.UpperLeftCorner.Y + ViewWidth;
 		
 		pos = frameRect.UpperLeftCorner.X + 2;
 		
@@ -846,6 +846,8 @@ void CGUIImageTabControl::draw()
 	refreshSprites();
 
 	IGUIElement::draw();
+	
+	//driver->draw2DRectangle(video::SColor(32,255,255,32), ViewRect, 0);
 }
 
 
