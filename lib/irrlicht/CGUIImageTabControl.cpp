@@ -726,11 +726,14 @@ printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLe
 		{
 			skin->draw3DTabButton(this, false, frameRect, &AbsoluteClippingRect, VerticalAlignment);
 
-			// draw text
-			core::rect<s32> textClipRect(frameRect);	// TODO: exact size depends on borders in draw3DTabButton which we don't get with current interface
-			textClipRect.clipAgainst(AbsoluteClippingRect);
-			font->draw(text, frameRect, Tabs[i]->getTextColor(),
-				true, true, &textClipRect);
+			if ( text )
+			{
+				// draw text
+				core::rect<s32> textClipRect(frameRect);	// TODO: exact size depends on borders in draw3DTabButton which we don't get with current interface
+				textClipRect.clipAgainst(AbsoluteClippingRect);
+				font->draw(text, frameRect, Tabs[i]->getTextColor(),
+					true, true, &textClipRect);
+			}
 				
 			Tabs[i]->drawImage(frameRect);
 		}

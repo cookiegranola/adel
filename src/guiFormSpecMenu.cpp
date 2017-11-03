@@ -1570,6 +1570,9 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
                 }
                 
 				texture = m_tsrc->getTexture(tab_name);
+				
+				if (texture)
+					tab_name = "";
 			}
 			
 			e->addImageTab(unescape_translate(unescape_string(utf8_to_wide(tab_name))).c_str(), 
