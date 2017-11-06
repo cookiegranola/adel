@@ -184,13 +184,11 @@ namespace gui
 
 		void scrollLeft();
 		void scrollRight();
-		bool needScrollControl( bool withScrollControl=false );
 		s32 calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
 			CGUIImageTab* tab) const;
 		core::rect<s32> calcTabPos();
 
-		void recalculateScrollButtonPlacement();
-		void recalculateScrollBar();
+		void calcScrollButtons();
 		void refreshSprites();
 
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
@@ -207,8 +205,6 @@ namespace gui
 		core::rect<s32> ViewRect;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
-		bool NeedLeftScroll;
-		bool NeedRightScroll;
 		IGUIButton* UpButton;
 		IGUIButton* DownButton;
 		s32 ActiveTabIndex;

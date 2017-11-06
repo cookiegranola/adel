@@ -192,8 +192,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	TabExtraWidth(tab_extra_width), TabSpacing(tab_spacing), 
 	ViewWidth(view_width), ViewHeight(view_height), ViewRect(0, 0, 0, 0),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
-	ScrollControl(false), NeedLeftScroll(false), NeedRightScroll(false), 
-	UpButton(0), DownButton(0), ActiveTabIndex(-1), 
+	ScrollControl(false), UpButton(0), DownButton(0), ActiveTabIndex(-1), 
 	FirstScrollTabIndex(0), LastScrollTabIndex(-1)
 {
 	#ifdef _DEBUG
@@ -267,6 +266,7 @@ void CGUIImageTabControl::refreshSprites()
 {
 	video::SColor color(255,255,255,255);
 	IGUISkin* skin = Environment->getSkin();
+	
 	if (skin)
 	{
 		color = skin->getColor(isEnabled() ? EGDC_WINDOW_SYMBOL : EGDC_GRAY_WINDOW_SYMBOL);
@@ -312,8 +312,6 @@ CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id,
 		ActiveTabIndex = 0;
 		tab->setVisible(true);
 	}
-
-	recalculateScrollBar();
 
 	return tab;
 }
@@ -380,8 +378,6 @@ IGUITab* CGUIImageTabControl::insertTab(s32 idx, const wchar_t* caption, s32 id)
 	{
 		Tabs[i]->setNumber(i);
 	}
-
-	recalculateScrollBar();
 
 	return tab;
 }
@@ -489,13 +485,11 @@ void CGUIImageTabControl::scrollLeft()
 {
 	calcTabs();
 	
-	if ( NeedLeftScroll
+	if ( ScrollControl
 	     && FirstScrollTabIndex > 0 )
 	{
 		--FirstScrollTabIndex;
 	}
-	
-	recalculateScrollBar();
 }
 
 
@@ -503,13 +497,11 @@ void CGUIImageTabControl::scrollRight()
 {
 	calcTabs();
 	
-	if ( NeedRightScroll
+	if ( ScrollControl
 		 && FirstScrollTabIndex < (s32)(Tabs.size()) - 1 )
 	{
 		++FirstScrollTabIndex;
 	}
-	
-	recalculateScrollBar();
 }
 
 s32 CGUIImageTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
@@ -536,43 +528,11 @@ s32 CGUIImageTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* te
 	{
 		s32 tabMinWidth = font->getDimension(L"A").Width;
 		
-		if ( TabExtraWidth > 0 && TabExtraWidth > tabMinWidth )
+		if ( TabExtraWidth > 0 && tabMinWidth < TabExtraWidth )
 			tabMinWidth = TabExtraWidth;
-
-		if ( ScrollControl && pos+tabMinWidth <= UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
-		{
-			len = UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 - pos;
-		}
 	}
 	
 	return len;
-}
-
-bool CGUIImageTabControl::needScrollControl(bool withScrollControl)
-{
-	if ( FirstScrollTabIndex >= (s32)Tabs.size() )
-		FirstScrollTabIndex = ((s32)Tabs.size()) - 1;
-
-	if ( FirstScrollTabIndex < 0 )
-		FirstScrollTabIndex = 0;
-
-	IGUISkin* skin = Environment->getSkin();
-	if (!skin)
-		return false;
-
-	IGUIFont* font = skin->getFont();
-
-	core::rect<s32> frameRect(AbsoluteRect);
-
-	if (Tabs.empty())
-		return false;
-
-	if (!font)
-		return false;
-		
-	calcTabs();
-	
-	return NeedLeftScroll || NeedRightScroll;
 }
 
 
@@ -627,6 +587,12 @@ void CGUIImageTabControl::calcTabs()
 	if ( !font )
 		return;
 
+	if ( FirstScrollTabIndex >= (s32)Tabs.size() )
+		FirstScrollTabIndex = ((s32)Tabs.size()) - 1;
+
+	if ( FirstScrollTabIndex < 0 )
+		FirstScrollTabIndex = 0;
+		
 	s32 pos;
 
 	if ( Side < 2 )
@@ -638,9 +604,6 @@ void CGUIImageTabControl::calcTabs()
 		pos = ViewRect.UpperLeftCorner.Y;
 	}
 	
-	NeedLeftScroll = FirstScrollTabIndex > 0;
-	NeedRightScroll = false;
-
 	CGUIImageTab* tab;
 	
 	for (u32 i=FirstScrollTabIndex; i<Tabs.size(); ++i)
@@ -674,26 +637,34 @@ void CGUIImageTabControl::calcTabs()
 			if ( Side < 2 )
 			{
 				drawnRect.UpperLeftCorner.X = pos + 1;
-				pos += len;
+				pos += len + TabSpacing;
+				
+				if ( ScrollControl
+					 && pos > ViewRect.LowerRightCorner.X - 2 * ( TabHeight + TabSpacing ) )
+				{
+					break;		
+				}				
 				
 				if ( pos > ViewRect.LowerRightCorner.X )
-				{			
-					NeedRightScroll = true;
-					break;		
-				}
-				
-				if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
 				{
-				}
+					ScrollControl = true;	
+					break;		
+				}				
 			}
 			else
 			{
 				drawnRect.UpperLeftCorner.Y = pos + 1;			
-				pos += TabHeight;
+				pos += TabHeight + TabSpacing;
+				
+				if ( ScrollControl
+					 && pos > ViewRect.LowerRightCorner.Y - 2 * ( TabHeight + TabSpacing ) )
+				{
+					break;		
+				}				
 				
 				if ( pos > ViewRect.LowerRightCorner.Y )
 				{			
-					NeedRightScroll = true;
+					ScrollControl = true;
 					break;		
 				}
 			}
@@ -757,6 +728,7 @@ void CGUIImageTabControl::draw()
 		return;
 
 	calcTabs();
+	calcScrollButtons();
 	
 	if ( Tabs.empty() )
 	{
@@ -832,10 +804,13 @@ void CGUIImageTabControl::draw()
 	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, 0/*&AbsoluteClippingRect*/, TabHeight, VerticalAlignment);
 
 	// enable scrollcontrols on need
+
 	if ( UpButton )
-		UpButton->setEnabled(NeedLeftScroll);
+		UpButton->setEnabled(ScrollControl);
+	
 	if ( DownButton )
-		DownButton->setEnabled(NeedRightScroll);
+		DownButton->setEnabled(ScrollControl);
+		
 	refreshSprites();
 
 	IGUIElement::draw();
@@ -851,9 +826,6 @@ void CGUIImageTabControl::setTabHeight( s32 height )
 		height = 0;
 
 	TabHeight = height;
-
-	recalculateScrollButtonPlacement();
-	recalculateScrollBar();
 }
 
 
@@ -883,8 +855,6 @@ void CGUIImageTabControl::setTabExtraWidth( s32 extraWidth )
 		extraWidth = 0;
 
 	TabExtraWidth = extraWidth;
-
-	recalculateScrollBar();
 }
 
 
@@ -895,35 +865,10 @@ s32 CGUIImageTabControl::getTabExtraWidth() const
 }
 
 
-void CGUIImageTabControl::recalculateScrollBar()
-{
-	if (!UpButton || !DownButton)
-		return;
-
-	ScrollControl = needScrollControl() || FirstScrollTabIndex > 0;
-
-	if (ScrollControl)
-	{
-		UpButton->setVisible( true );
-		DownButton->setVisible( true );
-	}
-	else
-	{
-		UpButton->setVisible( false );
-		DownButton->setVisible( false );
-	}
-
-	bringToFront( UpButton );
-	bringToFront( DownButton );
-}
-
 //! Set the alignment of the tabs
 void CGUIImageTabControl::setTabVerticalAlignment( EGUI_ALIGNMENT alignment )
 {
 	VerticalAlignment = alignment;
-
-	recalculateScrollButtonPlacement();
-	recalculateScrollBar();
 
 	core::rect<s32> r(calcTabPos());
 	for ( u32 i=0; i<Tabs.size(); ++i )
@@ -932,39 +877,65 @@ void CGUIImageTabControl::setTabVerticalAlignment( EGUI_ALIGNMENT alignment )
 	}
 }
 
-void CGUIImageTabControl::recalculateScrollButtonPlacement()
+void CGUIImageTabControl::calcScrollButtons()
 {
-	IGUISkin* skin = Environment->getSkin();
-	s32 ButtonSize = 16;
-	s32 ButtonHeight = TabHeight - 2;
-	if ( ButtonHeight < 0 )
-		ButtonHeight = TabHeight;
-	if (skin)
+	core::rect<s32> buttonRect;
+	
+	if ( Side < 2 )
 	{
-		ButtonSize = skin->getSize(EGDS_WINDOW_BUTTON_WIDTH);
-		if (ButtonSize > TabHeight)
-			ButtonSize = TabHeight;
-	}
+		buttonRect.UpperLeftCorner.X = ViewRect.getWidth() - 2 * ( TabHeight + TabSpacing );
+		
+		if ( Side == 0 )
+		{
+			buttonRect.UpperLeftCorner.Y = 0.0f;
+		}
+		else
+		{
+			buttonRect.UpperLeftCorner.Y = ViewRect.getHeight();
+		}
+		
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		UpButton->setRelativePosition(buttonRect);
 
-	s32 ButtonX = RelativeRect.getWidth() - (s32)(2.5f*(f32)ButtonSize) - 1;
-	s32 ButtonY = 0;
-
-	if (VerticalAlignment == EGUIA_UPPERLEFT)
-	{
-		ButtonY = 2 + (TabHeight / 2) - (ButtonHeight / 2);
-		UpButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
-		DownButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
+		buttonRect.UpperLeftCorner.X += TabHeight + TabSpacing;
+		
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		DownButton->setRelativePosition(buttonRect);
 	}
 	else
 	{
-		ButtonY = RelativeRect.getHeight() - (TabHeight / 2) - (ButtonHeight / 2) - 2;
-		UpButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT);
-		DownButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT);
-	}
+		buttonRect.UpperLeftCorner.Y = ViewRect.getHeight() - 2 * ( TabHeight + TabSpacing );
+		
+		if ( Side == 2 )
+		{
+			buttonRect.UpperLeftCorner.X = 0.0f;
+		}
+		else
+		{
+			buttonRect.UpperLeftCorner.X = ViewRect.getWidth();
+		}
+		
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		UpButton->setRelativePosition(buttonRect);
 
-	UpButton->setRelativePosition(core::rect<s32>(ButtonX, ButtonY, ButtonX+ButtonSize, ButtonY+ButtonHeight));
-	ButtonX += ButtonSize + 1;
-	DownButton->setRelativePosition(core::rect<s32>(ButtonX, ButtonY, ButtonX+ButtonSize, ButtonY+ButtonHeight));
+		buttonRect.UpperLeftCorner.Y += TabHeight + TabSpacing;
+		
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		DownButton->setRelativePosition(buttonRect);
+	}
+	
+	if (!UpButton || !DownButton)
+		return;
+		
+		UpButton->setVisible( ScrollControl );
+		DownButton->setVisible( ScrollControl );
+
+	bringToFront( UpButton );
+	bringToFront( DownButton );
 }
 
 //! Get the alignment of the tabs
@@ -1067,8 +1038,6 @@ void CGUIImageTabControl::removeChild(IGUIElement* child)
 
 	// remove real element
 	IGUIElement::removeChild(child);
-
-	recalculateScrollBar();
 }
 
 
@@ -1076,7 +1045,6 @@ void CGUIImageTabControl::removeChild(IGUIElement* child)
 void CGUIImageTabControl::updateAbsolutePosition()
 {
 	IGUIElement::updateAbsolutePosition();
-	recalculateScrollBar();
 }
 
 
