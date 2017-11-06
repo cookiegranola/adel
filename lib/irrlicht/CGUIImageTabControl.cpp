@@ -725,6 +725,7 @@ void CGUIImageTabControl::calcTabs()
 				drawnRect.LowerRightCorner.Y += 2;
 			}
 			
+			tab->Drawn = true;
 			tab->DrawnRect = drawnRect;
 			
 			if ( text )
@@ -973,46 +974,18 @@ EGUI_ALIGNMENT CGUIImageTabControl::getTabVerticalAlignment() const
 s32 CGUIImageTabControl::getTabAt(s32 xpos, s32 ypos) const
 {
 	core::position2di p(xpos, ypos);
-	IGUISkin* skin = Environment->getSkin();
-	IGUIFont* font = skin->getFont();
 
-	core::rect<s32> frameRect(AbsoluteRect);
-
-	if ( VerticalAlignment == EGUIA_UPPERLEFT )
+	for (s32 i=FirstDrawnTabIndex; i<=LastDrawnTabIndex; ++i)
 	{
-		frameRect.UpperLeftCorner.Y += 2;
-		frameRect.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y + TabHeight;
-	}
-	else
-	{
-		frameRect.UpperLeftCorner.Y = frameRect.LowerRightCorner.Y - TabHeight;
-	}
-
-	s32 pos = frameRect.UpperLeftCorner.X + 2;
-
-	if (!frameRect.isPointInside(p))
-		return -1;
-
-	for (s32 i=CurrentScrollTabIndex; i<(s32)Tabs.size(); ++i)
-	{
-		// get Text
-		const wchar_t* text = 0;
-		if (Tabs[i])
-			text = Tabs[i]->getText();
-
-		// get text length
-		s32 len = calcTabWidth(pos, font, text, true, Tabs[i]);
-		if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
-			return -1;
-
-		frameRect.UpperLeftCorner.X = pos;
-		frameRect.LowerRightCorner.X = frameRect.UpperLeftCorner.X + len;
-
-		pos += len;
-
-		if (frameRect.isPointInside(p))
+		CGUIImageTab* tab = Tabs[i];
+		
+		if ( tab )
 		{
-			return i;
+			if ( tab->Drawn
+			     && tab->DrawnRect.isPointInside(p))
+			{
+				return i;
+			}
 		}
 	}
 	return -1;
