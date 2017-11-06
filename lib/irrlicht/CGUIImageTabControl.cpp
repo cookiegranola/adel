@@ -185,10 +185,11 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 id, s32 tab_height, 
 	s32 side, s32 view_width, s32 view_height)
-	: IGUITabControl(environment, parent, id, rectangle), ActiveTab(-1),
+	: IGUITabControl(environment, parent, id, rectangle), ActiveTab(-1), NeedLeftScroll(false), NeedRightScroll(false),
 	Border(border), FillBackground(fillbackground), ScrollControl(false), TabHeight(tab_height), VerticalAlignment(EGUIA_UPPERLEFT),
 	UpButton(0), DownButton(0), TabMaxWidth(0), CurrentScrollTabIndex(0), TabExtraWidth(20), 
 	Side(side), ViewWidth(view_width), ViewHeight(view_height)
+	
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTabControl");
@@ -615,9 +616,18 @@ core::rect<s32> CGUIImageTabControl::calcTabPos()
 	return r;
 }
 
-void CGUIImageTabControl::placeTabs()
-{
-	/*
+void CGUIImageTabControl::computeTabs()
+{	
+	if ( !IsVisible )
+		return;
+
+	IGUISkin* skin = Environment->getSkin();
+	
+	if ( !skin )
+		return;
+
+	IGUIFont* font = skin->getFont();
+
 	s32 pos;
 
 	if ( Side < 2 )
@@ -629,94 +639,90 @@ void CGUIImageTabControl::placeTabs()
 		pos = ViewRect.UpperLeftCorner.Y;
 	}
 	
-	bool needLeftScroll = CurrentScrollTabIndex > 0;
-	bool needRightScroll = false;
+	NeedLeftScroll = CurrentScrollTabIndex > 0;
+	NeedRightScroll = false;
 
+	CGUIImageTab* tab;
+	
 	for (u32 i=CurrentScrollTabIndex; i<Tabs.size(); ++i)
 	{
-		Tabs[i].Active = false;
-		Tabs[i].Drawn = false;
+		tab = Tabs[i];
+		
+		if ( tab )
+		{
+			tab->Active = false;
+			tab->Drawn = false;
+		}
 	}
 	
-	CGUIImageTab *activeTab = 0;
-	core::rect<s32> activeRect;
+	core::rect<s32> drawnRect;
 
 	for (u32 i=CurrentScrollTabIndex; i<Tabs.size(); ++i)
 	{
-		// get Text
-		const wchar_t* text = 0;
+		tab = Tabs[i];
 		
-		if ( Tabs[i] )
+		if ( tab )
 		{
+			const wchar_t* text = 0;
+		
 			text = Tabs[i]->getText();
-		}
 
-		// get text length
-		s32 len = calcTabWidth(pos, font, text, true, Tabs[i]);
-				
-		if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
-		{
-			needRightScroll = true;
-			break;
-		}
+			// get text length
+			s32 len = calcTabWidth(pos, font, text, true, tab);
+					
+			if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
+			{
+				NeedRightScroll = true;
+				break;
+			}
 
-		if ( Side < 2 )
-		{
-			frameRect.UpperLeftCorner.X = pos + 1;
-			pos += len;
-		}
-		else
-		{
-			frameRect.UpperLeftCorner.Y = pos + 1;			
-			pos += TabHeight;
-		}
+			if ( Side < 2 )
+			{
+				drawnRect.UpperLeftCorner.X = pos + 1;
+				pos += len;
+			}
+			else
+			{
+				drawnRect.UpperLeftCorner.Y = pos + 1;			
+				pos += TabHeight;
+			}
 
-		if ( Side == 0 )
-		{
-			frameRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y - TabHeight + 1;
-		}
-		else if ( Side == 1 )
-		{
-			frameRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y - TabHeight + 1;
-		}
-		else if ( Side == 2 )
-		{
-			frameRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X - len + 1;
-		}
-		else
-		{
-			frameRect.UpperLeftCorner.X = ViewRect.LowerRightCorner.X + 1;
-		}
-		
-		frameRect.LowerRightCorner.X = frameRect.UpperLeftCorner.X + len - 1;
-		frameRect.LowerRightCorner.Y = frameRect.UpperLeftCorner.Y + TabHeight - 1;
-		
-		if ( text )
-			Tabs[i]->refreshSkinColors();
+			if ( Side == 0 )
+			{
+				drawnRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y - TabHeight + 1;
+			}
+			else if ( Side == 1 )
+			{
+				drawnRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y - TabHeight + 1;
+			}
+			else if ( Side == 2 )
+			{
+				drawnRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X - len + 1;
+			}
+			else
+			{
+				drawnRect.UpperLeftCorner.X = ViewRect.LowerRightCorner.X + 1;
+			}
 			
-		if ( (s32)i == ActiveTab )
-		{
-			activeTab = Tabs[i];
-			activeRect = frameRect;
-			//activetext = text;
-		}
-		else
-		{
-			Tabs[i]->drawnRect = frameRect;
-		}
-	}
+			drawnRect.LowerRightCorner.X = drawnRect.UpperLeftCorner.X + len - 1;
+			drawnRect.LowerRightCorner.Y = drawnRect.UpperLeftCorner.Y + TabHeight - 1;
 
-	// draw active tab
-	if ( activeTab != 0 )
-	{
-		activeRect.UpperLeftCorner.X -= 2;
-		activeRect.UpperLeftCorner.Y -= 2;
-		activeRect.LowerRightCorner.X += 2;
-		activeRect.LowerRightCorner.Y += 2;
-	
-		activeTab->drawnRect = activeRect;
+			if ( i == (u32)ActiveTab )
+			{
+				tab->Active = true;
+				
+				drawnRect.UpperLeftCorner.X -= 2;
+				drawnRect.UpperLeftCorner.Y -= 2;
+				drawnRect.LowerRightCorner.X += 2;
+				drawnRect.LowerRightCorner.Y += 2;
+			}
+			
+			tab->DrawnRect = drawnRect;
+			
+			if ( text )
+				tab->refreshSkinColors();
+		}
 	}
-	*/
 }
 
 //! draws the element and its children
@@ -745,7 +751,7 @@ void CGUIImageTabControl::draw()
 
 	core::rect<s32> tr;
 	
-	placeTabs();
+	computeTabs();
 	
 	s32 pos;
 
@@ -757,11 +763,6 @@ void CGUIImageTabControl::draw()
 	{
 		pos = ViewRect.UpperLeftCorner.Y;
 	}
-
-		
-printf("View %d %d\n", ViewWidth, ViewHeight);
-printf("ViewRect %d %d %d %d\n", ViewRect.UpperLeftCorner.X, ViewRect.UpperLeftCorner.Y, ViewRect.LowerRightCorner.X, ViewRect.LowerRightCorner.Y);
-printf("AbsoluteRect %d %d %d %d\n", AbsoluteRect.UpperLeftCorner.X, AbsoluteRect.UpperLeftCorner.Y, AbsoluteRect.LowerRightCorner.X, AbsoluteRect.LowerRightCorner.Y);
 
 	bool needLeftScroll = CurrentScrollTabIndex > 0;
 	bool needRightScroll = false;
@@ -822,7 +823,6 @@ printf("AbsoluteRect %d %d %d %d\n", AbsoluteRect.UpperLeftCorner.X, AbsoluteRec
 		
 		if ( text )
 			Tabs[i]->refreshSkinColors();
-printf("frameRect %d %d %d %d\n", frameRect.UpperLeftCorner.X, frameRect.UpperLeftCorner.Y, frameRect.LowerRightCorner.X, frameRect.LowerRightCorner.Y);
 
 		if ( (s32)i == ActiveTab )
 		{

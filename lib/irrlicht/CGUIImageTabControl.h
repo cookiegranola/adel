@@ -139,7 +139,7 @@ namespace gui
 		virtual bool OnEvent(const SEvent& event);
 
 		//! place the visible tabs
-		virtual void placeTabs();
+		virtual void computeTabs();
 		
 		//! draws the element and its children
 		virtual void draw();
@@ -195,6 +195,8 @@ namespace gui
 
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
 		s32 ActiveTab;
+		bool NeedLeftScroll;
+		bool NeedRightScroll;
 		bool Border;
 		bool FillBackground;
 		bool ScrollControl;
