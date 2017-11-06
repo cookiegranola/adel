@@ -184,7 +184,7 @@ namespace gui
 
 		void scrollLeft();
 		void scrollRight();
-		bool needScrollControl( s32 startIndex=0, bool withScrollControl=false );
+		bool needScrollControl( bool withScrollControl=false );
 		s32 calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
 			CGUIImageTab* tab) const;
 		core::rect<s32> calcTabPos();
@@ -212,9 +212,8 @@ namespace gui
 		IGUIButton* UpButton;
 		IGUIButton* DownButton;
 		s32 ActiveTabIndex;
-		s32 CurrentScrollTabIndex;
-		s32 FirstDrawnTabIndex;
-		s32 LastDrawnTabIndex;
+		s32 FirstScrollTabIndex;
+		s32 LastScrollTabIndex;
 	};
 } // end namespace gui
 } // end namespace irr
