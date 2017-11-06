@@ -186,8 +186,8 @@ size_t Decoration::placeDeco(Mapgen *mg, u32 blockseed, v3s16 nmin, v3s16 nmax)
 
 				// Get all floors and ceilings in node column
 				u16 size = (nmax.Y - nmin.Y + 1) / 2;
-				s16 floors[size];
-				s16 ceilings[size];
+				s16* floors = (s16*)alloca(size * sizeof(s16));
+				s16* ceilings = (s16*)alloca(size * sizeof(s16));
 				u16 num_floors = 0;
 				u16 num_ceilings = 0;
 
