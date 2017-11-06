@@ -192,25 +192,33 @@ namespace gui
 		void recalculateScrollButtonPlacement();
 		void recalculateScrollBar();
 		void refreshSprites();
-
+/*
+ FillBackground(fillbackground), Border(border), TabHeight(tab_height), 
+	Side(side), ViewWidth(view_width), ViewHeight(view_height), 
+	TabMaxWidth(0), TabExtraWidth(20), VerticalAlignment(EGUIA_UPPERLEFT), 
+	ScrollControl(false), NeedLeftScroll(false), NeedRightScroll(false), 
+	UpButton(0), DownButton(0), ActiveTabIndex(-1), CurrentScrollTabIndex(0), 
+	FirstDrawnTabIndex(0), LastDrawnTabIndex(-1)*/
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
-		s32 ActiveTab;
-		bool NeedLeftScroll;
-		bool NeedRightScroll;
-		bool Border;
 		bool FillBackground;
-		bool ScrollControl;
+		bool Border;
 		s32 TabHeight;
-		gui::EGUI_ALIGNMENT VerticalAlignment;
-		IGUIButton* UpButton;
-		IGUIButton* DownButton;
-		s32 TabMaxWidth;
-		s32 CurrentScrollTabIndex;
-		s32 TabExtraWidth;
 		s32 Side;
 		s32 ViewWidth;
 		s32 ViewHeight;
 		core::rect<s32> ViewRect;
+		s32 TabMaxWidth;
+		s32 TabExtraWidth;
+		gui::EGUI_ALIGNMENT VerticalAlignment;
+		bool ScrollControl;
+		bool NeedLeftScroll;
+		bool NeedRightScroll;
+		IGUIButton* UpButton;
+		IGUIButton* DownButton;
+		s32 ActiveTabIndex;
+		s32 CurrentScrollTabIndex;
+		s32 FirstDrawnTabIndex;
+		s32 LastDrawnTabIndex;
 	};
 } // end namespace gui
 } // end namespace irr

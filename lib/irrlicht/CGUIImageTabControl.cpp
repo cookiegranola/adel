@@ -185,11 +185,13 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 id, s32 tab_height, 
 	s32 side, s32 view_width, s32 view_height)
-	: IGUITabControl(environment, parent, id, rectangle), ActiveTab(-1), NeedLeftScroll(false), NeedRightScroll(false),
-	Border(border), FillBackground(fillbackground), ScrollControl(false), TabHeight(tab_height), VerticalAlignment(EGUIA_UPPERLEFT),
-	UpButton(0), DownButton(0), TabMaxWidth(0), CurrentScrollTabIndex(0), TabExtraWidth(20), 
-	Side(side), ViewWidth(view_width), ViewHeight(view_height)
-	
+	: IGUITabControl(environment, parent, id, rectangle),  
+	Tabs(), FillBackground(fillbackground), Border(border), TabHeight(tab_height), 
+	Side(side), ViewWidth(view_width), ViewHeight(view_height), ViewRect(0, 0, 0, 0),
+	TabMaxWidth(0), TabExtraWidth(20), VerticalAlignment(EGUIA_UPPERLEFT), 
+	ScrollControl(false), NeedLeftScroll(false), NeedRightScroll(false), 
+	UpButton(0), DownButton(0), ActiveTabIndex(-1), CurrentScrollTabIndex(0), 
+	FirstDrawnTabIndex(0), LastDrawnTabIndex(-1)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTabControl");
@@ -302,9 +304,9 @@ CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id,
 	tab->setVisible(false);
 	Tabs.push_back(tab);
 
-	if (ActiveTab == -1)
+	if (ActiveTabIndex == -1)
 	{
-		ActiveTab = 0;
+		ActiveTabIndex = 0;
 		tab->setVisible(true);
 	}
 
@@ -342,13 +344,13 @@ void CGUIImageTabControl::addTab(CGUIImageTab* tab)
 	}
 	Tabs[tab->getNumber()] = tab;
 
-	if (ActiveTab == -1)
-		ActiveTab = tab->getNumber();
+	if (ActiveTabIndex == -1)
+		ActiveTabIndex = tab->getNumber();
 
 
-	if (tab->getNumber() == ActiveTab)
+	if (tab->getNumber() == ActiveTabIndex)
 	{
-		setActiveTab(ActiveTab);
+		setActiveTab(ActiveTabIndex);
 	}
 }
 
@@ -365,9 +367,9 @@ IGUITab* CGUIImageTabControl::insertTab(s32 idx, const wchar_t* caption, s32 id)
 	tab->setVisible(false);
 	Tabs.insert(tab, (u32)idx);
 
-	if (ActiveTab == -1)
+	if (ActiveTabIndex == -1)
 	{
-		ActiveTab = 0;
+		ActiveTabIndex = 0;
 		tab->setVisible(true);
 	}
 
@@ -627,6 +629,9 @@ void CGUIImageTabControl::computeTabs()
 		return;
 
 	IGUIFont* font = skin->getFont();
+	
+	if ( !font )
+		return;
 
 	s32 pos;
 
@@ -707,7 +712,7 @@ void CGUIImageTabControl::computeTabs()
 			drawnRect.LowerRightCorner.X = drawnRect.UpperLeftCorner.X + len - 1;
 			drawnRect.LowerRightCorner.Y = drawnRect.UpperLeftCorner.Y + TabHeight - 1;
 
-			if ( i == (u32)ActiveTab )
+			if ( i == (u32)ActiveTabIndex )
 			{
 				tab->Active = true;
 				
@@ -739,19 +744,20 @@ void CGUIImageTabControl::draw()
 	IGUIFont* font = skin->getFont();
 	video::IVideoDriver* driver = Environment->getVideoDriver();
 
+	if ( !font )
+		return;
+
 	core::rect<s32> frameRect(AbsoluteRect);
 
+	computeTabs();
+	
 	if ( Tabs.empty() )
 	{
 		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), frameRect, 0/*&AbsoluteClippingRect*/);
 	}
 	
-	if ( !font )
-		return;
-
 	core::rect<s32> tr;
 	
-	computeTabs();
 	
 	s32 pos;
 
@@ -824,7 +830,7 @@ void CGUIImageTabControl::draw()
 		if ( text )
 			Tabs[i]->refreshSkinColors();
 
-		if ( (s32)i == ActiveTab )
+		if ( (s32)i == ActiveTabIndex )
 		{
 			activeTab = Tabs[i];
 			activeRect = frameRect;
@@ -1082,7 +1088,7 @@ s32 CGUIImageTabControl::getTabAt(s32 xpos, s32 ypos) const
 //! Returns which tab is currently active
 s32 CGUIImageTabControl::getActiveTab() const
 {
-	return ActiveTab;
+	return ActiveTabIndex;
 }
 
 
@@ -1092,13 +1098,13 @@ bool CGUIImageTabControl::setActiveTab(s32 idx)
 	if ((u32)idx >= Tabs.size())
 		return false;
 
-	bool changed = (ActiveTab != idx);
+	bool changed = (ActiveTabIndex != idx);
 
-	ActiveTab = idx;
+	ActiveTabIndex = idx;
 
 	for (s32 i=0; i<(s32)Tabs.size(); ++i)
 		if (Tabs[i])
-			Tabs[i]->setVisible( i == ActiveTab );
+			Tabs[i]->setVisible( i == ActiveTabIndex );
 
 	if (changed)
 	{
@@ -1170,7 +1176,7 @@ void CGUIImageTabControl::serializeAttributes(io::IAttributes* out, io::SAttribu
 {
 	IGUITabControl::serializeAttributes(out,options);
 
-	out->addInt ("ActiveTab",	ActiveTab);
+	out->addInt ("ActiveTabIndex",	ActiveTabIndex);
 	out->addBool("Border",		Border);
 	out->addBool("FillBackground",	FillBackground);
 	out->addInt ("TabHeight",	TabHeight);
@@ -1185,14 +1191,14 @@ void CGUIImageTabControl::deserializeAttributes(io::IAttributes* in, io::SAttrib
 	Border          = in->getAttributeAsBool("Border");
 	FillBackground  = in->getAttributeAsBool("FillBackground");
 
-	ActiveTab = -1;
+	ActiveTabIndex = -1;
 
 	setTabHeight(in->getAttributeAsInt("TabHeight"));
 	TabMaxWidth     = in->getAttributeAsInt("TabMaxWidth");
 
 	IGUITabControl::deserializeAttributes(in,options);
 
-	setActiveTab(in->getAttributeAsInt("ActiveTab"));
+	setActiveTab(in->getAttributeAsInt("ActiveTabIndex"));
 	setTabVerticalAlignment( static_cast<EGUI_ALIGNMENT>(in->getAttributeAsEnumeration("TabVerticalAlignment" , GUIAlignmentNames)) );
 }
 } // end namespace irr
