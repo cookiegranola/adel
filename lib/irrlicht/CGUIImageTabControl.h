@@ -89,11 +89,11 @@ namespace gui
 	public:
 
 		//! destructor
-		CGUIImageTabControl(IGUIEnvironment* environment,
+		CGUIImageTabControl(IGUIEnvironment* environment, 
 			IGUIElement* parent, const core::rect<s32>& rectangle,
-			bool fillbackground=true, bool border=true, s32 id=-1, 
-			s32 tab_height=0, 
-			s32 side=0, s32 view_width=0, s32 view_height=0);
+			bool fillbackground=true, bool border=true, s32 side=0, s32 id=-1, 
+			s32 tab_height=0, s32 tab_min_width=0, s32 tab_max_width=0, s32 tab_extra_width=0, 
+			s32 tab_spacing=0, s32 view_width=0, s32 view_height=0);
 
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -196,13 +196,15 @@ namespace gui
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
 		bool FillBackground;
 		bool Border;
-		s32 TabHeight;
 		s32 Side;
+		s32 TabHeight;
+		s32 TabMinWidth;
+		s32 TabMaxWidth;
+		s32 TabExtraWidth;
+		s32 TabSpacing;
 		s32 ViewWidth;
 		s32 ViewHeight;
 		core::rect<s32> ViewRect;
-		s32 TabMaxWidth;
-		s32 TabExtraWidth;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
 		bool NeedLeftScroll;

@@ -183,12 +183,15 @@ void CGUIImageTab::drawImage(
 //! constructor
 CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	bool fillbackground, bool border, s32 id, s32 tab_height, 
-	s32 side, s32 view_width, s32 view_height)
+	bool fillbackground, bool border, s32 side, s32 id, 
+	s32 tab_height, s32 tab_min_width, s32 tab_max_width, s32 tab_extra_width, 
+	s32 tab_spacing, s32 view_width, s32 view_height)
 	: IGUITabControl(environment, parent, id, rectangle),  
-	Tabs(), FillBackground(fillbackground), Border(border), TabHeight(tab_height), 
-	Side(side), ViewWidth(view_width), ViewHeight(view_height), ViewRect(0, 0, 0, 0),
-	TabMaxWidth(0), TabExtraWidth(20), VerticalAlignment(EGUIA_UPPERLEFT), 
+	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
+	TabHeight(tab_height), TabMinWidth(tab_min_width), TabMaxWidth(tab_max_width), 
+	TabExtraWidth(tab_extra_width), TabSpacing(tab_spacing), 
+	ViewWidth(view_width), ViewHeight(view_height), ViewRect(0, 0, 0, 0),
+	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), NeedLeftScroll(false), NeedRightScroll(false), 
 	UpButton(0), DownButton(0), ActiveTabIndex(-1), CurrentScrollTabIndex(0), 
 	FirstDrawnTabIndex(0), LastDrawnTabIndex(-1)

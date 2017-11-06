@@ -1487,11 +1487,15 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		std::string name = parts[1];
 		std::vector<std::string> buttons = split(parts[2],',');
 		std::string str_index = parts[3];
+		int tab_index = stoi(str_index) -1;
 		bool show_background = true;
 		bool show_border = true;
-		int tab_index = stoi(str_index) -1;
-        s32 tab_height = m_btn_height*2;
         s32 side = 0;
+        s32 tab_height = m_btn_height*2;
+        s32 tab_min_width = m_btn_height*2;
+        s32 tab_max_width = 0;
+        s32 tab_extra_width = 20;
+        s32 tab_spacing = 4;
 
 		MY_CHECKPOS("tabheader",0);
 
@@ -1503,16 +1507,32 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
             show_border = false;
 		}
         
-        if (parts.size() > 6 && parts[6].length() > 0) {
-            tab_height = stoi(parts[6]);
+        if (parts.size() > 6)
+        {
+            if (parts[6] == "top") side = 0;
+            if (parts[6] == "bottom") side = 1;
+            if (parts[6] == "left") side = 2;
+            if (parts[6] == "right") side = 3;
         }
         
-        if (parts.size() > 7)
-        {
-            if (parts[7] == "top") side = 0;
-            if (parts[7] == "bottom") side = 1;
-            if (parts[7] == "left") side = 2;
-            if (parts[7] == "right") side = 3;
+        if (parts.size() > 7 && parts[7].length() > 0) {
+            tab_height = stoi(parts[7]);
+        }
+                
+        if (parts.size() > 8 && parts[8].length() > 0) {
+            tab_min_width = stoi(parts[8]);
+        }
+                
+        if (parts.size() > 9 && parts[9].length() > 0) {
+            tab_max_width = stoi(parts[9]);
+        }
+                
+        if (parts.size() > 10 && parts[10].length() > 0) {
+            tab_extra_width = stoi(parts[10]);
+        }
+                
+        if (parts.size() > 11 && parts[11].length() > 0) {
+            tab_spacing = stoi(parts[11]);
         }
 
 		FieldSpec spec(
@@ -1534,9 +1554,10 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
 
-		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this,
-			rect, show_background, show_border, spec.fid, tab_height, 
-			side, DesiredRect.getWidth(), DesiredRect.getHeight());
+		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this, rect,
+			show_background, show_border, side, spec.fid, 
+			tab_height, tab_min_width, tab_max_width, tab_extra_width, 
+			tab_spacing, DesiredRect.getWidth(), DesiredRect.getHeight());
 		e->drop();
         
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
