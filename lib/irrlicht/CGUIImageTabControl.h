@@ -139,7 +139,7 @@ namespace gui
 		virtual bool OnEvent(const SEvent& event);
 
 		//! place the visible tabs
-		virtual void computeTabs();
+		virtual void calcTabs();
 		
 		//! draws the element and its children
 		virtual void draw();
@@ -192,13 +192,7 @@ namespace gui
 		void recalculateScrollButtonPlacement();
 		void recalculateScrollBar();
 		void refreshSprites();
-/*
- FillBackground(fillbackground), Border(border), TabHeight(tab_height), 
-	Side(side), ViewWidth(view_width), ViewHeight(view_height), 
-	TabMaxWidth(0), TabExtraWidth(20), VerticalAlignment(EGUIA_UPPERLEFT), 
-	ScrollControl(false), NeedLeftScroll(false), NeedRightScroll(false), 
-	UpButton(0), DownButton(0), ActiveTabIndex(-1), CurrentScrollTabIndex(0), 
-	FirstDrawnTabIndex(0), LastDrawnTabIndex(-1)*/
+
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
 		bool FillBackground;
 		bool Border;
