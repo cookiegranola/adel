@@ -487,19 +487,28 @@ bool CGUIImageTabControl::OnEvent(const SEvent& event)
 
 void CGUIImageTabControl::scrollLeft()
 {
-	if ( FirstScrollTabIndex > 0 )
+	calcTabs();
+	
+	if ( NeedLeftScroll
+	     && FirstScrollTabIndex > 0 )
+	{
 		--FirstScrollTabIndex;
+	}
+	
 	recalculateScrollBar();
 }
 
 
 void CGUIImageTabControl::scrollRight()
 {
-	if ( FirstScrollTabIndex < (s32)(Tabs.size()) - 1 )
+	calcTabs();
+	
+	if ( NeedRightScroll
+		 && FirstScrollTabIndex < (s32)(Tabs.size()) - 1 )
 	{
-		if ( needScrollControl(true) )
-			++FirstScrollTabIndex;
+		++FirstScrollTabIndex;
 	}
+	
 	recalculateScrollBar();
 }
 
@@ -662,21 +671,31 @@ void CGUIImageTabControl::calcTabs()
 			// get text length
 			s32 len = calcTabWidth(pos, font, text, true, tab);
 					
-			if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
-			{
-				NeedRightScroll = true;
-				break;
-			}
-
 			if ( Side < 2 )
 			{
 				drawnRect.UpperLeftCorner.X = pos + 1;
 				pos += len;
+				
+				if ( pos > ViewRect.LowerRightCorner.X )
+				{			
+					NeedRightScroll = true;
+					break;		
+				}
+				
+				if ( ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
+				{
+				}
 			}
 			else
 			{
 				drawnRect.UpperLeftCorner.Y = pos + 1;			
 				pos += TabHeight;
+				
+				if ( pos > ViewRect.LowerRightCorner.Y )
+				{			
+					NeedRightScroll = true;
+					break;		
+				}
 			}
 
 			if ( Side == 0 )
