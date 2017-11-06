@@ -137,9 +137,6 @@ namespace gui
 
 		//! called if an event happened.
 		virtual bool OnEvent(const SEvent& event);
-
-		//! place the visible tabs
-		virtual void calcTabs();
 		
 		//! draws the element and its children
 		virtual void draw();
@@ -180,15 +177,16 @@ namespace gui
 		//! Update the position of the element, decides scroll button status
 		virtual void updateAbsolutePosition();
 
-	private:
 
+	private:
+	
 		void scrollLeft();
 		void scrollRight();
 		s32 calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
 			CGUIImageTab* tab) const;
-		core::rect<s32> calcTabPos();
-
+		void calcTabs();
 		void calcScrollButtons();
+		core::rect<s32> calcTabPos();
 		void refreshSprites();
 
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
