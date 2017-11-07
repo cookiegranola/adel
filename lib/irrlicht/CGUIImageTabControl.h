@@ -67,7 +67,7 @@ namespace gui
 		//! only for internal use by CGUIImageTabControl
 		void refreshSkinColors();
 		
-		void drawImage(const irr::core::rect<s32>& frameRect);
+		void drawImage(const irr::core::rect<s32>& tabRect);
 		
 		s32 Number;
 		video::SColor BackColor;
