@@ -184,12 +184,12 @@ void CGUIImageTab::drawImage(
 CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 side, s32 id, 
-	s32 tab_height, s32 tab_min_width, s32 tab_max_width, s32 tab_extra_width, 
+	s32 tab_height, s32 tab_width, s32 tab_padding, 
 	s32 tab_spacing, s32 view_width, s32 view_height, const core::rect<s32>& view_rect)
 	: IGUITabControl(environment, parent, id, rectangle),  
 	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
-	TabHeight(tab_height), TabMinWidth(tab_min_width), TabMaxWidth(tab_max_width), 
-	TabExtraWidth(tab_extra_width), TabSpacing(tab_spacing), 
+	TabHeight(tab_height), TabWidth(tab_width), 
+	TabPadding(tab_padding), TabSpacing(tab_spacing), 
 	ViewWidth(view_width), ViewHeight(view_height), ViewRect(view_rect),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), UpButton(0), DownButton(0), ActiveTabIndex(-1), 
@@ -213,17 +213,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 		}
 	}
 
-	/*
-	ViewRect.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
-	ViewRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y;
-	ViewRect.LowerRightCorner.X = ViewRect.UpperLeftCorner.X + ViewWidth;
-	ViewRect.LowerRightCorner.Y = ViewRect.UpperLeftCorner.Y + ViewHeight;
-	*/
-	
-	ViewRect.UpperLeftCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	ViewRect.UpperLeftCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
-	ViewRect.LowerRightCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	ViewRect.LowerRightCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
+	calcView();
 	
 	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
@@ -514,29 +504,35 @@ s32 CGUIImageTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* te
 	if ( !font )
 		return 0;
 
-	s32 len = font->getDimension(text).Width + TabExtraWidth;
+	s32 len = font->getDimension(text).Width + TabPadding;
 	
 	if ( tab->Texture )
 	{
-		len = TabHeight * tab->Scaling * tab->Texture->getSize().Width / tab->Texture->getSize().Height + TabExtraWidth;
+		len = TabHeight * tab->Scaling * tab->Texture->getSize().Width / tab->Texture->getSize().Height + TabPadding;
 	}
-	
-	if ( TabMinWidth > 0 && len < TabMinWidth )
-		len = TabMinWidth;
-		
-	if ( TabMaxWidth > 0 && len > TabMaxWidth )
-		len = TabMaxWidth;
+			
+	if ( TabWidth > 0 )
+		len = TabWidth;
 
 	// check if we miss the place to draw the tab-button
 	if ( withScrollControl && ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
 	{
 		s32 tabMinWidth = font->getDimension(L"A").Width;
 		
-		if ( TabExtraWidth > 0 && tabMinWidth < TabExtraWidth )
-			tabMinWidth = TabExtraWidth;
+		if ( TabPadding > 0 && tabMinWidth < TabPadding )
+			tabMinWidth = TabPadding;
 	}
 	
 	return len;
+}
+
+
+void CGUIImageTabControl::calcView()
+{	
+	ViewRect.UpperLeftCorner.X += AbsoluteRect.UpperLeftCorner.X;
+	ViewRect.UpperLeftCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
+	ViewRect.LowerRightCorner.X += AbsoluteRect.UpperLeftCorner.X;
+	ViewRect.LowerRightCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
 }
 
 
@@ -639,23 +635,23 @@ void CGUIImageTabControl::calcTabs()
 
 			if ( Side == 0 )
 			{
-				drawnRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y - TabHeight + 1;
+				drawnRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y + 2;
 			}
 			else if ( Side == 1 )
 			{
-				drawnRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y - TabHeight + 1;
+				drawnRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y + 2;
 			}
 			else if ( Side == 2 )
 			{
-				drawnRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X - len + 1;
+				drawnRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X - len + 2;
 			}
 			else
 			{
-				drawnRect.UpperLeftCorner.X = ViewRect.LowerRightCorner.X + 1;
+				drawnRect.UpperLeftCorner.X = ViewRect.LowerRightCorner.X + 2;
 			}
 			
-			drawnRect.LowerRightCorner.X = drawnRect.UpperLeftCorner.X + len - 1;
-			drawnRect.LowerRightCorner.Y = drawnRect.UpperLeftCorner.Y + TabHeight - 1;
+			drawnRect.LowerRightCorner.X = drawnRect.UpperLeftCorner.X + len - 2;
+			drawnRect.LowerRightCorner.Y = drawnRect.UpperLeftCorner.Y + TabHeight - 2;
 
 			if ( i == (u32)ActiveTabIndex )
 			{
@@ -904,32 +900,32 @@ s32 CGUIImageTabControl::getTabHeight() const
 }
 
 //! set the maximal width of a tab. Per default width is 0 which means "no width restriction".
-void CGUIImageTabControl::setTabMaxWidth(s32 width )
+void CGUIImageTabControl::setTabWidth(s32 width )
 {
-	TabMaxWidth = width;
+	TabWidth = width;
 }
 
 //! get the maximal width of a tab
-s32 CGUIImageTabControl::getTabMaxWidth() const
+s32 CGUIImageTabControl::getTabWidth() const
 {
-	return TabMaxWidth;
+	return TabWidth;
 }
 
 
 //! Set the extra width added to tabs on each side of the text
-void CGUIImageTabControl::setTabExtraWidth( s32 extraWidth )
+void CGUIImageTabControl::setTabPadding( s32 padding )
 {
-	if ( extraWidth < 0 )
-		extraWidth = 0;
+	if ( padding < 0 )
+		padding = 0;
 
-	TabExtraWidth = extraWidth;
+	TabPadding = padding;
 }
 
 
 //! Get the extra width added to tabs on each side of the text
-s32 CGUIImageTabControl::getTabExtraWidth() const
+s32 CGUIImageTabControl::getTabPadding() const
 {
-	return TabExtraWidth;
+	return TabPadding;
 }
 
 
@@ -1064,7 +1060,7 @@ void CGUIImageTabControl::serializeAttributes(io::IAttributes* out, io::SAttribu
 	out->addBool("Border",		Border);
 	out->addBool("FillBackground",	FillBackground);
 	out->addInt ("TabHeight",	TabHeight);
-	out->addInt ("TabMaxWidth", TabMaxWidth);
+	out->addInt ("TabWidth", TabWidth);
 	out->addEnum("TabVerticalAlignment", s32(VerticalAlignment), GUIAlignmentNames);
 }
 
@@ -1078,7 +1074,7 @@ void CGUIImageTabControl::deserializeAttributes(io::IAttributes* in, io::SAttrib
 	ActiveTabIndex = -1;
 
 	setTabHeight(in->getAttributeAsInt("TabHeight"));
-	TabMaxWidth     = in->getAttributeAsInt("TabMaxWidth");
+	TabWidth     = in->getAttributeAsInt("TabWidth");
 
 	IGUITabControl::deserializeAttributes(in,options);
 

@@ -92,8 +92,8 @@ namespace gui
 		CGUIImageTabControl(IGUIEnvironment* environment, 
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground, bool border, s32 side, s32 id, 
-			s32 tab_height, s32 tab_min_width, s32 tab_max_width, s32 tab_extra_width, 
-			s32 tab_spacing, s32 view_width, s32 view_height, const core::rect<s32>& view_rect);
+			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
+			s32 view_width, s32 view_height, const core::rect<s32>& view_rect);
 
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -155,11 +155,35 @@ namespace gui
 		//! Get the height of the tabs
 		virtual s32 getTabHeight() const;
 
+		//! set the width of a tab. Per default width is 0 which means "no fixed width".
+		virtual void setTabWidth( s32 width );
+
+		//! get the width of a tab
+		virtual s32 getTabWidth() const;
+		
 		//! set the maximal width of a tab. Per default width is 0 which means "no width restriction".
-		virtual void setTabMaxWidth(s32 width );
+		virtual void setTabMaxWidth( s32 width )
+		{
+			TabWidth = width;
+		}
 
 		//! get the maximal width of a tab
-		virtual s32 getTabMaxWidth() const;
+		virtual s32 getTabMaxWidth() const
+		{
+			return TabWidth;
+		}
+		
+		//! set the extra width of a tab. 
+		virtual void setTabExtraWidth( s32 width )
+		{
+			TabPadding = width;
+		}
+
+		//! get the extra width of a tab
+		virtual s32 getTabExtraWidth() const
+		{
+			return TabPadding;
+		}
 
 		//! Set the alignment of the tabs
 		//! note: EGUIA_CENTER is not an option
@@ -169,10 +193,10 @@ namespace gui
 		virtual gui::EGUI_ALIGNMENT getTabVerticalAlignment() const;
 
 		//! Set the extra width added to tabs on each side of the text
-		virtual void setTabExtraWidth( s32 extraWidth );
+		virtual void setTabPadding( s32 padding );
 
 		//! Get the extra width added to tabs on each side of the text
-		virtual s32 getTabExtraWidth() const;
+		virtual s32 getTabPadding() const;
 
 		//! Update the position of the element, decides scroll button status
 		virtual void updateAbsolutePosition();
@@ -184,6 +208,7 @@ namespace gui
 		void scrollRight();
 		s32 calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
 			CGUIImageTab* tab) const;
+		void calcView();
 		void calcTabs();
 		void calcScrollButtons();
 		core::rect<s32> calcTabPos();
@@ -194,9 +219,9 @@ namespace gui
 		bool Border;
 		s32 Side;
 		s32 TabHeight;
-		s32 TabMinWidth;
+		s32 TabWidth;
 		s32 TabMaxWidth;
-		s32 TabExtraWidth;
+		s32 TabPadding;
 		s32 TabSpacing;
 		s32 ViewWidth;
 		s32 ViewHeight;

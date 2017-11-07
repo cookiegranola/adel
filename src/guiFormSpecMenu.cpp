@@ -1492,9 +1492,8 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		bool show_border = true;
         s32 side = 0;
         s32 tab_height = m_btn_height*2;
-        s32 tab_min_width = m_btn_height*2;
-        s32 tab_max_width = 0;
-        s32 tab_extra_width = 20;
+        s32 tab_width = 0;
+        s32 tab_padding = 20;
         s32 tab_spacing = 4;
 
 		MY_CHECKPOS("tabheader",0);
@@ -1520,15 +1519,11 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
         }
                 
         if (parts.size() > 8 && parts[8].length() > 0) {
-            tab_min_width = stoi(parts[8]);
-        }
-                
-        if (parts.size() > 9 && parts[9].length() > 0) {
-            tab_max_width = stoi(parts[9]);
+            tab_width = stoi(parts[8]);
         }
                 
         if (parts.size() > 10 && parts[10].length() > 0) {
-            tab_extra_width = stoi(parts[10]);
+            tab_padding = stoi(parts[10]);
         }
                 
         if (parts.size() > 11 && parts[11].length() > 0) {
@@ -1557,20 +1552,19 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		if ( side == 0  )
 		{
 			pos.Y -= tab_height;
-			geom.Y += tab_height;
-		}
-		else if ( side == 1 )
-		{
-			geom.Y += tab_height;
 		}
 		else if ( side == 2 )
 		{
-			pos.X -= tab_height;
-			geom.X += tab_height;
+			pos.X -= tab_width;
 		}
-		else if ( side == 3 )
+		
+		if ( side < 2 )
 		{
-			geom.X += tab_height;
+			geom.Y += tab_height;
+		}
+		else
+		{
+			geom.X += tab_width;
 		}
 
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
@@ -1578,7 +1572,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this, rect,
 			show_background, show_border, side, spec.fid, 
-			tab_height, tab_min_width, tab_max_width, tab_extra_width, 
+			tab_height, tab_width, tab_padding, 
 			tab_spacing, DesiredRect.getWidth(), DesiredRect.getHeight(), view_rect);
 		e->drop();
         
