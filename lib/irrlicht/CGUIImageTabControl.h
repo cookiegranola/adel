@@ -91,9 +91,9 @@ namespace gui
 		//! destructor
 		CGUIImageTabControl(IGUIEnvironment* environment, 
 			IGUIElement* parent, const core::rect<s32>& rectangle,
-			bool fillbackground=true, bool border=true, s32 side=0, s32 id=-1, 
-			s32 tab_height=0, s32 tab_min_width=0, s32 tab_max_width=0, s32 tab_extra_width=0, 
-			s32 tab_spacing=0, s32 view_width=0, s32 view_height=0);
+			bool fillbackground, bool border, s32 side, s32 id, 
+			s32 tab_height, s32 tab_min_width, s32 tab_max_width, s32 tab_extra_width, 
+			s32 tab_spacing, s32 view_width, s32 view_height, const core::rect<s32>& view_rect);
 
 		//! destructor
 		virtual ~CGUIImageTabControl();

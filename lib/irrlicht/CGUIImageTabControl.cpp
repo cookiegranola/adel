@@ -185,12 +185,12 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 side, s32 id, 
 	s32 tab_height, s32 tab_min_width, s32 tab_max_width, s32 tab_extra_width, 
-	s32 tab_spacing, s32 view_width, s32 view_height)
+	s32 tab_spacing, s32 view_width, s32 view_height, const core::rect<s32>& view_rect)
 	: IGUITabControl(environment, parent, id, rectangle),  
 	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
 	TabHeight(tab_height), TabMinWidth(tab_min_width), TabMaxWidth(tab_max_width), 
 	TabExtraWidth(tab_extra_width), TabSpacing(tab_spacing), 
-	ViewWidth(view_width), ViewHeight(view_height), ViewRect(0, 0, 0, 0),
+	ViewWidth(view_width), ViewHeight(view_height), ViewRect(view_rect),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), UpButton(0), DownButton(0), ActiveTabIndex(-1), 
 	FirstScrollTabIndex(0), LastScrollTabIndex(-1)
@@ -213,11 +213,18 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 		}
 	}
 
+	/*
 	ViewRect.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
-	ViewRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y + TabHeight;
+	ViewRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y;
 	ViewRect.LowerRightCorner.X = ViewRect.UpperLeftCorner.X + ViewWidth;
-	ViewRect.LowerRightCorner.Y = ViewRect.UpperLeftCorner.Y + TabHeight + ViewHeight;
-
+	ViewRect.LowerRightCorner.Y = ViewRect.UpperLeftCorner.Y + ViewHeight;
+	*/
+	
+	ViewRect.UpperLeftCorner.X += AbsoluteRect.UpperLeftCorner.X;
+	ViewRect.UpperLeftCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
+	ViewRect.LowerRightCorner.X += AbsoluteRect.UpperLeftCorner.X;
+	ViewRect.LowerRightCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
+	
 	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
 	if ( UpButton )

@@ -1546,18 +1546,40 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 
 		v2s32 pos = pos_offset * spacing;
 		pos.X += stof(v_pos[0]) * (float)spacing.X;
-		pos.Y += stof(v_pos[1]) * (float)spacing.Y - tab_height;
+		pos.Y += stof(v_pos[1]) * (float)spacing.Y;
 		v2s32 geom;
 		geom.X = DesiredRect.getWidth();
-		geom.Y = tab_height;
+		geom.Y = DesiredRect.getHeight();
 		
+		core::rect<s32> view_rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
+				pos.Y+geom.Y);
+
+		if ( side == 0  )
+		{
+			pos.Y -= tab_height;
+			geom.Y += tab_height;
+		}
+		else if ( side == 1 )
+		{
+			geom.Y += tab_height;
+		}
+		else if ( side == 2 )
+		{
+			pos.X -= tab_height;
+			geom.X += tab_height;
+		}
+		else if ( side == 3 )
+		{
+			geom.X += tab_height;
+		}
+
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
 
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this, rect,
 			show_background, show_border, side, spec.fid, 
 			tab_height, tab_min_width, tab_max_width, tab_extra_width, 
-			tab_spacing, DesiredRect.getWidth(), DesiredRect.getHeight());
+			tab_spacing, DesiredRect.getWidth(), DesiredRect.getHeight(), view_rect);
 		e->drop();
         
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
