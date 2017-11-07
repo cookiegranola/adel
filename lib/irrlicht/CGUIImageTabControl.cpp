@@ -643,7 +643,7 @@ void CGUIImageTabControl::calcTabs()
 			}
 			else if ( Side == 2 )
 			{
-				drawnRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X - len + 2;
+				drawnRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X + 2;
 			}
 			else
 			{
