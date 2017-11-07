@@ -1548,16 +1548,10 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		
 		core::rect<s32> view_rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
-		core::rect<s32> tab_rect(view_rect);
 		core::rect<s32> rect(view_rect);
 				
 		if ( side == 0  )
 		{
-			tab_rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
-			tab_rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y - tab_height;
-			tab_rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
-			tab_rect.LowerRightCorner.Y = view_rect.UpperLeftCorner.Y;
-			
 			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
 			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y - tab_height;
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
@@ -1565,11 +1559,6 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		}
 		else if ( side == 1  )
 		{
-			tab_rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
-			tab_rect.UpperLeftCorner.Y = view_rect.LowerRightCorner.Y;
-			tab_rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
-			tab_rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y + tab_height;
-			
 			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
 			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
@@ -1577,11 +1566,6 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		}
 		else if ( side == 2 )
 		{
-			tab_rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X - tab_width;
-			tab_rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
-			tab_rect.LowerRightCorner.X = view_rect.UpperLeftCorner.X;
-			tab_rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;
-			
 			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X - tab_width;
 			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
@@ -1589,21 +1573,16 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		}
 		else if ( side == 3 )
 		{
-			tab_rect.UpperLeftCorner.X = view_rect.LowerRightCorner.X;
-			tab_rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
-			tab_rect.LowerRightCorner.X = view_rect.LowerRightCorner.X + tab_width;
-			tab_rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;
-			
 			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
 			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X + tab_width;
 			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;			
 		}
 
-		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, this, rect,
-			show_background, show_border, side, spec.fid, 
-			tab_height, tab_width, tab_padding, tab_spacing, tab_rect, 
-			DesiredRect.getWidth(), DesiredRect.getHeight(), view_rect );
+		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, 
+			this, rect, show_background, show_border, side, spec.fid, 
+			tab_height, tab_width, tab_padding, tab_spacing, 
+			DesiredRect.getWidth(), DesiredRect.getHeight() );
 		e->drop();
         
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,

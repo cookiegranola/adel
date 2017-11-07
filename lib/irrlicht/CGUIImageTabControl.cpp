@@ -184,14 +184,13 @@ void CGUIImageTab::drawImage(
 CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 side, s32 id, 
-	s32 tab_height, s32 tab_width, s32 tab_padding, 
-	s32 tab_spacing, const core::rect<s32>& tab_rect, 
-	s32 view_width, s32 view_height, const core::rect<s32>& view_rect)
+	s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing,
+	s32 view_width, s32 view_height)
 	: IGUITabControl(environment, parent, id, rectangle),  
-	Rect(rectangle), Tabs(), FillBackground(fillbackground), Border(border), Side(side),
+	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
 	TabHeight(tab_height), TabWidth(tab_width), 
-	TabPadding(tab_padding), TabSpacing(tab_spacing), TabRect(tab_rect),
-	ViewWidth(view_width), ViewHeight(view_height), ViewRect(view_rect),
+	TabPadding(tab_padding), TabSpacing(tab_spacing),
+	ViewWidth(view_width), ViewHeight(view_height),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), UpButton(0), DownButton(0), ActiveTabIndex(-1), 
 	FirstScrollTabIndex(0), LastScrollTabIndex(-1)
@@ -213,8 +212,6 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 			TabHeight = skin->getSize(gui::EGDS_BUTTON_HEIGHT) + 2;
 		}
 	}
-
-	calcRects();
 	
 	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
@@ -528,36 +525,6 @@ s32 CGUIImageTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* te
 }
 
 
-void CGUIImageTabControl::calcRects()
-{	
-	Rect.UpperLeftCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	Rect.UpperLeftCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
-	Rect.LowerRightCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	Rect.LowerRightCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
-	
-	TabRect.UpperLeftCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	TabRect.UpperLeftCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
-	TabRect.LowerRightCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	TabRect.LowerRightCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
-	
-	ViewRect.UpperLeftCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	ViewRect.UpperLeftCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
-	ViewRect.LowerRightCorner.X += AbsoluteRect.UpperLeftCorner.X;
-	ViewRect.LowerRightCorner.Y += AbsoluteRect.UpperLeftCorner.Y;
-	
-	if ( Side == 0 )
-	{
-		ViewRect.UpperLeftCorner.Y += TabHeight;
-		ViewRect.LowerRightCorner.Y += TabHeight;
-	}
-	else if ( Side == 2 )
-	{
-		ViewRect.UpperLeftCorner.X += TabWidth;
-		ViewRect.LowerRightCorner.X += TabWidth;
-	}
-}
-
-
 void CGUIImageTabControl::calcTabs()
 {	
 	if ( !IsVisible )
@@ -583,11 +550,11 @@ void CGUIImageTabControl::calcTabs()
 
 	if ( Side < 2 )
 	{
-		pos = ViewRect.UpperLeftCorner.X;
+		pos = AbsoluteRect.UpperLeftCorner.X;
 	}
 	else
 	{
-		pos = ViewRect.UpperLeftCorner.Y;
+		pos = AbsoluteRect.UpperLeftCorner.Y;
 	}
 	
 	CGUIImageTab* tab;
@@ -603,7 +570,7 @@ void CGUIImageTabControl::calcTabs()
 		}
 	}
 	
-	core::rect<s32> drawnRect;
+	core::rect<s32> tabRect;
 	
 	LastScrollTabIndex = -1;
 
@@ -622,16 +589,16 @@ void CGUIImageTabControl::calcTabs()
 					
 			if ( Side < 2 )
 			{
-				drawnRect.UpperLeftCorner.X = pos + 1;
+				tabRect.UpperLeftCorner.X = pos + 1;
 				pos += len + TabSpacing;
 				
 				if ( ScrollControl
-					 && pos > ViewRect.LowerRightCorner.X - 2 * ( TabHeight + TabSpacing ) )
+					 && pos > AbsoluteRect.LowerRightCorner.X - 2 * ( TabHeight + TabSpacing ) )
 				{
 					break;		
 				}				
 				
-				if ( pos > ViewRect.LowerRightCorner.X )
+				if ( pos > AbsoluteRect.LowerRightCorner.X )
 				{
 					ScrollControl = true;	
 					break;		
@@ -639,16 +606,16 @@ void CGUIImageTabControl::calcTabs()
 			}
 			else
 			{
-				drawnRect.UpperLeftCorner.Y = pos + 1;			
+				tabRect.UpperLeftCorner.Y = pos + 1;			
 				pos += TabHeight + TabSpacing;
 				
 				if ( ScrollControl
-					 && pos > ViewRect.LowerRightCorner.Y - 2 * ( TabHeight + TabSpacing ) )
+					 && pos > AbsoluteRect.LowerRightCorner.Y - 2 * ( TabHeight + TabSpacing ) )
 				{
 					break;		
 				}				
 				
-				if ( pos > ViewRect.LowerRightCorner.Y )
+				if ( pos > AbsoluteRect.LowerRightCorner.Y )
 				{			
 					ScrollControl = true;
 					break;		
@@ -657,36 +624,36 @@ void CGUIImageTabControl::calcTabs()
 
 			if ( Side == 0 )
 			{
-				drawnRect.UpperLeftCorner.Y = ViewRect.UpperLeftCorner.Y + 2;
+				tabRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y + 2;
 			}
 			else if ( Side == 1 )
 			{
-				drawnRect.UpperLeftCorner.Y = ViewRect.LowerRightCorner.Y + 2;
+				tabRect.UpperLeftCorner.Y = AbsoluteRect.LowerRightCorner.Y - TabHeight + 2;
 			}
 			else if ( Side == 2 )
 			{
-				drawnRect.UpperLeftCorner.X = ViewRect.UpperLeftCorner.X + 2;
+				tabRect.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X + 2;
 			}
 			else
 			{
-				drawnRect.UpperLeftCorner.X = ViewRect.LowerRightCorner.X + 2;
+				tabRect.UpperLeftCorner.X = AbsoluteRect.LowerRightCorner.X - TabWidth + 2;
 			}
 			
-			drawnRect.LowerRightCorner.X = drawnRect.UpperLeftCorner.X + len - 2;
-			drawnRect.LowerRightCorner.Y = drawnRect.UpperLeftCorner.Y + TabHeight - 2;
+			tabRect.LowerRightCorner.X = tabRect.UpperLeftCorner.X + len - 2;
+			tabRect.LowerRightCorner.Y = tabRect.UpperLeftCorner.Y + TabHeight - 2;
 
 			if ( i == (u32)ActiveTabIndex )
 			{
 				tab->Active = true;
 				
-				drawnRect.UpperLeftCorner.X -= 2;
-				drawnRect.UpperLeftCorner.Y -= 2;
-				drawnRect.LowerRightCorner.X += 2;
-				drawnRect.LowerRightCorner.Y += 2;
+				tabRect.UpperLeftCorner.X -= 2;
+				tabRect.UpperLeftCorner.Y -= 2;
+				tabRect.LowerRightCorner.X += 2;
+				tabRect.LowerRightCorner.Y += 2;
 			}
 			
 			tab->Drawn = true;
-			tab->DrawnRect = drawnRect;
+			tab->DrawnRect = tabRect;
 			
 			if ( text )
 				tab->refreshSkinColors();
@@ -703,7 +670,7 @@ void CGUIImageTabControl::calcScrollButtons()
 	
 	if ( Side < 2 )
 	{
-		buttonRect.UpperLeftCorner.X = ViewRect.getWidth() - 2 * ( TabHeight + TabSpacing );
+		buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - 2 * ( TabHeight + TabSpacing );
 		
 		if ( Side == 0 )
 		{
@@ -711,7 +678,7 @@ void CGUIImageTabControl::calcScrollButtons()
 		}
 		else
 		{
-			buttonRect.UpperLeftCorner.Y = ViewRect.getHeight();
+			buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - TabHeight;
 		}
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
@@ -726,7 +693,7 @@ void CGUIImageTabControl::calcScrollButtons()
 	}
 	else
 	{
-		buttonRect.UpperLeftCorner.Y = ViewRect.getHeight() - 2 * ( TabHeight + TabSpacing );
+		buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - 2 * ( TabHeight + TabSpacing );
 		
 		if ( Side == 2 )
 		{
@@ -734,7 +701,7 @@ void CGUIImageTabControl::calcScrollButtons()
 		}
 		else
 		{
-			buttonRect.UpperLeftCorner.X = ViewRect.getWidth();
+			buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - TabWidth;
 		}
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
@@ -812,7 +779,7 @@ void CGUIImageTabControl::draw()
 
 	if ( !font )
 		return;
-
+	
 	calcTabs();
 	calcScrollButtons();
 	
@@ -902,9 +869,6 @@ void CGUIImageTabControl::draw()
 	IGUIElement::draw();
 	
 	driver->draw2DRectangle(video::SColor(32,255,0,0), AbsoluteRect, 0);
-	//driver->draw2DRectangle(video::SColor(32,255,0,0), Rect, 0);
-	//driver->draw2DRectangle(video::SColor(32,0,255,0), TabRect, 0);
-	//driver->draw2DRectangle(video::SColor(32,0,0,255), ViewRect, 0);
 }
 
 

@@ -92,9 +92,8 @@ namespace gui
 		CGUIImageTabControl(IGUIEnvironment* environment, 
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground, bool border, s32 side, s32 id, 
-			s32 tab_height, s32 tab_width, s32 tab_padding, 
-			s32 tab_spacing, const core::rect<s32>& tab_rect, 
-			s32 view_width, s32 view_height, const core::rect<s32>& view_rect);
+			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
+			s32 view_width, s32 view_height);
 
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -209,13 +208,11 @@ namespace gui
 		void scrollRight();
 		s32 calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* text, bool withScrollControl,
 			CGUIImageTab* tab) const;
-		void calcRects();
 		void calcTabs();
 		void calcScrollButtons();
 		core::rect<s32> calcTabPos();
 		void refreshSprites();
 
-		core::rect<s32> Rect;
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
 		bool FillBackground;
 		bool Border;
@@ -225,10 +222,8 @@ namespace gui
 		s32 TabMaxWidth;
 		s32 TabPadding;
 		s32 TabSpacing;
-		core::rect<s32> TabRect;
 		s32 ViewWidth;
 		s32 ViewHeight;
-		core::rect<s32> ViewRect;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
 		IGUIButton* UpButton;
