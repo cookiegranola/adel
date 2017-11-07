@@ -1579,10 +1579,25 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;			
 		}
 
+		video::ITexture *up_button_texture = 0;
+		video::ITexture *down_button_texture = 0;
+
+		if ( side < 2 )
+		{
+			up_button_texture = m_tsrc->getTexture("left_arrow.png");
+			down_button_texture = m_tsrc->getTexture("right_arrow.png");
+		}
+		else
+		{
+			up_button_texture = m_tsrc->getTexture("up_arrow.png");
+			down_button_texture = m_tsrc->getTexture("down_arrow.png");
+		}
+
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, 
 			this, rect, show_background, show_border, side, spec.fid, 
 			tab_height, tab_width, tab_padding, tab_spacing, 
-			DesiredRect.getWidth(), DesiredRect.getHeight() );
+			DesiredRect.getWidth(), DesiredRect.getHeight(),
+			up_button_texture, down_button_texture);
 		e->drop();
         
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,

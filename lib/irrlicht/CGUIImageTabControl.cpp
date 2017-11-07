@@ -185,7 +185,8 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 side, s32 id, 
 	s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing,
-	s32 view_width, s32 view_height)
+	s32 view_width, s32 view_height,
+	video::ITexture* up_button_texture, video::ITexture* down_button_texture)
 	: IGUITabControl(environment, parent, id, rectangle),  
 	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
 	TabHeight(tab_height), TabWidth(tab_width), 
@@ -193,43 +194,37 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	ViewWidth(view_width), ViewHeight(view_height),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), UpButton(0), DownButton(0), ActiveTabIndex(-1), 
-	FirstScrollTabIndex(0), LastScrollTabIndex(-1)
+	FirstScrollTabIndex(0), LastScrollTabIndex(-1),
+	UpButtonTexture(up_button_texture), DownButtonTexture(down_button_texture)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTabControl");
 	#endif
-
-	IGUISkin* skin = Environment->getSkin();
-	IGUISpriteBank* sprites = 0;
-
-	if ( TabHeight == 0 )
-	{
-		TabHeight = 32;
-
-		if (skin)
-		{
-			sprites = skin->getSpriteBank();
-			TabHeight = skin->getSize(gui::EGDS_BUTTON_HEIGHT) + 2;
-		}
-	}
 	
 	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
 	if ( UpButton )
 	{
-		UpButton->setSpriteBank(sprites);
+        UpButton->setImage(UpButtonTexture);
+        UpButton->setPressedImage(UpButtonTexture);
+        UpButton->setScaleImage(true);
+		UpButton->setUseAlphaChannel(true);
 		UpButton->setVisible(false);
 		UpButton->setSubElement(true);
 		UpButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
 		UpButton->setOverrideFont(Environment->getBuiltInFont());
 		UpButton->grab();
+		
 	}
 
 	DownButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
 	if ( DownButton )
 	{
-		DownButton->setSpriteBank(sprites);
+        DownButton->setImage(DownButtonTexture);
+        DownButton->setPressedImage(DownButtonTexture);
+        DownButton->setScaleImage(true);
+		DownButton->setUseAlphaChannel(true);
 		DownButton->setVisible(false);
 		DownButton->setSubElement(true);
 		DownButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);

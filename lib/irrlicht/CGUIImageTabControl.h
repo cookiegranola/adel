@@ -93,8 +93,9 @@ namespace gui
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground, bool border, s32 side, s32 id, 
 			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
-			s32 view_width, s32 view_height);
-
+			s32 view_width, s32 view_height,
+			video::ITexture* up_button_texture, video::ITexture* down_button_texture);
+			
 		//! destructor
 		virtual ~CGUIImageTabControl();
 
@@ -231,6 +232,8 @@ namespace gui
 		s32 ActiveTabIndex;
 		s32 FirstScrollTabIndex;
 		s32 LastScrollTabIndex;
+		video::ITexture* UpButtonTexture;
+		video::ITexture* DownButtonTexture;
 	};
 } // end namespace gui
 } // end namespace irr
