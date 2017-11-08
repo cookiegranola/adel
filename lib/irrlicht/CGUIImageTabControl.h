@@ -66,8 +66,7 @@ namespace gui
 
 		//! only for internal use by CGUIImageTabControl
 		void refreshSkinColors();
-		
-		void drawImage(const irr::core::rect<s32>& tabRect);
+		void drawImage(const irr::core::rect<s32>& tab_rect);
 		
 		s32 Number;
 		video::SColor BackColor;
@@ -207,8 +206,6 @@ namespace gui
 		//! Update the position of the element, decides scroll button status
 		virtual void updateAbsolutePosition();
 
-
-	private:
 	
 		void scrollLeft();
 		void scrollRight();
@@ -217,9 +214,10 @@ namespace gui
 		void calcTabs();
 		void calcScrollButtons();
 		core::rect<s32> calcTabPos();
-		void refreshSprites();
-		void drawExpandedImage(const irr::core::rect<s32>& tabRect, 
+		void drawExpandedImage(const irr::core::rect<s32>& tab_rect, 
 			const video::ITexture *texture, const s32 border_width, const s32 border_height);
+		void drawTab(CGUIImageTab* tab, IGUIFont* font);
+		void refreshSprites();
 
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
 		bool FillBackground;
@@ -252,6 +250,7 @@ namespace gui
 		video::ITexture* RightActiveTabTexture;
 		video::ITexture* PriorArrowTexture;
 		video::ITexture* NextArrowTexture;
+		irr::core::rect<s32> ContentRect;
 	};
 } // end namespace gui
 } // end namespace irr

@@ -52,11 +52,6 @@ void CGUIImageTab::draw()
 	if (!IsVisible)
 		return;
 
-	IGUISkin *skin = Environment->getSkin();
-
-	if (skin && DrawBackground)
-		skin->draw2DRectangle(this, BackColor, AbsoluteRect, 0);
-	
 	IGUIElement::draw();
 }
 
@@ -200,13 +195,13 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	BorderWidth(border_width), BorderHeight(border_height),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), PriorArrow(0), NextArrow(0), ActiveTabIndex(-1), 
-	FirstScrollTabIndex(0), LastScrollTabIndex(-1),
-	TabContentTexture(content_texture),
+	FirstScrollTabIndex(0), LastScrollTabIndex(-1),	TabContentTexture(content_texture),
 	TopTabTexture(top_tab_texture), TopActiveTabTexture(top_active_tab_texture),
 	BottomTabTexture(bottom_tab_texture), BottomActiveTabTexture(bottom_active_tab_texture),
 	LeftTabTexture(left_tab_texture), LeftActiveTabTexture(left_active_tab_texture),
 	RightTabTexture(right_tab_texture), RightActiveTabTexture(right_active_tab_texture),
-	PriorArrowTexture(prior_arrow_texture), NextArrowTexture(next_arrow_texture)
+	PriorArrowTexture(prior_arrow_texture), NextArrowTexture(next_arrow_texture),
+	ContentRect(0, 0, 0, 0)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTabControl");
@@ -557,11 +552,11 @@ void CGUIImageTabControl::calcTabs()
 
 	if ( Side < 2 )
 	{
-		pos = AbsoluteRect.UpperLeftCorner.X;
+		pos = AbsoluteRect.UpperLeftCorner.X + BorderWidth;
 	}
 	else
 	{
-		pos = AbsoluteRect.UpperLeftCorner.Y;
+		pos = AbsoluteRect.UpperLeftCorner.Y + BorderHeight;
 	}
 	
 	CGUIImageTab* tab;
@@ -600,12 +595,12 @@ void CGUIImageTabControl::calcTabs()
 				pos += len + TabSpacing;
 				
 				if ( ScrollControl
-					 && pos > AbsoluteRect.LowerRightCorner.X - 2 * ( TabHeight + TabSpacing ) )
+					 && pos > AbsoluteRect.LowerRightCorner.X - 2 * ( TabHeight + TabSpacing ) - BorderWidth )
 				{
 					break;		
 				}				
 				
-				if ( pos > AbsoluteRect.LowerRightCorner.X )
+				if ( pos > AbsoluteRect.LowerRightCorner.X - BorderWidth )
 				{
 					ScrollControl = true;	
 					break;		
@@ -617,12 +612,12 @@ void CGUIImageTabControl::calcTabs()
 				pos += TabHeight + TabSpacing;
 				
 				if ( ScrollControl
-					 && pos > AbsoluteRect.LowerRightCorner.Y - 2 * ( TabHeight + TabSpacing ) )
+					 && pos > AbsoluteRect.LowerRightCorner.Y - 2 * ( TabHeight + TabSpacing ) - BorderHeight )
 				{
 					break;		
 				}				
 				
-				if ( pos > AbsoluteRect.LowerRightCorner.Y )
+				if ( pos > AbsoluteRect.LowerRightCorner.Y - BorderHeight )
 				{			
 					ScrollControl = true;
 					break;		
@@ -667,6 +662,25 @@ void CGUIImageTabControl::calcTabs()
 				
 			LastScrollTabIndex = i;
 		}
+	}
+	
+	ContentRect = AbsoluteRect;
+	
+	if ( Side == 0 )
+	{
+		ContentRect.UpperLeftCorner.Y += TabHeight;
+	}
+	else if ( Side == 1 )
+	{
+		ContentRect.LowerRightCorner.Y -= TabHeight;
+	}
+	else if ( Side == 2 )
+	{
+		ContentRect.UpperLeftCorner.X += TabWidth;
+	}
+	else if ( Side == 3 )
+	{
+		ContentRect.LowerRightCorner.X -= TabWidth;
 	}
 }
 
@@ -733,6 +747,7 @@ void CGUIImageTabControl::calcScrollButtons()
 }
 
 
+//! Computes a tab position
 core::rect<s32> CGUIImageTabControl::calcTabPos()
 {
 	core::rect<s32> r;
@@ -764,6 +779,111 @@ core::rect<s32> CGUIImageTabControl::calcTabPos()
 }
 
 
+//! Draws an expanded image
+void CGUIImageTabControl::drawExpandedImage(const irr::core::rect<s32>& tab_rect, 
+	const video::ITexture *texture, const s32 border_width, const s32 border_height)
+{
+	if (texture)
+	{
+		s32 texture_width = texture->getSize().Width;
+		s32 texture_height = texture->getSize().Height;
+		
+		s32 left = tab_rect.UpperLeftCorner.X;
+		s32 right = tab_rect.LowerRightCorner.X;
+		s32 top = tab_rect.UpperLeftCorner.Y;
+		s32 bottom = tab_rect.LowerRightCorner.Y;
+		
+		video::IVideoDriver* driver = Environment->getVideoDriver();
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left, top, left + border_width, top + border_height), 
+			irr::core::rect<s32>(0, 0, border_width, border_height), 
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left + border_width, top, right - border_width, top + border_height), 
+			irr::core::rect<s32>(border_width, 0, texture_width - border_width, border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(right - border_width, top, right, top + border_height), 
+			irr::core::rect<s32>(texture_width - border_width, 0, texture_width, border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left, top + border_height, left + border_width, bottom - border_height), 
+			irr::core::rect<s32>(0, border_height, border_width, texture_height - border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left + border_width, top + border_height, right - border_width, bottom - border_height), 
+			irr::core::rect<s32>(border_width, border_height, texture_width - border_width, texture_height - border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(right - border_width, top + border_height, right, bottom - border_height), 
+			irr::core::rect<s32>(texture_width - border_width, border_height, texture_width, texture_height - border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left, bottom - border_height, left + border_width, bottom), 
+			irr::core::rect<s32>(0, texture_height - border_height, border_width, texture_height),  
+			0, 0, true);
+			
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left + border_width, bottom - border_height, right - border_width, bottom), 
+			irr::core::rect<s32>(border_width, texture_height - border_height, texture_width - border_width, texture_height),  
+			0, 0, true);
+			
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(right - border_width, bottom - border_height, right, bottom), 
+			irr::core::rect<s32>(texture_width - border_width, texture_height - border_height, texture_width, texture_height),  
+			0, 0, true);
+	}
+}
+
+
+//! Draws a tab
+void CGUIImageTabControl::drawTab(CGUIImageTab* tab, IGUIFont* font)
+{
+	core::rect<s32> tab_rect(tab->DrawnRect);				
+	const wchar_t* text = tab->getText();
+	video::ITexture* tab_texture;
+
+	if ( Side == 0 )
+	{
+		tab_rect.LowerRightCorner.Y += BorderHeight;
+		tab_texture = tab->Active ? TopActiveTabTexture : TopTabTexture;
+	}
+	else if ( Side == 1 )
+	{
+		tab_rect.UpperLeftCorner.Y -= BorderHeight;
+		tab_texture = tab->Active ? BottomActiveTabTexture : BottomTabTexture;
+	}
+	else if ( Side == 2 )
+	{
+		tab_rect.LowerRightCorner.X += BorderWidth;
+		tab_texture = tab->Active ? LeftActiveTabTexture : LeftTabTexture;
+	}
+	else
+	{
+		tab_rect.UpperLeftCorner.X += BorderWidth;
+		tab_texture = tab->Active ? RightActiveTabTexture : RightTabTexture;
+	}
+	
+	drawExpandedImage(tab_rect, tab_texture, BorderWidth, BorderHeight);
+
+	if ( text )
+	{
+		// draw text
+		font->draw(text, tab_rect, tab->getTextColor(),
+			true, true, &tab_rect);
+	}
+		
+	tab->drawImage(tab_rect);
+}
+
+
 //! draws the element and its children
 void CGUIImageTabControl::draw()
 {
@@ -776,7 +896,6 @@ void CGUIImageTabControl::draw()
 		return;
 
 	IGUIFont* font = skin->getFont();
-	video::IVideoDriver* driver = Environment->getVideoDriver();
 
 	if ( !font )
 		return;
@@ -784,43 +903,25 @@ void CGUIImageTabControl::draw()
 	calcTabs();
 	calcScrollButtons();
 	
-	if ( Tabs.empty() )
-	{
-		driver->draw2DRectangle(skin->getColor(EGDC_3D_HIGH_LIGHT), AbsoluteRect, 0);
-	}
+	CGUIImageTab* activeTab = 0;
 		
 	for (s32 i=FirstScrollTabIndex; i<=LastScrollTabIndex; ++i)
 	{
 		CGUIImageTab* tab = Tabs[i];
 		
-		if ( tab )
-		{	
-			core::rect<s32> tabRect(tab->DrawnRect);				
-			const wchar_t* text = tab->getText();
-
-			//if ( tab->Active ) ...
-			
-			skin->draw3DTabButton(this, false, tabRect, 0, VerticalAlignment);
-
-			if ( text )
-			{
-				// draw text
-				core::rect<s32> textClipRect(tabRect);	// TODO: exact size depends on borders in draw3DTabButton which we don't get with current interface
-				//textClipRect.clipAgainst(AbsoluteClippingRect);
-				font->draw(text, tabRect, Tabs[i]->getTextColor(),
-					true, true, &textClipRect);
-			}
-				
-			Tabs[i]->drawImage(tabRect);
+		if (tab)
+		{
+			if (tab->Active)
+				activeTab = tab;
+			else
+				drawTab(tab, font);
 		}
 	}
 
-	/*
-	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, 0, TabHeight, VerticalAlignment);
-	*/
+	drawExpandedImage(ContentRect, TabContentTexture, BorderWidth, BorderHeight);
 	
-	drawExpandedImage(AbsoluteRect, TabContentTexture, BorderWidth, BorderHeight);
-	
+	if (activeTab)
+		drawTab(activeTab, font);
 
 	if ( PriorArrow )
 		PriorArrow->setEnabled(ScrollControl);
@@ -832,7 +933,7 @@ void CGUIImageTabControl::draw()
 
 	IGUIElement::draw();
 	
-	driver->draw2DRectangle(video::SColor(32,255,0,0), AbsoluteRect, 0);
+	//Environment->getVideoDriver()->draw2DRectangle(video::SColor(32,255,0,0), ContentRect, 0);
 }
 
 
@@ -1033,69 +1134,6 @@ void CGUIImageTabControl::deserializeAttributes(io::IAttributes* in, io::SAttrib
 
 	setActiveTab(in->getAttributeAsInt("ActiveTabIndex"));
 	setTabVerticalAlignment( static_cast<EGUI_ALIGNMENT>(in->getAttributeAsEnumeration("TabVerticalAlignment" , GUIAlignmentNames)) );
-}
-
-//! Draws an expanded image
-void CGUIImageTabControl::drawExpandedImage(const irr::core::rect<s32>& tabRect, 
-	const video::ITexture *texture, const s32 border_width, const s32 border_height)
-{
-	if (texture)
-	{
-		s32 texture_width = texture->getSize().Width;
-		s32 texture_height = texture->getSize().Height;
-		
-		s32 left = tabRect.UpperLeftCorner.Y;
-		s32 right = tabRect.LowerRightCorner.X;
-		s32 top = tabRect.UpperLeftCorner.Y;
-		s32 bottom = tabRect.LowerRightCorner.Y;
-		
-		video::IVideoDriver* driver = Environment->getVideoDriver();
-
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(left, top, left + border_width, top + border_height), 
-			irr::core::rect<s32>(0, 0, border_width, border_height), 
-			0, 0, true);
-
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(left + border_width, top, right - border_width, top + border_height), 
-			irr::core::rect<s32>(border_width, 0, texture_width - border_width, border_height),  
-			0, 0, true);
-
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(right - border_width, top, right, top + border_height), 
-			irr::core::rect<s32>(texture_width - border_width, 0, texture_width, border_height),  
-			0, 0, true);
-
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(left, top + border_height, left + border_width, bottom - border_height), 
-			irr::core::rect<s32>(0, border_height, border_width, texture_height - border_height),  
-			0, 0, true);
-
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(left + border_width, top + border_height, right - border_width, bottom - border_height), 
-			irr::core::rect<s32>(border_width, border_height, texture_width - border_width, texture_height - border_height),  
-			0, 0, true);
-
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(right - border_width, top + border_height, right, bottom - border_height), 
-			irr::core::rect<s32>(texture_width - border_width, border_height, texture_width, texture_height - border_height),  
-			0, 0, true);
-
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(left, bottom - border_height, left + border_width, bottom), 
-			irr::core::rect<s32>(0, texture_height - border_height, border_width, texture_height),  
-			0, 0, true);
-			
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(left + border_width, bottom - border_height, right - border_width, bottom), 
-			irr::core::rect<s32>(border_width, texture_height - border_height, texture_width - border_width, texture_height),  
-			0, 0, true);
-			
-		driver->draw2DImage(texture,
-			irr::core::rect<s32>(right - border_width, bottom - border_height, right, bottom), 
-			irr::core::rect<s32>(texture_width - border_width, texture_height - border_height, texture_width, texture_height),  
-			0, 0, true);
-	}
 }
 } // end namespace irr
 } // end namespace gui
