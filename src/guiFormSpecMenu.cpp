@@ -1497,7 +1497,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
         s32 tab_spacing = 4;
         s32 border_width = 16;
         s32 border_height = 16;
-        s32 border_offset = 9;
+        s32 border_offset = 11;
 
 		MY_CHECKPOS("tabheader",0);
 
@@ -1518,20 +1518,40 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
         }
         
         if (parts.size() > 7 && parts[7].length() > 0) {
-            tab_height = stoi(parts[7]);
-        }
-                
+			std::vector<std::string> values = split(parts[7],',');
+			
+			if (values.size() > 0 && values[0].length() > 0) {
+				tab_height = stoi(values[0]);
+			}
+					
+			if (values.size() > 1 && values[1].length() > 0) {
+				tab_width = stoi(values[1]);
+			}
+					
+			if (values.size() > 2 && values[2].length() > 0) {
+				tab_padding = stoi(values[2]);
+			}
+					
+			if (values.size() > 3 && values[3].length() > 0) {
+				tab_spacing = stoi(values[3]);
+			}
+		}
+        
         if (parts.size() > 8 && parts[8].length() > 0) {
-            tab_width = stoi(parts[8]);
-        }
-                
-        if (parts.size() > 10 && parts[10].length() > 0) {
-            tab_padding = stoi(parts[10]);
-        }
-                
-        if (parts.size() > 11 && parts[11].length() > 0) {
-            tab_spacing = stoi(parts[11]);
-        }
+			std::vector<std::string> values = split(parts[8],',');
+			
+			if (values.size() > 0 && values[0].length() > 0) {
+				border_width = stoi(values[0]);
+			}
+					
+			if (values.size() > 1 && values[1].length() > 0) {
+				border_height = stoi(values[1]);
+			}
+					
+			if (values.size() > 2 && values[2].length() > 0) {
+				border_offset = stoi(values[2]);
+			}
+		}
 
 		FieldSpec spec(
 			name,

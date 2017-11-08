@@ -592,7 +592,7 @@ void CGUIImageTabControl::calcTabs()
 					
 			if ( Side < 2 )
 			{
-				tabRect.UpperLeftCorner.X = pos + 1;
+				tabRect.UpperLeftCorner.X = pos;
 				pos += len + TabSpacing;
 				
 				if ( ScrollControl
@@ -609,7 +609,7 @@ void CGUIImageTabControl::calcTabs()
 			}
 			else
 			{
-				tabRect.UpperLeftCorner.Y = pos + 1;			
+				tabRect.UpperLeftCorner.Y = pos;			
 				pos += TabHeight + TabSpacing;
 				
 				if ( ScrollControl
@@ -627,32 +627,27 @@ void CGUIImageTabControl::calcTabs()
 
 			if ( Side == 0 )
 			{
-				tabRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y + 2;
+				tabRect.UpperLeftCorner.Y = AbsoluteRect.UpperLeftCorner.Y;
 			}
 			else if ( Side == 1 )
 			{
-				tabRect.UpperLeftCorner.Y = AbsoluteRect.LowerRightCorner.Y - TabHeight + 2;
+				tabRect.UpperLeftCorner.Y = AbsoluteRect.LowerRightCorner.Y - TabHeight;
 			}
 			else if ( Side == 2 )
 			{
-				tabRect.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X + 2;
+				tabRect.UpperLeftCorner.X = AbsoluteRect.UpperLeftCorner.X;
 			}
 			else
 			{
-				tabRect.UpperLeftCorner.X = AbsoluteRect.LowerRightCorner.X - TabWidth + 2;
+				tabRect.UpperLeftCorner.X = AbsoluteRect.LowerRightCorner.X - TabWidth;
 			}
 			
-			tabRect.LowerRightCorner.X = tabRect.UpperLeftCorner.X + len - 2;
-			tabRect.LowerRightCorner.Y = tabRect.UpperLeftCorner.Y + TabHeight - 2;
+			tabRect.LowerRightCorner.X = tabRect.UpperLeftCorner.X + len;
+			tabRect.LowerRightCorner.Y = tabRect.UpperLeftCorner.Y + TabHeight;
 
 			if ( i == (u32)ActiveTabIndex )
 			{
 				tab->Active = true;
-				
-				tabRect.UpperLeftCorner.X -= 2;
-				tabRect.UpperLeftCorner.Y -= 2;
-				tabRect.LowerRightCorner.X += 2;
-				tabRect.LowerRightCorner.Y += 2;
 			}
 			
 			tab->Drawn = true;
@@ -868,7 +863,7 @@ void CGUIImageTabControl::drawTab(CGUIImageTab* tab, IGUIFont* font)
 	}
 	else
 	{
-		tab_rect.UpperLeftCorner.X += BorderOffset;
+		tab_rect.UpperLeftCorner.X -= BorderOffset;
 		tab_texture = tab->Active ? RightActiveTabTexture : RightTabTexture;
 	}
 	
