@@ -185,7 +185,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 side, s32 id, 
 	s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing,
-	s32 view_width, s32 view_height,
+	s32 view_width, s32 view_height, s32 border_width, s32 border_height,
 	video::ITexture* content_texture, 
 	video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 	video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -197,6 +197,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	TabHeight(tab_height), TabWidth(tab_width), 
 	TabPadding(tab_padding), TabSpacing(tab_spacing),
 	ViewWidth(view_width), ViewHeight(view_height),
+	BorderWidth(border_width), BorderHeight(border_height),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), PriorArrow(0), NextArrow(0), ActiveTabIndex(-1), 
 	FirstScrollTabIndex(0), LastScrollTabIndex(-1),
@@ -814,7 +815,12 @@ void CGUIImageTabControl::draw()
 		}
 	}
 
+	/*
 	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, 0, TabHeight, VerticalAlignment);
+	*/
+	
+	drawExpandedImage(AbsoluteRect, TabContentTexture, BorderWidth, BorderHeight);
+	
 
 	if ( PriorArrow )
 		PriorArrow->setEnabled(ScrollControl);
@@ -1031,9 +1037,7 @@ void CGUIImageTabControl::deserializeAttributes(io::IAttributes* in, io::SAttrib
 
 //! Draws an expanded image
 void CGUIImageTabControl::drawExpandedImage(const irr::core::rect<s32>& tabRect, 
-	const video::ITexture *texture,
-	const s32 border_height, const s32 border_width
-	)
+	const video::ITexture *texture, const s32 border_width, const s32 border_height)
 {
 	if (texture)
 	{

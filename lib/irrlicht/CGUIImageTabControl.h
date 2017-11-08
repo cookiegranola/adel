@@ -93,7 +93,7 @@ namespace gui
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground, bool border, s32 side, s32 id, 
 			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
-			s32 view_width, s32 view_height,
+			s32 view_width, s32 view_height, s32 border_width, s32 border_height,
 			video::ITexture* content_texture, 
 			video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 			video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -219,8 +219,7 @@ namespace gui
 		core::rect<s32> calcTabPos();
 		void refreshSprites();
 		void drawExpandedImage(const irr::core::rect<s32>& tabRect, 
-			const video::ITexture *texture, 
-			const s32 border_height, const s32 border_width);
+			const video::ITexture *texture, const s32 border_width, const s32 border_height);
 
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
 		bool FillBackground;
@@ -233,6 +232,8 @@ namespace gui
 		s32 TabSpacing;
 		s32 ViewWidth;
 		s32 ViewHeight;
+		s32 BorderWidth;
+		s32 BorderHeight;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
 		IGUIButton* PriorArrow;
