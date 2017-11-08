@@ -1579,27 +1579,41 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;			
 		}
 
-		video::ITexture *up_button_texture = 0;
-		video::ITexture *down_button_texture = 0;
+		video::ITexture *content_texture = m_tsrc->getTexture("tab_content.png");
+		video::ITexture *top_tab_texture = m_tsrc->getTexture("tab_top.png");
+		video::ITexture *top_active_tab_texture = m_tsrc->getTexture("tab_top_active.png");
+		video::ITexture *bottom_tab_texture = m_tsrc->getTexture("tab_bottom.png");
+		video::ITexture *bottom_active_tab_texture = m_tsrc->getTexture("tab_bottom_active.png");
+		video::ITexture *left_tab_texture = m_tsrc->getTexture("tab_left.png");
+		video::ITexture *left_active_tab_texture = m_tsrc->getTexture("tab_left_active.png");
+		video::ITexture *right_tab_texture = m_tsrc->getTexture("tab_right.png");
+		video::ITexture *right_active_tab_texture = m_tsrc->getTexture("tab_right_active.png");
+		video::ITexture *prior_arrow_texture = 0;
+		video::ITexture *next_arrow_texture = 0;
 
 		if ( side < 2 )
 		{
-			up_button_texture = m_tsrc->getTexture("left_arrow.png");
-			down_button_texture = m_tsrc->getTexture("right_arrow.png");
+			prior_arrow_texture = m_tsrc->getTexture("tab_arrow_left.png");
+			next_arrow_texture = m_tsrc->getTexture("tab_arrow_right.png");
 		}
 		else
 		{
-			up_button_texture = m_tsrc->getTexture("up_arrow.png");
-			down_button_texture = m_tsrc->getTexture("down_arrow.png");
+			prior_arrow_texture = m_tsrc->getTexture("tab_arrow_up.png");
+			next_arrow_texture = m_tsrc->getTexture("tab_arrow_down.png");
 		}
 
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, 
 			this, rect, show_background, show_border, side, spec.fid, 
 			tab_height, tab_width, tab_padding, tab_spacing, 
 			DesiredRect.getWidth(), DesiredRect.getHeight(),
-			up_button_texture, down_button_texture);
+			content_texture, 
+			top_tab_texture, top_active_tab_texture,
+			bottom_tab_texture, bottom_active_tab_texture,
+			left_tab_texture, left_active_tab_texture,
+			right_tab_texture, right_active_tab_texture,
+			prior_arrow_texture, next_arrow_texture);
+			
 		e->drop();
-        
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
 				irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
         e->setTabHeight(tab_height);

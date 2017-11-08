@@ -94,7 +94,12 @@ namespace gui
 			bool fillbackground, bool border, s32 side, s32 id, 
 			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
 			s32 view_width, s32 view_height,
-			video::ITexture* up_button_texture, video::ITexture* down_button_texture);
+			video::ITexture* content_texture, 
+			video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
+			video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
+			video::ITexture* left_tab_texture, video::ITexture* left_active_tab_texture,
+			video::ITexture* right_tab_texture, video::ITexture* right_active_tab_texture,
+			video::ITexture* prior_arrow_texture, video::ITexture* next_arrow_texture);
 			
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -227,13 +232,22 @@ namespace gui
 		s32 ViewHeight;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
-		IGUIButton* UpButton;
-		IGUIButton* DownButton;
+		IGUIButton* PriorArrow;
+		IGUIButton* NextArrow;
 		s32 ActiveTabIndex;
 		s32 FirstScrollTabIndex;
 		s32 LastScrollTabIndex;
-		video::ITexture* UpButtonTexture;
-		video::ITexture* DownButtonTexture;
+		video::ITexture* TabContentTexture;
+		video::ITexture* TopTabTexture;
+		video::ITexture* TopActiveTabTexture;
+		video::ITexture* BottomTabTexture;
+		video::ITexture* BottomActiveTabTexture;
+		video::ITexture* LeftTabTexture;
+		video::ITexture* LeftActiveTabTexture;
+		video::ITexture* RightTabTexture;
+		video::ITexture* RightActiveTabTexture;
+		video::ITexture* PriorArrowTexture;
+		video::ITexture* NextArrowTexture;
 	};
 } // end namespace gui
 } // end namespace irr

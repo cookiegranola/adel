@@ -186,50 +186,60 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	bool fillbackground, bool border, s32 side, s32 id, 
 	s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing,
 	s32 view_width, s32 view_height,
-	video::ITexture* up_button_texture, video::ITexture* down_button_texture)
+	video::ITexture* content_texture, 
+	video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
+	video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
+	video::ITexture* left_tab_texture, video::ITexture* left_active_tab_texture,
+	video::ITexture* right_tab_texture, video::ITexture* right_active_tab_texture,
+	video::ITexture* prior_arrow_texture, video::ITexture* next_arrow_texture)
 	: IGUITabControl(environment, parent, id, rectangle),  
 	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
 	TabHeight(tab_height), TabWidth(tab_width), 
 	TabPadding(tab_padding), TabSpacing(tab_spacing),
 	ViewWidth(view_width), ViewHeight(view_height),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
-	ScrollControl(false), UpButton(0), DownButton(0), ActiveTabIndex(-1), 
+	ScrollControl(false), PriorArrow(0), NextArrow(0), ActiveTabIndex(-1), 
 	FirstScrollTabIndex(0), LastScrollTabIndex(-1),
-	UpButtonTexture(up_button_texture), DownButtonTexture(down_button_texture)
+	TabContentTexture(content_texture),
+	TopTabTexture(top_tab_texture), TopActiveTabTexture(top_active_tab_texture),
+	BottomTabTexture(bottom_tab_texture), BottomActiveTabTexture(bottom_active_tab_texture),
+	LeftTabTexture(left_tab_texture), LeftActiveTabTexture(left_active_tab_texture),
+	RightTabTexture(right_tab_texture), RightActiveTabTexture(right_active_tab_texture),
+	PriorArrowTexture(prior_arrow_texture), NextArrowTexture(next_arrow_texture)
 {
 	#ifdef _DEBUG
 	setDebugName("CGUIImageTabControl");
 	#endif
 	
-	UpButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
+	PriorArrow = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
-	if ( UpButton )
+	if ( PriorArrow )
 	{
-        UpButton->setImage(UpButtonTexture);
-        UpButton->setPressedImage(UpButtonTexture);
-        UpButton->setScaleImage(true);
-		UpButton->setUseAlphaChannel(true);
-		UpButton->setVisible(false);
-		UpButton->setSubElement(true);
-		UpButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
-		UpButton->setOverrideFont(Environment->getBuiltInFont());
-		UpButton->grab();
+        PriorArrow->setImage(PriorArrowTexture);
+        PriorArrow->setPressedImage(PriorArrowTexture);
+        PriorArrow->setScaleImage(true);
+		PriorArrow->setUseAlphaChannel(true);
+		PriorArrow->setVisible(false);
+		PriorArrow->setSubElement(true);
+		PriorArrow->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
+		PriorArrow->setOverrideFont(Environment->getBuiltInFont());
+		PriorArrow->grab();
 		
 	}
 
-	DownButton = Environment->addButton(core::rect<s32>(0,0,10,10), this);
+	NextArrow = Environment->addButton(core::rect<s32>(0,0,10,10), this);
 
-	if ( DownButton )
+	if ( NextArrow )
 	{
-        DownButton->setImage(DownButtonTexture);
-        DownButton->setPressedImage(DownButtonTexture);
-        DownButton->setScaleImage(true);
-		DownButton->setUseAlphaChannel(true);
-		DownButton->setVisible(false);
-		DownButton->setSubElement(true);
-		DownButton->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
-		DownButton->setOverrideFont(Environment->getBuiltInFont());
-		DownButton->grab();
+        NextArrow->setImage(NextArrowTexture);
+        NextArrow->setPressedImage(NextArrowTexture);
+        NextArrow->setScaleImage(true);
+		NextArrow->setUseAlphaChannel(true);
+		NextArrow->setVisible(false);
+		NextArrow->setSubElement(true);
+		NextArrow->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
+		NextArrow->setOverrideFont(Environment->getBuiltInFont());
+		NextArrow->grab();
 	}
 
 	setTabVerticalAlignment(EGUIA_UPPERLEFT);
@@ -245,11 +255,11 @@ CGUIImageTabControl::~CGUIImageTabControl()
 			Tabs[i]->drop();
 	}
 
-	if (UpButton)
-		UpButton->drop();
+	if (PriorArrow)
+		PriorArrow->drop();
 
-	if (DownButton)
-		DownButton->drop();
+	if (NextArrow)
+		NextArrow->drop();
 }
 
 void CGUIImageTabControl::refreshSprites()
@@ -262,16 +272,16 @@ void CGUIImageTabControl::refreshSprites()
 		color = skin->getColor(isEnabled() ? EGDC_WINDOW_SYMBOL : EGDC_GRAY_WINDOW_SYMBOL);
 	}
 
-	if (UpButton)
+	if (PriorArrow)
 	{
-		UpButton->setSprite(EGBS_BUTTON_UP, skin->getIcon(EGDI_CURSOR_LEFT), color);
-		UpButton->setSprite(EGBS_BUTTON_DOWN, skin->getIcon(EGDI_CURSOR_LEFT), color);
+		PriorArrow->setSprite(EGBS_BUTTON_UP, skin->getIcon(EGDI_CURSOR_LEFT), color);
+		PriorArrow->setSprite(EGBS_BUTTON_DOWN, skin->getIcon(EGDI_CURSOR_LEFT), color);
 	}
 
-	if (DownButton)
+	if (NextArrow)
 	{
-		DownButton->setSprite(EGBS_BUTTON_UP, skin->getIcon(EGDI_CURSOR_RIGHT), color);
-		DownButton->setSprite(EGBS_BUTTON_DOWN, skin->getIcon(EGDI_CURSOR_RIGHT), color);
+		NextArrow->setSprite(EGBS_BUTTON_UP, skin->getIcon(EGDI_CURSOR_RIGHT), color);
+		NextArrow->setSprite(EGBS_BUTTON_DOWN, skin->getIcon(EGDI_CURSOR_RIGHT), color);
 	}
 }
 
@@ -426,12 +436,12 @@ bool CGUIImageTabControl::OnEvent(const SEvent& event)
 			switch(event.GUIEvent.EventType)
 			{
 			case EGET_BUTTON_CLICKED:
-				if (event.GUIEvent.Caller == UpButton)
+				if (event.GUIEvent.Caller == PriorArrow)
 				{
 					scrollLeft();
 					return true;
 				}
-				else if (event.GUIEvent.Caller == DownButton)
+				else if (event.GUIEvent.Caller == NextArrow)
 				{
 					scrollRight();
 					return true;
@@ -509,7 +519,7 @@ s32 CGUIImageTabControl::calcTabWidth(s32 pos, IGUIFont* font, const wchar_t* te
 			
 
 	// check if we miss the place to draw the tab-button
-	if ( withScrollControl && ScrollControl && pos+len > UpButton->getAbsolutePosition().UpperLeftCorner.X - 2 )
+	if ( withScrollControl && ScrollControl && pos+len > PriorArrow->getAbsolutePosition().UpperLeftCorner.X - 2 )
 	{
 		s32 tabMinWidth = font->getDimension(L"A").Width;
 		
@@ -679,13 +689,13 @@ void CGUIImageTabControl::calcScrollButtons()
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
 		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
-		UpButton->setRelativePosition(buttonRect);
+		PriorArrow->setRelativePosition(buttonRect);
 
 		buttonRect.UpperLeftCorner.X += TabHeight + TabSpacing;
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
 		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
-		DownButton->setRelativePosition(buttonRect);
+		NextArrow->setRelativePosition(buttonRect);
 	}
 	else
 	{
@@ -702,23 +712,23 @@ void CGUIImageTabControl::calcScrollButtons()
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
 		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
-		UpButton->setRelativePosition(buttonRect);
+		PriorArrow->setRelativePosition(buttonRect);
 
 		buttonRect.UpperLeftCorner.Y += TabHeight + TabSpacing;
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
 		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
-		DownButton->setRelativePosition(buttonRect);
+		NextArrow->setRelativePosition(buttonRect);
 	}
 	
-	if (!UpButton || !DownButton)
+	if (!PriorArrow || !NextArrow)
 		return;
 		
-		UpButton->setVisible( ScrollControl );
-		DownButton->setVisible( ScrollControl );
+		PriorArrow->setVisible( ScrollControl );
+		NextArrow->setVisible( ScrollControl );
 
-	bringToFront( UpButton );
-	bringToFront( DownButton );
+	bringToFront( PriorArrow );
+	bringToFront( NextArrow );
 }
 
 
@@ -806,11 +816,11 @@ void CGUIImageTabControl::draw()
 
 	skin->draw3DTabBody(this, Border, FillBackground, AbsoluteRect, 0, TabHeight, VerticalAlignment);
 
-	if ( UpButton )
-		UpButton->setEnabled(ScrollControl);
+	if ( PriorArrow )
+		PriorArrow->setEnabled(ScrollControl);
 	
-	if ( DownButton )
-		DownButton->setEnabled(ScrollControl);
+	if ( NextArrow )
+		NextArrow->setEnabled(ScrollControl);
 		
 	refreshSprites();
 
