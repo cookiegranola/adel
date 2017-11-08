@@ -1497,6 +1497,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
         s32 tab_spacing = 4;
         s32 border_width = 16;
         s32 border_height = 16;
+        s32 border_offset = 9;
 
 		MY_CHECKPOS("tabheader",0);
 
@@ -1608,7 +1609,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			this, rect, show_background, show_border, side, spec.fid, 
 			tab_height, tab_width, tab_padding, tab_spacing, 
 			DesiredRect.getWidth(), DesiredRect.getHeight(),
-			border_width, border_height, content_texture, 
+			border_width, border_height, border_offset, content_texture, 
 			top_tab_texture, top_active_tab_texture,
 			bottom_tab_texture, bottom_active_tab_texture,
 			left_tab_texture, left_active_tab_texture,

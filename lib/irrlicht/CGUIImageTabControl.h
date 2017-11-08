@@ -92,7 +92,8 @@ namespace gui
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground, bool border, s32 side, s32 id, 
 			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
-			s32 view_width, s32 view_height, s32 border_width, s32 border_height,
+			s32 view_width, s32 view_height, 
+			s32 border_width, s32 border_height, s32 border_offset,
 			video::ITexture* content_texture, 
 			video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 			video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -232,6 +233,7 @@ namespace gui
 		s32 ViewHeight;
 		s32 BorderWidth;
 		s32 BorderHeight;
+		s32 BorderOffset;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
 		IGUIButton* PriorArrow;

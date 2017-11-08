@@ -180,7 +180,8 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 side, s32 id, 
 	s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing,
-	s32 view_width, s32 view_height, s32 border_width, s32 border_height,
+	s32 view_width, s32 view_height, 
+	s32 border_width, s32 border_height, s32 border_offset,
 	video::ITexture* content_texture, 
 	video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 	video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -192,7 +193,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	TabHeight(tab_height), TabWidth(tab_width), 
 	TabPadding(tab_padding), TabSpacing(tab_spacing),
 	ViewWidth(view_width), ViewHeight(view_height),
-	BorderWidth(border_width), BorderHeight(border_height),
+	BorderWidth(border_width), BorderHeight(border_height), BorderOffset(border_offset),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), PriorArrow(0), NextArrow(0), ActiveTabIndex(-1), 
 	FirstScrollTabIndex(0), LastScrollTabIndex(-1),	TabContentTexture(content_texture),
@@ -852,22 +853,22 @@ void CGUIImageTabControl::drawTab(CGUIImageTab* tab, IGUIFont* font)
 
 	if ( Side == 0 )
 	{
-		tab_rect.LowerRightCorner.Y += BorderHeight;
+		tab_rect.LowerRightCorner.Y += BorderOffset;
 		tab_texture = tab->Active ? TopActiveTabTexture : TopTabTexture;
 	}
 	else if ( Side == 1 )
 	{
-		tab_rect.UpperLeftCorner.Y -= BorderHeight;
+		tab_rect.UpperLeftCorner.Y -= BorderOffset;
 		tab_texture = tab->Active ? BottomActiveTabTexture : BottomTabTexture;
 	}
 	else if ( Side == 2 )
 	{
-		tab_rect.LowerRightCorner.X += BorderWidth;
+		tab_rect.LowerRightCorner.X += BorderOffset;
 		tab_texture = tab->Active ? LeftActiveTabTexture : LeftTabTexture;
 	}
 	else
 	{
-		tab_rect.UpperLeftCorner.X += BorderWidth;
+		tab_rect.UpperLeftCorner.X += BorderOffset;
 		tab_texture = tab->Active ? RightActiveTabTexture : RightTabTexture;
 	}
 	
