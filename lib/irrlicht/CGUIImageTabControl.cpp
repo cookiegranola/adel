@@ -1028,24 +1028,73 @@ void CGUIImageTabControl::deserializeAttributes(io::IAttributes* in, io::SAttrib
 	setActiveTab(in->getAttributeAsInt("ActiveTabIndex"));
 	setTabVerticalAlignment( static_cast<EGUI_ALIGNMENT>(in->getAttributeAsEnumeration("TabVerticalAlignment" , GUIAlignmentNames)) );
 }
+
+//! Draws an expanded image
+void CGUIImageTabControl::drawExpandedImage(const irr::core::rect<s32>& tabRect, 
+	const video::ITexture *texture,
+	const s32 border_height, const s32 border_width
+	)
+{
+	if (texture)
+	{
+		s32 texture_width = texture->getSize().Width;
+		s32 texture_height = texture->getSize().Height;
+		
+		s32 left = tabRect.UpperLeftCorner.Y;
+		s32 right = tabRect.LowerRightCorner.X;
+		s32 top = tabRect.UpperLeftCorner.Y;
+		s32 bottom = tabRect.LowerRightCorner.Y;
+		
+		video::IVideoDriver* driver = Environment->getVideoDriver();
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left, top, left + border_width, top + border_height), 
+			irr::core::rect<s32>(0, 0, border_width, border_height), 
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left + border_width, top, right - border_width, top + border_height), 
+			irr::core::rect<s32>(border_width, 0, texture_width - border_width, border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(right - border_width, top, right, top + border_height), 
+			irr::core::rect<s32>(texture_width - border_width, 0, texture_width, border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left, top + border_height, left + border_width, bottom - border_height), 
+			irr::core::rect<s32>(0, border_height, border_width, texture_height - border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left + border_width, top + border_height, right - border_width, bottom - border_height), 
+			irr::core::rect<s32>(border_width, border_height, texture_width - border_width, texture_height - border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(right - border_width, top + border_height, right, bottom - border_height), 
+			irr::core::rect<s32>(texture_width - border_width, border_height, texture_width, texture_height - border_height),  
+			0, 0, true);
+
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left, bottom - border_height, left + border_width, bottom), 
+			irr::core::rect<s32>(0, texture_height - border_height, border_width, texture_height),  
+			0, 0, true);
+			
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(left + border_width, bottom - border_height, right - border_width, bottom), 
+			irr::core::rect<s32>(border_width, texture_height - border_height, texture_width - border_width, texture_height),  
+			0, 0, true);
+			
+		driver->draw2DImage(texture,
+			irr::core::rect<s32>(right - border_width, bottom - border_height, right, bottom), 
+			irr::core::rect<s32>(texture_width - border_width, texture_height - border_height, texture_width, texture_height),  
+			0, 0, true);
+	}
+}
 } // end namespace irr
 } // end namespace gui
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

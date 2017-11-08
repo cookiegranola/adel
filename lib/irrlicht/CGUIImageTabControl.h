@@ -218,6 +218,9 @@ namespace gui
 		void calcScrollButtons();
 		core::rect<s32> calcTabPos();
 		void refreshSprites();
+		void drawExpandedImage(const irr::core::rect<s32>& tabRect, 
+			const video::ITexture *texture, 
+			const s32 border_height, const s32 border_width);
 
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
 		bool FillBackground;
