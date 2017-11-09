@@ -26,6 +26,7 @@ cd Documents
 mkdir KIDSCODE
 cd KIDSCODE
 git clone -b windows https://github.com/cookiegranola/adel
+git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
 cd adel
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
