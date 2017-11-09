@@ -93,6 +93,7 @@ namespace gui
 			bool fillbackground, bool border, s32 side, s32 id, 
 			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
 			s32 width, s32 height, s32 border_width, s32 border_height, s32 border_offset,
+			s32 button_width, s32 button_height, s32 button_offset, s32 button_spacing, 
 			video::ITexture* content_texture, 
 			video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 			video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -233,6 +234,10 @@ namespace gui
 		s32 BorderWidth;
 		s32 BorderHeight;
 		s32 BorderOffset;
+		s32 ButtonWidth;
+		s32 ButtonHeigh;
+		s32 ButtonOffset;
+		s32 ButtonSpacing;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
 		IGUIButton* PriorArrow;
