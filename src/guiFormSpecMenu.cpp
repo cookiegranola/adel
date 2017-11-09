@@ -1482,7 +1482,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 	// :PATCH::
 	std::vector<std::string> parts = split(element,';');
 
-	if ((parts.size() == 4) || (parts.size() >= 6))
+	if (parts.size() >= 4)
 	{
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::string name = parts[1];
@@ -1502,12 +1502,13 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
         s32 border_offset = 11;
 		s32 button_width = 16;
 		s32 button_height = 24;
-		s32 button_offset = 4;
 		s32 button_spacing = 4;
+		s32 button_offset = 4;
+		s32 button_distance = 4;
 
 		MY_CHECKPOS("tabheader",0);
 
-		if (parts.size() > 4 && parts[4] == "true") {
+		if (parts.size() > 4 && parts[4] == "false") {
             show_background = false;
         }
         
@@ -1520,10 +1521,10 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			std::vector<std::string> values = split(parts[6],',');
 			
 			if (values.size() > 0) {
-				if (parts[6] == "top") side = 0;
-				if (parts[6] == "bottom") side = 1;
-				if (parts[6] == "left") side = 2;
-				if (parts[6] == "right") side = 3;
+				if (values[0] == "top") side = 0;
+				if (values[0] == "bottom") side = 1;
+				if (values[0] == "left") side = 2;
+				if (values[0] == "right") side = 3;
 			}
 			
 			if (values.size() > 1 && values[1].length() > 0) {
@@ -1579,7 +1580,15 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			}
 					
 			if (values.size() > 2 && values[2].length() > 0) {
-				button_offset = stoi(values[2]);
+				button_spacing = stoi(values[2]);
+			}
+					
+			if (values.size() > 3 && values[3].length() > 0) {
+				button_offset = stoi(values[3]);
+			}
+					
+			if (values.size() > 4 && values[4].length() > 0) {
+				button_distance = stoi(values[4]);
 			}
 		}
 
@@ -1662,8 +1671,10 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			this, rect, show_background, show_border, side, spec.fid, 
 			tab_height, tab_width, tab_padding, tab_spacing, 
 			width, height, border_width, border_height, border_offset, 
-			button_width, button_height, button_offset, button_spacing,
-			content_texture, top_tab_texture, top_active_tab_texture,
+			button_width, button_height, 
+			button_spacing, button_offset, button_distance, 
+			content_texture, 
+			top_tab_texture, top_active_tab_texture,
 			bottom_tab_texture, bottom_active_tab_texture,
 			left_tab_texture, left_active_tab_texture,
 			right_tab_texture, right_active_tab_texture,

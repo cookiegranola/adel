@@ -178,10 +178,11 @@ void CGUIImageTab::drawImage(
 //! constructor
 CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
-	bool fillbackground, bool border, s32 side, s32 id, 
+	bool show_background, bool show_border, s32 side, s32 id, 
 	s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing,
 	s32 width, s32 height, s32 border_width, s32 border_height, s32 border_offset,
-	s32 button_width, s32 button_height, s32 button_offset, s32 button_spacing,
+	s32 button_width, s32 button_height, 
+	s32 button_spacing, s32 button_offset, s32 button_distance, 
 	video::ITexture* content_texture, 
 	video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 	video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -189,13 +190,14 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	video::ITexture* right_tab_texture, video::ITexture* right_active_tab_texture,
 	video::ITexture* prior_arrow_texture, video::ITexture* next_arrow_texture)
 	: IGUITabControl(environment, parent, id, rectangle),  
-	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
+	Tabs(), ShowBackground(show_background), ShowBorder(show_border), Side(side),
 	TabHeight(tab_height), TabWidth(tab_width), 
 	TabPadding(tab_padding), TabSpacing(tab_spacing),
 	Width(width), Height(height),
 	BorderWidth(border_width), BorderHeight(border_height), BorderOffset(border_offset),
-	ButtonWidth(button_width), ButtonHeigh(button_height), ButtonOffset(button_offset), 
-	ButtonSpacing(button_spacing), VerticalAlignment(EGUIA_UPPERLEFT), 
+	ButtonWidth(button_width), ButtonHeight(button_height), 
+	ButtonSpacing(button_spacing), ButtonOffset(button_offset), ButtonDistance(button_distance), 
+	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), PriorArrow(0), NextArrow(0), ActiveTabIndex(-1), 
 	FirstScrollTabIndex(0), LastScrollTabIndex(-1),	TabContentTexture(content_texture),
 	TopTabTexture(top_tab_texture), TopActiveTabTexture(top_active_tab_texture),
@@ -690,48 +692,48 @@ void CGUIImageTabControl::calcScrollButtons()
 	
 	if ( Side < 2 )
 	{
-		buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - 2 * ( TabHeight + TabSpacing );
+		buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - ButtonDistance - 2 * ButtonWidth - ButtonSpacing;
 		
 		if ( Side == 0 )
 		{
-			buttonRect.UpperLeftCorner.Y = 0;
+			buttonRect.UpperLeftCorner.Y = TabHeight - ButtonHeight - ButtonOffset;
 		}
 		else
 		{
-			buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - TabHeight;
+			buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - TabHeight + ButtonOffset;
 		}
 		
-		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
-		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + ButtonWidth;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + ButtonHeight;
 		PriorArrow->setRelativePosition(buttonRect);
 
-		buttonRect.UpperLeftCorner.X += TabHeight + TabSpacing;
+		buttonRect.UpperLeftCorner.X += ButtonWidth + ButtonSpacing;
 		
-		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
-		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + ButtonWidth;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + ButtonHeight;
 		NextArrow->setRelativePosition(buttonRect);
 	}
 	else
 	{
-		buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - 2 * ( TabHeight + TabSpacing );
+		buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - ButtonDistance - 2 * ButtonHeight - ButtonSpacing;
 		
 		if ( Side == 2 )
 		{
-			buttonRect.UpperLeftCorner.X = TabWidth - TabHeight;
+			buttonRect.UpperLeftCorner.X = TabWidth - ButtonWidth - ButtonOffset;
 		}
 		else
 		{
-			buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - TabWidth;
+			buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - TabWidth + ButtonOffset;
 		}
 		
-		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
-		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + ButtonWidth;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + ButtonHeight;
 		PriorArrow->setRelativePosition(buttonRect);
 
-		buttonRect.UpperLeftCorner.Y += TabHeight + TabSpacing;
+		buttonRect.UpperLeftCorner.Y += ButtonHeight + ButtonSpacing;
 		
-		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + TabHeight;
-		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + TabHeight;
+		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + ButtonWidth;
+		buttonRect.LowerRightCorner.Y = buttonRect.UpperLeftCorner.Y + ButtonHeight;
 		NextArrow->setRelativePosition(buttonRect);
 	}
 	
@@ -1110,8 +1112,8 @@ void CGUIImageTabControl::serializeAttributes(io::IAttributes* out, io::SAttribu
 	IGUITabControl::serializeAttributes(out,options);
 
 	out->addInt ("ActiveTabIndex",	ActiveTabIndex);
-	out->addBool("Border",		Border);
-	out->addBool("FillBackground",	FillBackground);
+	out->addBool("Border",		ShowBorder);
+	out->addBool("FillBackground",	ShowBackground);
 	out->addInt ("TabHeight",	TabHeight);
 	out->addInt ("TabWidth", TabWidth);
 	out->addEnum("TabVerticalAlignment", s32(VerticalAlignment), GUIAlignmentNames);
@@ -1121,8 +1123,8 @@ void CGUIImageTabControl::serializeAttributes(io::IAttributes* out, io::SAttribu
 //! Reads attributes of the element
 void CGUIImageTabControl::deserializeAttributes(io::IAttributes* in, io::SAttributeReadWriteOptions* options=0)
 {
-	Border          = in->getAttributeAsBool("Border");
-	FillBackground  = in->getAttributeAsBool("FillBackground");
+	ShowBorder      = in->getAttributeAsBool("Border");
+	ShowBackground  = in->getAttributeAsBool("FillBackground");
 
 	ActiveTabIndex = -1;
 

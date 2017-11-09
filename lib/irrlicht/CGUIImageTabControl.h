@@ -90,10 +90,10 @@ namespace gui
 		//! destructor
 		CGUIImageTabControl(IGUIEnvironment* environment, 
 			IGUIElement* parent, const core::rect<s32>& rectangle,
-			bool fillbackground, bool border, s32 side, s32 id, 
+			bool show_background, bool show_border, s32 side, s32 id, 
 			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
 			s32 width, s32 height, s32 border_width, s32 border_height, s32 border_offset,
-			s32 button_width, s32 button_height, s32 button_offset, s32 button_spacing, 
+			s32 button_width, s32 button_height, s32 button_spacing, s32 button_offset, s32 button_distance, 
 			video::ITexture* content_texture, 
 			video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 			video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -221,8 +221,8 @@ namespace gui
 		void refreshSprites();
 
 		core::array<CGUIImageTab*> Tabs;	// CGUIImageTab* because we need setNumber (which is certainly not nice)
-		bool FillBackground;
-		bool Border;
+		bool ShowBackground;
+		bool ShowBorder;
 		s32 Side;
 		s32 TabHeight;
 		s32 TabWidth;
@@ -235,9 +235,10 @@ namespace gui
 		s32 BorderHeight;
 		s32 BorderOffset;
 		s32 ButtonWidth;
-		s32 ButtonHeigh;
-		s32 ButtonOffset;
+		s32 ButtonHeight;
 		s32 ButtonSpacing;
+		s32 ButtonOffset;
+		s32 ButtonDistance;
 		gui::EGUI_ALIGNMENT VerticalAlignment;
 		bool ScrollControl;
 		IGUIButton* PriorArrow;
