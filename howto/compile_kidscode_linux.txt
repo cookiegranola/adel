@@ -10,8 +10,20 @@ cd adel
 git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
+
+sudo apt install build-essential freeglut3 freeglut3-dev freeglut3-dbg xserver-xorg-dev x11proto-xf86vidmode-dev libxxf86vm-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libxext-dev libxcursor-dev
+cd lib/irrlicht
+cd source/Irrlicht
+make
+(pour la version debug)
+make NDEBUG=1
+(pour la version release)
+cd ../../../..
+ls lib/irrlicht/lib/Linux
+
+
 rm CMakeCache.txt
-cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=1 -DRUN_IN_PLACE=1
+cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=1 -DRUN_IN_PLACE=1 -DIRRLICHT_INCLUDE_DIR=lib/irrlicht/include -DIRRLICHT_LIBRARY=lib/irrlicht/lib/Linux/libIrrlicht.a
 make
 
 ./bin/kidscode
@@ -49,3 +61,6 @@ cd test
 # Références
 
 http://dev.minetest.net/Compiling_Minetest
+http://www.irrlicht3d.org/wiki/index.php?n=Main.CompilingOnLinux
+
+

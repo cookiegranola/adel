@@ -75,8 +75,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 	}
 
 
-#include "../lib/irrlicht/CGUIImageTabControl.h"
-#include "../lib/irrlicht/CGUIImageTabControl.cpp"
+#include "../lib/irrlicht_patch/CGUIImageTabControl.h"
+#include "../lib/irrlicht_patch/CGUIImageTabControl.cpp"
 
 #include <IGUIElement.h>
 #include <IGUIEnvironment.h>
