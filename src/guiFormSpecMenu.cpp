@@ -1500,7 +1500,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
         s32 border_width = 16;
         s32 border_height = 16;
         s32 border_offset = 11;
-		s32 button_width = 16;
+		s32 button_width = 24;
 		s32 button_height = 24;
 		s32 button_spacing = 4;
 		s32 button_offset = 4;
@@ -1654,17 +1654,23 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		video::ITexture *right_tab_texture = m_tsrc->getTexture("tab_right.png");
 		video::ITexture *right_active_tab_texture = m_tsrc->getTexture("tab_right_active.png");
 		video::ITexture *prior_arrow_texture = 0;
+		video::ITexture *prior_arrow_pressed_texture = 0;
 		video::ITexture *next_arrow_texture = 0;
+		video::ITexture *next_arrow_pressed_texture = 0;
 
 		if ( side < 2 )
 		{
 			prior_arrow_texture = m_tsrc->getTexture("tab_arrow_left.png");
+			prior_arrow_pressed_texture = m_tsrc->getTexture("tab_arrow_left_pressed.png");
 			next_arrow_texture = m_tsrc->getTexture("tab_arrow_right.png");
+			next_arrow_pressed_texture = m_tsrc->getTexture("tab_arrow_right_pressed.png");
 		}
 		else
 		{
 			prior_arrow_texture = m_tsrc->getTexture("tab_arrow_up.png");
+			prior_arrow_pressed_texture = m_tsrc->getTexture("tab_arrow_up_pressed.png");
 			next_arrow_texture = m_tsrc->getTexture("tab_arrow_down.png");
+			next_arrow_pressed_texture = m_tsrc->getTexture("tab_arrow_down_pressed.png");
 		}
 
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, 
@@ -1678,7 +1684,8 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			bottom_tab_texture, bottom_active_tab_texture,
 			left_tab_texture, left_active_tab_texture,
 			right_tab_texture, right_active_tab_texture,
-			prior_arrow_texture, next_arrow_texture);
+			prior_arrow_texture, prior_arrow_pressed_texture, 
+			next_arrow_texture, next_arrow_pressed_texture);
 			
 		e->drop();
 		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,

@@ -188,7 +188,8 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
 	video::ITexture* left_tab_texture, video::ITexture* left_active_tab_texture,
 	video::ITexture* right_tab_texture, video::ITexture* right_active_tab_texture,
-	video::ITexture* prior_arrow_texture, video::ITexture* next_arrow_texture)
+	video::ITexture* prior_arrow_texture, video::ITexture* prior_arrow_pressed_texture, 
+	video::ITexture* next_arrow_texture, video::ITexture* next_arrow_pressed_texture)
 	: IGUITabControl(environment, parent, id, rectangle),  
 	Tabs(), ShowBackground(show_background), ShowBorder(show_border), Side(side),
 	TabHeight(tab_height), TabWidth(tab_width), 
@@ -204,7 +205,8 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	BottomTabTexture(bottom_tab_texture), BottomActiveTabTexture(bottom_active_tab_texture),
 	LeftTabTexture(left_tab_texture), LeftActiveTabTexture(left_active_tab_texture),
 	RightTabTexture(right_tab_texture), RightActiveTabTexture(right_active_tab_texture),
-	PriorArrowTexture(prior_arrow_texture), NextArrowTexture(next_arrow_texture),
+	PriorArrowTexture(prior_arrow_texture), PriorArrowPressedTexture(prior_arrow_pressed_texture), 
+	NextArrowTexture(next_arrow_texture), NextArrowPressedTexture(next_arrow_pressed_texture),
 	ContentRect(0, 0, 0, 0)
 {
 	#ifdef _DEBUG
@@ -216,7 +218,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	if ( PriorArrow )
 	{
         PriorArrow->setImage(PriorArrowTexture);
-        PriorArrow->setPressedImage(PriorArrowTexture);
+        PriorArrow->setPressedImage(PriorArrowPressedTexture);
         PriorArrow->setDrawBorder(false);
         PriorArrow->setScaleImage(true);
 		PriorArrow->setUseAlphaChannel(true);
@@ -225,7 +227,6 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 		PriorArrow->setAlignment(EGUIA_LOWERRIGHT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_UPPERLEFT);
 		PriorArrow->setOverrideFont(Environment->getBuiltInFont());
 		PriorArrow->grab();
-		
 	}
 
 	NextArrow = Environment->addButton(core::rect<s32>(0,0,10,10), this);
@@ -233,7 +234,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	if ( NextArrow )
 	{
         NextArrow->setImage(NextArrowTexture);
-        NextArrow->setPressedImage(NextArrowTexture);
+        NextArrow->setPressedImage(NextArrowPressedTexture);
         NextArrow->setDrawBorder(false);
         NextArrow->setScaleImage(true);
 		NextArrow->setUseAlphaChannel(true);
@@ -601,7 +602,7 @@ void CGUIImageTabControl::calcTabs()
 				pos += len + TabSpacing;
 				
 				if ( ScrollControl
-					 && pos > AbsoluteRect.LowerRightCorner.X - 2 * ( TabHeight + TabSpacing ) - BorderWidth )
+					 && pos > AbsoluteRect.LowerRightCorner.X - ButtonOffset - 2 * ( ButtonWidth + ButtonSpacing ) - BorderWidth )
 				{
 					break;		
 				}				
@@ -618,7 +619,7 @@ void CGUIImageTabControl::calcTabs()
 				pos += TabHeight + TabSpacing;
 				
 				if ( ScrollControl
-					 && pos > AbsoluteRect.LowerRightCorner.Y - 2 * ( TabHeight + TabSpacing ) - BorderHeight )
+					 && pos > AbsoluteRect.LowerRightCorner.Y - ButtonOffset - 2 * ( ButtonHeight + ButtonSpacing ) - BorderHeight )
 				{
 					break;		
 				}				
@@ -692,15 +693,15 @@ void CGUIImageTabControl::calcScrollButtons()
 	
 	if ( Side < 2 )
 	{
-		buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - ButtonDistance - 2 * ButtonWidth - ButtonSpacing;
+		buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - ButtonOffset - 2 * ButtonWidth - ButtonSpacing;
 		
 		if ( Side == 0 )
 		{
-			buttonRect.UpperLeftCorner.Y = TabHeight - ButtonHeight - ButtonOffset;
+			buttonRect.UpperLeftCorner.Y = TabHeight - ButtonHeight - ButtonDistance;
 		}
 		else
 		{
-			buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - TabHeight + ButtonOffset;
+			buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - TabHeight + ButtonDistance;
 		}
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + ButtonWidth;
@@ -715,15 +716,15 @@ void CGUIImageTabControl::calcScrollButtons()
 	}
 	else
 	{
-		buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - ButtonDistance - 2 * ButtonHeight - ButtonSpacing;
+		buttonRect.UpperLeftCorner.Y = AbsoluteRect.getHeight() - ButtonOffset - 2 * ButtonHeight - ButtonSpacing;
 		
 		if ( Side == 2 )
 		{
-			buttonRect.UpperLeftCorner.X = TabWidth - ButtonWidth - ButtonOffset;
+			buttonRect.UpperLeftCorner.X = TabWidth - ButtonWidth - ButtonDistance;
 		}
 		else
 		{
-			buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - TabWidth + ButtonOffset;
+			buttonRect.UpperLeftCorner.X = AbsoluteRect.getWidth() - TabWidth + ButtonDistance;
 		}
 		
 		buttonRect.LowerRightCorner.X = buttonRect.UpperLeftCorner.X + ButtonWidth;
@@ -740,8 +741,8 @@ void CGUIImageTabControl::calcScrollButtons()
 	if (!PriorArrow || !NextArrow)
 		return;
 		
-		PriorArrow->setVisible( ScrollControl );
-		NextArrow->setVisible( ScrollControl );
+	PriorArrow->setVisible( ScrollControl );
+	NextArrow->setVisible( ScrollControl );
 
 	bringToFront( PriorArrow );
 	bringToFront( NextArrow );

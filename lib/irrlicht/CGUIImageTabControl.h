@@ -99,7 +99,8 @@ namespace gui
 			video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
 			video::ITexture* left_tab_texture, video::ITexture* left_active_tab_texture,
 			video::ITexture* right_tab_texture, video::ITexture* right_active_tab_texture,
-			video::ITexture* prior_arrow_texture, video::ITexture* next_arrow_texture);
+			video::ITexture* prior_arrow_texture, video::ITexture* prior_arrow_pressed_texture, 
+			video::ITexture* next_arrow_texture, video::ITexture* next_arrow_pressed_texture);
 			
 		//! destructor
 		virtual ~CGUIImageTabControl();
@@ -256,7 +257,9 @@ namespace gui
 		video::ITexture* RightTabTexture;
 		video::ITexture* RightActiveTabTexture;
 		video::ITexture* PriorArrowTexture;
+		video::ITexture* PriorArrowPressedTexture;
 		video::ITexture* NextArrowTexture;
+		video::ITexture* NextArrowPressedTexture;
 		irr::core::rect<s32> ContentRect;
 	};
 } // end namespace gui
