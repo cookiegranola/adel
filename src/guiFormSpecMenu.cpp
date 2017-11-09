@@ -1479,6 +1479,7 @@ void GUIFormSpecMenu::parseImageButton(parserData* data, const std::string &elem
 
 void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &element)
 {
+	// :PATCH::
 	std::vector<std::string> parts = split(element,';');
 
 	if ((parts.size() == 4) || (parts.size() >= 6))
@@ -1561,13 +1562,16 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		);
 
 		spec.ftype = f_TabHeader;
+		
+		s32 width = DesiredRect.getWidth();
+		s32 height = DesiredRect.getHeight();
 
 		v2s32 pos = pos_offset * spacing;
 		pos.X += stof(v_pos[0]) * (float)spacing.X;
 		pos.Y += stof(v_pos[1]) * (float)spacing.Y;
 		v2s32 geom;
-		geom.X = DesiredRect.getWidth();
-		geom.Y = DesiredRect.getHeight();
+		geom.X = width;
+		geom.Y = height;
 		
 		core::rect<s32> view_rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
 				pos.Y+geom.Y);
@@ -1628,7 +1632,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, 
 			this, rect, show_background, show_border, side, spec.fid, 
 			tab_height, tab_width, tab_padding, tab_spacing, 
-			DesiredRect.getWidth(), DesiredRect.getHeight(),
+			width, height,
 			border_width, border_height, border_offset, content_texture, 
 			top_tab_texture, top_active_tab_texture,
 			bottom_tab_texture, bottom_active_tab_texture,
@@ -1687,6 +1691,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 	}
 	errorstream << "Invalid TabHeader element(" << parts.size() << "): '"
 			<< element << "'"  << std::endl;
+	// ::PATCH:
 }
 
 void GUIFormSpecMenu::parseItemImageButton(parserData* data, const std::string &element)

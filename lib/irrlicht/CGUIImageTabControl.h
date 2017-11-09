@@ -92,8 +92,7 @@ namespace gui
 			IGUIElement* parent, const core::rect<s32>& rectangle,
 			bool fillbackground, bool border, s32 side, s32 id, 
 			s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing, 
-			s32 view_width, s32 view_height, 
-			s32 border_width, s32 border_height, s32 border_offset,
+			s32 width, s32 height, s32 border_width, s32 border_height, s32 border_offset,
 			video::ITexture* content_texture, 
 			video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 			video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -214,7 +213,7 @@ namespace gui
 			CGUIImageTab* tab) const;
 		void calcTabs();
 		void calcScrollButtons();
-		core::rect<s32> calcTabPos();
+		core::rect<s32> calcRelativeRect();
 		void drawExpandedImage(const irr::core::rect<s32>& tab_rect, 
 			const video::ITexture *texture, const s32 border_width, const s32 border_height);
 		void drawTab(CGUIImageTab* tab, IGUIFont* font);
@@ -229,8 +228,8 @@ namespace gui
 		s32 TabMaxWidth;
 		s32 TabPadding;
 		s32 TabSpacing;
-		s32 ViewWidth;
-		s32 ViewHeight;
+		s32 Width;
+		s32 Height;
 		s32 BorderWidth;
 		s32 BorderHeight;
 		s32 BorderOffset;

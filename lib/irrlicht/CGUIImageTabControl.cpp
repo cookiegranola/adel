@@ -180,8 +180,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	IGUIElement* parent, const core::rect<s32>& rectangle,
 	bool fillbackground, bool border, s32 side, s32 id, 
 	s32 tab_height, s32 tab_width, s32 tab_padding, s32 tab_spacing,
-	s32 view_width, s32 view_height, 
-	s32 border_width, s32 border_height, s32 border_offset,
+	s32 width, s32 height, s32 border_width, s32 border_height, s32 border_offset,
 	video::ITexture* content_texture, 
 	video::ITexture* top_tab_texture, video::ITexture* top_active_tab_texture,
 	video::ITexture* bottom_tab_texture, video::ITexture* bottom_active_tab_texture,
@@ -192,7 +191,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	Tabs(), FillBackground(fillbackground), Border(border), Side(side),
 	TabHeight(tab_height), TabWidth(tab_width), 
 	TabPadding(tab_padding), TabSpacing(tab_spacing),
-	ViewWidth(view_width), ViewHeight(view_height),
+	Width(width), Height(height),
 	BorderWidth(border_width), BorderHeight(border_height), BorderOffset(border_offset),
 	VerticalAlignment(EGUIA_UPPERLEFT), 
 	ScrollControl(false), PriorArrow(0), NextArrow(0), ActiveTabIndex(-1), 
@@ -214,6 +213,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	{
         PriorArrow->setImage(PriorArrowTexture);
         PriorArrow->setPressedImage(PriorArrowTexture);
+        PriorArrow->setDrawBorder(false);
         PriorArrow->setScaleImage(true);
 		PriorArrow->setUseAlphaChannel(true);
 		PriorArrow->setVisible(false);
@@ -230,6 +230,7 @@ CGUIImageTabControl::CGUIImageTabControl(IGUIEnvironment* environment,
 	{
         NextArrow->setImage(NextArrowTexture);
         NextArrow->setPressedImage(NextArrowTexture);
+        NextArrow->setDrawBorder(false);
         NextArrow->setScaleImage(true);
 		NextArrow->setUseAlphaChannel(true);
 		NextArrow->setVisible(false);
@@ -292,7 +293,7 @@ IGUITab* CGUIImageTabControl::addTab(const wchar_t* caption, s32 id)
 CGUIImageTab* CGUIImageTabControl::addImageTab(const wchar_t* caption, s32 id, 
 	video::ITexture *texture, f32 scaling)
 {
-	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcTabPos(), id, 
+	CGUIImageTab* tab = new CGUIImageTab(Tabs.size(), Environment, this, calcRelativeRect(), id, 
 		texture, scaling);
 
 	if (!texture)
@@ -358,7 +359,7 @@ IGUITab* CGUIImageTabControl::insertTab(s32 idx, const wchar_t* caption, s32 id)
 	if ( idx < 0 || idx > (s32)Tabs.size() )	// idx == Tabs.size() is indeed ok here as core::array can handle that
 		return NULL;
 
-	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcTabPos(), id);
+	CGUIImageTab* tab = new CGUIImageTab(idx, Environment, this, calcRelativeRect(), id);
 
 	tab->setText(caption);
 	tab->setAlignment(EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
@@ -744,7 +745,7 @@ void CGUIImageTabControl::calcScrollButtons()
 
 
 //! Computes a tab position
-core::rect<s32> CGUIImageTabControl::calcTabPos()
+core::rect<s32> CGUIImageTabControl::calcRelativeRect()
 {
 	core::rect<s32> r;
 	
@@ -984,7 +985,7 @@ void CGUIImageTabControl::setTabVerticalAlignment( EGUI_ALIGNMENT alignment )
 {
 	VerticalAlignment = alignment;
 
-	core::rect<s32> r(calcTabPos());
+	core::rect<s32> r(calcRelativeRect());
 	for ( u32 i=0; i<Tabs.size(); ++i )
 	{
 		Tabs[i]->setRelativePosition(r);
