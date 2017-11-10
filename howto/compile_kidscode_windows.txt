@@ -37,6 +37,10 @@ https://git-scm.com/download/win
         + Checkout as-is, commit as-is
         + Use MinTTY
 
+https://www.microsoft.com/en-us/download/confirmation.aspx?id=6812
+
+		Lancer DXSDK_Jun10.exe
+		
 C:
 md \KIDSCODE
 cd \KIDSCODE
@@ -47,7 +51,7 @@ git clone --recursive https://github.com/cookiegranola/minetest_game games/minet
 
 ouvrir C:\KIDSCODE\adel\lib\irrlicht\source\Irrlicht\Irrlicht11.0.sln avec Visual Studio 2017
 
-	générer les solutions Debug/Release Win32
+	générer les solutions Static lib Debug ou Release Win32
 
 https://www.dropbox.com/s/t3fuc61116lytva/Minetest_MSVC_Win32_libraries_compiled_170104.7z 
 (ou utiliser celui du répertoire howto)
@@ -77,21 +81,21 @@ Le répertoire C:\KIDSCODE contiendra alors ceci :
 	zlib-1.2.8
 
 del CMakeCache.txt
-cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=0 -DRUN_IN_PLACE=1 -DCURL_INCLUDE_DIR=C:\KIDSCODE\curl-master\include -DCURL_LIBRARY=C:\KIDSCODE\curl-master\bin\libcurl_imp.lib -DCURL_DLL=C:\KIDSCODE\curl-master\bin\libcurl.dll -DFREETYPE_INCLUDE_DIRS=C:\KIDSCODE\freetype-2.7.0\include -DFREETYPE_INCLUDE_DIR_freetype2=C:\KIDSCODE\freetype-2.7.0\include -DFREETYPE_INCLUDE_DIR_ft2build=C:\KIDSCODE\freetype-2.7.0\include -DFREETYPE_LIBRARY=C:\KIDSCODE\freetype-2.7.0\bin\freetype27.lib -DIRRLICHT_INCLUDE_DIR=C:\KIDSCODE\adel\lib\irrlicht\include -DIRRLICHT_LIBRARY=C:\KIDSCODE\adel\lib\irrlicht\lib\Win32-visualstudio -DVORBIS_INCLUDE_DIR=C:\KIDSCODE\libvorbis-1.3.3\include -DOGG_INCLUDE_DIR=C:\KIDSCODE\libogg-1.3.1\include -DOGG_LIBRARY=C:\KIDSCODE\libogg-1.3.1\bin\libogg.lib -DOGG_DLL=C:\KIDSCODE\libogg-1.3.1\bin\libogg.dll -DVORBIS_LIBRARY=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbis.lib -DVORBIS_DLL=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbis.dll -DVORBISFILE_LIBRARY=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbisfile.lib -DVORBISFILE_DLL=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbisfile.dll -DOPENAL_INCLUDE_DIR=C:\KIDSCODE\openal-soft-1.15.1\include\AL -DOPENAL_LIBRARY=C:\KIDSCODE\openal-soft-1.15.1\bin\OpenAL32.lib -DOPENAL_DLL=C:\KIDSCODE\openal-soft-1.15.1\bin\OpenAL32.dll -DPostgreSQL_INCLUDE_DIR=C:\KIDSCODE\postgresql-9.5.3\include -DPostgreSQL_TYPE_INCLUDE_DIR=C:\KIDSCODE\postgresql-9.5.3\include -DPostgreSQL_LIBRARY=C:\KIDSCODE\postgresql-9.5.3\bin\libpq.lib -DPOSTGRESQL_LIBRARY=C:\KIDSCODE\postgresql-9.5.3\bin\libpq.lib -DSQLITE3_INCLUDE_DIR=C:\KIDSCODE\sqlite-3.15.2\include -DSQLITE3_LIBRARY=C:\KIDSCODE\sqlite-3.15.2\bin\sqlite3.lib -DZLIB_INCLUDE_DIR=C:\KIDSCODE\zlib-1.2.8\include -DZLIB_LIBRARIES=C:\KIDSCODE\zlib-1.2.8\bin\ZlibDllRelease\zlibwapi.lib -DZLIB_DLL=C:\KIDSCODE\zlib-1.2.8\bin\ZlibDllRelease\zlibwapi.dll
+cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=0 -DRUN_IN_PLACE=1 -DCURL_INCLUDE_DIR=C:\KIDSCODE\curl-master\include -DCURL_LIBRARY=C:\KIDSCODE\curl-master\bin\libcurl_imp.lib -DCURL_DLL=C:\KIDSCODE\curl-master\bin\libcurl.dll -DFREETYPE_INCLUDE_DIRS=C:\KIDSCODE\freetype-2.7.0\include -DFREETYPE_INCLUDE_DIR_freetype2=C:\KIDSCODE\freetype-2.7.0\include -DFREETYPE_INCLUDE_DIR_ft2build=C:\KIDSCODE\freetype-2.7.0\include -DFREETYPE_LIBRARY=C:\KIDSCODE\freetype-2.7.0\bin\freetype27.lib -DIRRLICHT_INCLUDE_DIR=C:\KIDSCODE\adel\lib\irrlicht\include -DIRRLICHT_LIBRARY=C:\KIDSCODE\adel\lib\irrlicht\lib\Win32-visualstudio\Irrlicht.lib -DVORBIS_INCLUDE_DIR=C:\KIDSCODE\libvorbis-1.3.3\include -DOGG_INCLUDE_DIR=C:\KIDSCODE\libogg-1.3.1\include -DOGG_LIBRARY=C:\KIDSCODE\libogg-1.3.1\bin\libogg.lib -DOGG_DLL=C:\KIDSCODE\libogg-1.3.1\bin\libogg.dll -DVORBIS_LIBRARY=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbis.lib -DVORBIS_DLL=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbis.dll -DVORBISFILE_LIBRARY=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbisfile.lib -DVORBISFILE_DLL=C:\KIDSCODE\libvorbis-1.3.3\bin\libvorbisfile.dll -DOPENAL_INCLUDE_DIR=C:\KIDSCODE\openal-soft-1.15.1\include\AL -DOPENAL_LIBRARY=C:\KIDSCODE\openal-soft-1.15.1\bin\OpenAL32.lib -DOPENAL_DLL=C:\KIDSCODE\openal-soft-1.15.1\bin\OpenAL32.dll -DPostgreSQL_INCLUDE_DIR=C:\KIDSCODE\postgresql-9.5.3\include -DPostgreSQL_TYPE_INCLUDE_DIR=C:\KIDSCODE\postgresql-9.5.3\include -DPostgreSQL_LIBRARY=C:\KIDSCODE\postgresql-9.5.3\bin\libpq.lib -DPOSTGRESQL_LIBRARY=C:\KIDSCODE\postgresql-9.5.3\bin\libpq.lib -DSQLITE3_INCLUDE_DIR=C:\KIDSCODE\sqlite-3.15.2\include -DSQLITE3_LIBRARY=C:\KIDSCODE\sqlite-3.15.2\bin\sqlite3.lib -DZLIB_INCLUDE_DIR=C:\KIDSCODE\zlib-1.2.8\include -DZLIB_LIBRARIES=C:\KIDSCODE\zlib-1.2.8\bin\ZlibDllRelease\zlibwapi.lib -DZLIB_DLL=C:\KIDSCODE\zlib-1.2.8\bin\ZlibDllRelease\zlibwapi.dll
 
 ouvrir C:\KIDSCODE\adel\kidscode.sln avec Visual Studio 2017
 
-    choisir minetest comme projet de démarrage
+    définir minetest comme projet de démarrage
 
     dans les propriétés du projet minetest
     
-        dans la section "Entrée" de "Editeur de liens"
+        dans la section "Editeur de liens" à la sous-section "Entrée"
             
             ajouter "LIBCMT" aux bibliothèques par défaut spécifiques ignorées pour les solutions Debug/RelWithDebInfo Win32
 
                 %(IgnoreSpecificDefaultLibraries) LIBCMT
         
-        dans la section "Général" de "C/C++"
+        dans la section "C/C++" à la sous-section "Général" pour la solution RelWithDebInfo
         
             mettre "Aucun" comme format des informations de débogage pour la solution RelWithDebInfo Win32
         
@@ -135,10 +139,31 @@ encrypt_games.bat
 
 ---
 
+# Corriger Irrlicht11.0.sln
+
+ouvrir C:\KIDSCODE\adel\lib\irrlicht\source\Irrlicht\Irrlicht11.0.sln avec Visual Studio 2017
+
+	ajouter les fichiers cpp et h manquants
+
+	pour les solutions Static lib Debug/Release Win32
+	
+		dans les propriétés du projet minetest Irrlicht
+		
+			dans la section Général
+			
+				Version du Windows SDK : 10.0.16299.0
+				Ensemble d'outils de plateforme : Visual Studio 2017 (v141)
+				
+			dans la section Répertoires VC++
+			
+				Répertoires Include : $(DXSDK_DIR)include;$(VC_IncludePath);$(WindowsSDK_IncludePath)
+				Répertoires de bibliothèques : $(DXSDK_DIR)Lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)
+
+---
+
 # Références
 
 http://dev.minetest.net/Compiling_Minetest
 http://krock-works.16mb.com/MTstuff/Compile_Minetest_MSVC.txt
 https://forum.minetest.net/viewtopic.php?t=9190
 https://github.com/mdoege/mtmake-osx
-
