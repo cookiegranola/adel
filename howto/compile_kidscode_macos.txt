@@ -31,14 +31,18 @@ cd adel
 git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
+rm /usr/local/lib/libIrrlicht.a
+
 ouvrir lib/irrlicht/source/Irrlicht/MacOSX/MacOSX.xcodeproj avec Xcode
 
-	générer le build
-	
-ls -l /usr/local/lib/libIrrlicht.a
+	Scheme > libirrlicht.a
+	Product > Build for > profiling (pour la version release)
+
+ls /usr/local/lib/libIrrlicht.a
+find /Users -type f -iname "libIrrlicht.a" -exec cp {} /usr/local/lib/libIrrlicht.a \;
 
 rm CMakeCache.txt
-cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=0 -DRUN_IN_PLACE=1 -DIRRLICHT_INCLUDE_DIR=lib/irrlicht/include -DIRRLICHT_LIBRARY=lib/irrlicht/MacOSX/build/Release/libIrrlicht.a
+cmake . -DIRRLICHT_INCLUDE_DIR=lib/irrlicht/include -DIRRLICHT_LIBRARY=/usr/local/lib/libIrrlicht.a
 make package
 
 ouvrir minetest-0.5.0-dev-osx.zip
