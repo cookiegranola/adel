@@ -36,7 +36,9 @@ rm /usr/local/lib/libIrrlicht.a
 ouvrir lib/irrlicht/source/Irrlicht/MacOSX/MacOSX.xcodeproj avec Xcode
 
 	Scheme > libirrlicht.a
-	Product > Build for > profiling (pour la version release)
+	Product > Clean
+	Product > Build
+	(ou pour la version release : Product > Build for > Profiling)
 
 ls /usr/local/lib/libIrrlicht.a
 find /Users -type f -iname "libIrrlicht.a" -exec cp {} /usr/local/lib/libIrrlicht.a \;
