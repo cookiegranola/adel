@@ -36,6 +36,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <IGUIFont.h>
 #include <IGUITabControl.h>
 #include <IGUIComboBox.h>
+#include <IGUIElement.h> // :PATCH:
+#include <IGUIEnvironment.h> // :PATCH:
+#include <CGUIImageTabControl.h> // :PATCH:
 #include "client/renderingengine.h"
 #include "log.h"
 #include "client/tile.h" // ITextureSource
@@ -73,13 +76,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 			<< parts[b] << "\"" << std::endl;                               \
 			return;                                                         \
 	}
-
-
-#include "../lib/irrlicht_patch/CGUIImageTabControl.h"
-#include "../lib/irrlicht_patch/CGUIImageTabControl.cpp"
-
-#include <IGUIElement.h>
-#include <IGUIEnvironment.h>
 
 
 /*
