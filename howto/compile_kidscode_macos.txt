@@ -25,13 +25,19 @@ brew uninstall luajit
 cd Documents
 mkdir KIDSCODE
 cd KIDSCODE
-git clone -b windows https://github.com/cookiegranola/adel
-git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
+git clone -b gui https://github.com/cookiegranola/adel
 cd adel
+git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
+d lib/irrlicht
+cd source/Irrlicht
+make
+(make NDEBUG=1 pour la version release)
+cd ../../../..
+
 rm CMakeCache.txt
-cmake .
+cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=0 -DRUN_IN_PLACE=1 -DIRRLICHT_INCLUDE_DIR=lib/irrlicht/include -DIRRLICHT_LIBRARY=lib/irrlicht/lib/MacOSX/libIrrlicht.a
 make package
 
 ouvrir minetest-0.5.0-dev-osx.zip
