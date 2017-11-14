@@ -19,19 +19,32 @@ cat /etc/paths
 export PATH=/usr/local/bin:$PATH
 env
 
-brew install git cmake freetype gettext hiredis irrlicht jpeg leveldb libogg libvorbis postgresql spatialindex
+brew install git cmake freetype gettext hiredis jpeg leveldb libogg libvorbis postgresql spatialindex
+brew uninstall irrlicht
 brew uninstall luajit
 
 cd Documents
 mkdir KIDSCODE
 cd KIDSCODE
-git clone -b windows https://github.com/cookiegranola/adel
-git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
+git clone -b gui https://github.com/cookiegranola/adel
 cd adel
+git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
+rm /usr/local/lib/libIrrlicht.a
+
+ouvrir lib/irrlicht/source/Irrlicht/MacOSX/MacOSX.xcodeproj avec Xcode
+
+	Scheme > libirrlicht.a
+	Product > Clean
+	Product > Build
+	(ou pour la version release : Product > Build for > Profiling)
+
+ls /usr/local/lib/libIrrlicht.a
+find /Users -type f -iname "libIrrlicht.a" -exec cp {} /usr/local/lib/libIrrlicht.a \;
+
 rm CMakeCache.txt
-cmake .
+cmake . -DIRRLICHT_INCLUDE_DIR=lib/irrlicht/include -DIRRLICHT_LIBRARY=/usr/local/lib/libIrrlicht.a
 make package
 
 ouvrir minetest-0.5.0-dev-osx.zip
@@ -61,7 +74,19 @@ Ensuite refaire un make package dans le répertoire adel.
 
 ---
 
+# Corriger Irrlicht 1.8.4
+
+modifier lib/irrlicht/source/Irrlicht/MacOSX/ClrrDeviceMacOSX.mm à la ligne 499 :
+    
+	[NSApp setDelegate:(id<NSApplicationDelegate>)[[[AppDelegate alloc] initWithDevice:this] autorelease]];
+
+---
+
 # Références
 
 https://forum.minetest.net/viewtopic.php?t=9190
 https://github.com/mdoege/mtmake-osx
+http://irrlicht3d.org/wiki/index.php?n=Main.InstallingIrrlicht
+http://irrlicht.sourceforge.net/forum/viewtopic.php?f=7&t=51562
+https://blog.nobel-joergensen.com/2012/08/30/compiling-irrlicht-sdk-1-7-3-in-osx-mountain-lion-xcode-4-4/
+
