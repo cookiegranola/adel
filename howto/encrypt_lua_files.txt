@@ -1,4 +1,6 @@
-1. Encryption
+# Encrypt Lua files
+
+## Encryption
 
 The Lua files can be encrypted using the 256 bit variant of the AES encryption algorithm.
 
@@ -60,7 +62,7 @@ Sample data :
 	#define ENCRYPTION_PRIME_7 1340222629u
 	
 
-2. Encryption tool
+## Encryption tool
 
 Lua files can be encrypted/decrypted using a dedicated tool in the "adel/util/crypt/" folder.
 
@@ -89,7 +91,7 @@ This command will create a "CryptList.txt" file with the paths of the Lua files 
 and its subfolder.
 
 
-3. Compilation
+## Compilation
 
 Encryption tool :
 
@@ -113,21 +115,9 @@ Game and server :
 	make
 
 
-4. Usage
+## Usage
 
 At any time, the Lua files can be decrypted and encrypted in place in the development folder. 
 
 A safer approach is to copy the Lua files to deploy in a temporary folder and encrypt them there
 before deployment.
-
-
-5. Signature tool
-
-The "md5.sh" shell script in the "adel/util/md5/" allows to update the production database,
-by generating an SQL script file with the required commands.
-
-It will scan all Lua files in the current folder and generate SQL commands like this one :
-
-	update maps 
-		set mods_hash_md5 = "c50f510b0072cb9467e0d4c43f96fcae" 
-		where url_download = "http://assets.kidscode.com/master/test/x.lua";
