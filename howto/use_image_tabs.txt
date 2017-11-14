@@ -52,11 +52,11 @@ Within an optional argument, all values are optional too.
 - tab width : sets a fixed width for the tabs
 - tab padding : adds padding to the sides of the tab text/image
 - tab spacing : adds space between the tabs
-- tab border width : keeps the left/right borders of the tab texture unstretched
-- tab border height : keeps the top/bottom borders of the tab texture unstretched
+- tab border width : sets the left/right border width for the tab textures
+- tab border height : sets the top/bottom border height for the tab textures
 - tab border offset : makes the tab overlap the content area
-- scroll button width : sets the widths for the scroll buttons 
-- scroll button height : sets the height for the scroll buttons 
+- scroll button width : sets the width of the scroll buttons
+- scroll button height : sets the height of the scroll buttons 
 - scroll button spacing : adds space between the scroll buttons
 - scroll button offset : adds space from the tab area end
 - scroll button distance : adds space from the content area edge
