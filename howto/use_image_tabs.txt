@@ -1,0 +1,85 @@
+# Use image tabs
+
+## Sample
+
+	minetest.register_node(":default:test", {
+		description = "ImageTabTest",
+		tiles = {"aaa.png"},
+		groups = {snappy = 3},
+
+		on_rightclick = function(_,_, clicker)
+			local formspec = [[
+				size[8,8]
+				tabheader[0,0;tabs;logo.png,heart.png@0.8,object_marker_red.png,some text,some other text,more text,still more text,just another text;logo.png;false;false;top,4;64,160,20,4;16,16,11;16,24,4,4,4]
+			]]
+
+			local player_name = clicker:get_player_name()
+			minetest.show_formspec(player_name, "image_tab_test", formspec)
+		end,
+	})
+
+## Arguments
+
+The argument separator is the semicolon.
+
+The value separator in an argument is the comma.
+
+Up to 10 arguments can be provided.
+
+1. X position, Y position
+2. name
+3. first tab name, second tab name, ...
+4. active tab name
+5. show background (true/false)
+6. show border (true/false)
+7. tab side (top/bottom/left/right), view padding size (pixels)
+8. tab height (pixels), tab width (pixels), tab padding (pixels), tab spacing (pixels)
+9. border width (pixels), border height (pixels), border offset (pixels)
+10. button width (pixels), button height (pixels), button spacing (pixels), button offset (pixels), button distance (pixels)
+
+Only the first 4 arguments are mandatory.
+
+Within an optional argument, all values are optional too.
+
+If a tab name is an image file name ending by ".bmp", ".jpg", ".png" or ".tga", this image is used instead of the text.
+
+If the image file extension is following by "@" and a real value between 0 and 1, the image is scaled down of this ratio.
+
+## Textures
+
+The image tabs are drawn using the following extendable textures in "adel/textures/base/pack/" :
+
+- Content view
+
+	tab_content.png
+
+- Tabs
+
+	tab_top.png
+	tab_top_active.png
+	tab_bottom.png
+	tab_bottom_active.png
+	tab_left.png
+	tab_left_active.png
+	tab_right.png
+	tab_right_active.png
+
+- Scroll buttons
+
+	tab_arrow_up.png
+	tab_arrow_up_pressed.png
+	tab_arrow_down.png
+	tab_arrow_down_pressed.png
+	tab_arrow_left.png
+	tab_arrow_left_pressed.png
+	tab_arrow_right.png
+	tab_arrow_right_pressed.png
+
+They are divided in a matrix of 3x3 blocks.
+
+The 4 corner areas are not stretched.
+
+The 4 side areas are stretched along the side axis.
+
+The middle area is stretched along both axes.
+
