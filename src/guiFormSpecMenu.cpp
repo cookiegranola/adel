@@ -462,7 +462,7 @@ void GUIFormSpecMenu::parseCheckbox(parserData* data, const std::string &element
 	errorstream<< "Invalid checkbox element(" << parts.size() << "): '" << element << "'"  << std::endl;
 }
 
-void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &element)
+void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &element) // :PATCH:
 {
 	std::vector<std::string> parts = split(element,';');
 
@@ -470,8 +470,13 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::vector<std::string> v_dim = split(parts[1],',');
 		std::string name = parts[3];
-		std::string value = parts[4];
-
+		s32 value = 0;
+		s32 min = 0;
+		s32 max = 1000;
+		s32 base_step = 1;
+		s32 small_step = 10;
+		s32 large_step = 100;
+		
 		MY_CHECKPOS("scrollbar",0);
 
 		v2s32 pos = padding + pos_offset * spacing;
@@ -503,16 +508,44 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		if (parts[2] == "vertical")
 			is_horizontal = false;
 
+		std::vector<std::string> values = split(parts[4],',');
+		
+		if (values.size() > 0 && values[0].length() > 0) {
+			value = stoi(values[0]);
+		}
+		
+		if (values.size() > 1 && values[1].length() > 0) {
+			min = stoi(values[1]);
+		}
+		
+		if (values.size() > 2 && values[2].length() > 0) {
+			max = stoi(values[2]);
+		}
+			
+		if (values.size() > 3 && values[3].length() > 0) {
+			base_step = stoi(values[3]);
+		}
+			
+		if (values.size() > 4 && values[4].length() > 0) {
+			small_step = stoi(values[4]);
+		}
+		
+		if (values.size() > 5 && values[5].length() > 0) {
+			large_step = stoi(values[5]);
+		}
+
 		spec.ftype = f_ScrollBar;
 		spec.send  = true;
 		gui::IGUIScrollBar* e =
 				Environment->addScrollBar(is_horizontal,rect,this,spec.fid);
+				
+		e->setMin(min);
+		e->setMax(max);
+		e->setBaseStep(base_step);
+		e->setSmallStep(small_step);
+		e->setLargeStep(large_step);
 
-		e->setMax(1000);
-		e->setMin(0);
-		e->setPos(stoi(parts[4]));
-		e->setSmallStep(10);
-		e->setLargeStep(100);
+		e->setPos(value);
 
 		m_scrollbars.emplace_back(spec,e);
 		m_fields.push_back(spec);
