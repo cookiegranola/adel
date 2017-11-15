@@ -1,0 +1,10 @@
+# Improve the crash dump readability
+
+Change the following constant in luaconf.h :
+
+/*
+@@ LUA_IDSIZE gives the maximum size for the description of the source
+@* of a function in debug information.
+** CHANGE it if you want a different size.
+*/
+#define LUA_IDSIZE	60
