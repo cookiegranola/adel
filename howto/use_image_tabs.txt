@@ -65,9 +65,19 @@ If the image file extension is immediately following by "@" and a real value bet
 
 ## Textures
 
-The image tabs are drawn using the following extendable textures in "adel/textures/base/pack/" :
+The tabs are drawn using stretchable textures.
 
-- Content area :
+They are divided in a matrix of 3x3 blocks :
+
+- 4 corner areas, which are not stretched.
+- 4 side areas, which are stretched along the side axis.
+- 1 middle area, which is stretched along both axes.
+
+By default, all side areas are 16 pixels wide, with a 11 pixels overlap over the content area.
+
+They are currently located in "adel/textures/base/pack/"
+
+- Content :
 
 	tab_content.png
 
@@ -92,12 +102,4 @@ The image tabs are drawn using the following extendable textures in "adel/textur
 	tab_arrow_left_pressed.png
 	tab_arrow_right.png
 	tab_arrow_right_pressed.png
-
-They are divided in a matrix of 3x3 blocks.
-
-The 4 corner areas are not stretched.
-
-The 4 side areas are stretched along the side axis.
-
-The middle area is stretched along both axes.
 
