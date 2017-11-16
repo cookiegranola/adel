@@ -1617,19 +1617,19 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			std::vector<std::string> values = split(parts[9],',');
 
 			if (values.size() > 0 && values[0].length() > 0) {
-				border_width = stoi(values[0]);
+				tab_prefix = values[0];
 			}
 					
 			if (values.size() > 1 && values[1].length() > 0) {
-				border_height = stoi(values[1]);
+				border_width = stoi(values[1]);
 			}
 					
 			if (values.size() > 2 && values[2].length() > 0) {
-				border_offset = stoi(values[2]);
+				border_height = stoi(values[2]);
 			}
 			
 			if (values.size() > 3 && values[3].length() > 0) {
-				tab_prefix = values[3];
+				border_offset = stoi(values[3]);
 			}
 		}
 		
