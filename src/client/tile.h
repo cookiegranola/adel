@@ -86,7 +86,7 @@ struct TextureFromMeshParams
 	TextureSource creates and caches textures.
 */
 
-class ISimpleTextureSource
+class ISimpleTextureSource : public video::ITextureLoader
 {
 public:
 	ISimpleTextureSource() = default;
