@@ -10,7 +10,7 @@
 		on_rightclick = function(_,_, clicker)
 			local formspec = [[
 				size[8,8]
-				tabheader[0,0;tabs;logo.png,heart.png@0.8,object_marker_red.png,some text,some other text,more text,still more text,just another text;2;false;false;top,4;64,160,20,4;16,24,4,4,4]
+				tabheader[0,0;tabs;logo.png,heart.png@0.8,object_marker_red.png,some text,some other text,more text,still more text,just another text;2;false;false;top,4;64,160,20,4;16,24,4,4,4;tab_,16,16,11]
 			]]
 
 			local player_name = clicker:get_player_name()
@@ -35,6 +35,7 @@ Up to 9 arguments can be provided.
 7. tab side (top/bottom/left/right), content area padding (pixels)
 8. tab height (pixels), width (pixels), padding (pixels), spacing (pixels), offset (pixels)
 9. scroll button width (pixels), height (pixels), spacing (pixels), offset (pixels), distance (pixels)
+10. texture prefix, border width (pixels), border height (pixels), border offset (pixels)
 
 Only the first 4 arguments are mandatory.
 
@@ -45,20 +46,21 @@ Within an optional argument, all values are optional too.
 
 - tab name : sets the text or image to put on the tab
 - active tab index : gives the index of the active tab (starting at 1)
-- tab side : where to add the tabs
-- content area padding : grow the content area from a few pixels
+- tab side : tells on which side the tabs are put
+- content area padding : grows the content area from a few pixels
 - tab height : sets a fixed height for the tabs
 - tab width : sets a fixed width for the tabs
 - tab padding : adds padding to the sides of the tab text/image
 - tab spacing : adds space between the tabs
-- tab border width : sets the left/right border width for the tab textures
-- tab border height : sets the top/bottom border height for the tab textures
-- tab border offset : makes the tab overlap the content area
 - scroll button width : sets the width of the scroll buttons
 - scroll button height : sets the height of the scroll buttons 
 - scroll button spacing : adds space between the scroll buttons
 - scroll button offset : adds space from the tab area end
 - scroll button distance : adds space from the content area edge
+- texture prefix : sets the prefix for the tab texture names ("tab_" by default)
+- texture border width : sets the left/right border width for the textures
+- texture border height : sets the top/bottom border height for the textures
+- texture border offset : sets the border offset of the tab textures over the content area
 
 If the tab name is actually an image file name ending by ".bmp", ".jpg", ".png" or ".tga", then this image will used instead of the text.
 If the image file extension is immediately following by "@" and a real value between 0 and 1, the image will be scaled down using this ratio.
@@ -75,7 +77,7 @@ They are divided in a matrix of 3x3 blocks :
 
 By default, all side areas are 16 pixels wide, with a 11 pixels overlap over the content area.
 
-They are currently located in "adel/textures/base/pack/"
+The default tab textures use the "tab_" prefix, and can be found in the "adel/textures/base/pack/" folder :
 
 - Content :
 
@@ -92,7 +94,7 @@ They are currently located in "adel/textures/base/pack/"
 	tab_right.png
 	tab_right_active.png
 
-- Scroll buttons :
+- Arrow buttons :
 
 	tab_arrow_up.png
 	tab_arrow_up_pressed.png
