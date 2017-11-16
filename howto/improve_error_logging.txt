@@ -1,4 +1,4 @@
-# Improve the crash dump readability
+# Improve the error logging
 
 Change the following constant in luaconf.h :
 
@@ -8,3 +8,11 @@ Change the following constant in luaconf.h :
 ** CHANGE it if you want a different size.
 */
 #define LUA_IDSIZE	60
+
+
+# Test the error logging
+
+Add the following code in a Lua mod :
+
+	local my_array = {}
+	minetest.blabla(my_array[nil])
