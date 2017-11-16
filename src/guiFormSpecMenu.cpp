@@ -1526,18 +1526,22 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
         s32 tab_width = 0;
         s32 tab_padding = 20;
         s32 tab_spacing = 4;
+		s32 border_width = 16;
+		s32 border_height = 16;
+		s32 border_offset = 11;
 		s32 button_width = 24;
 		s32 button_height = 24;
 		s32 button_spacing = 4;
 		s32 button_offset = 4;
 		s32 button_distance = 4;
-		EGUI_TEXTURE content_texture = EGT_NONE;
-		EGUI_TEXTURE tab_texture = EGT_NONE;
-		EGUI_TEXTURE active_tab_texture = EGT_NONE;
-		EGUI_TEXTURE prior_arrow_texture = EGT_NONE;
-		EGUI_TEXTURE prior_arrow_pressed_texture = EGT_NONE;
-		EGUI_TEXTURE next_arrow_texture = EGT_NONE;
-		EGUI_TEXTURE next_arrow_pressed_texture = EGT_NONE;
+		video::ITexture* content_texture = 0;
+		video::ITexture* tab_texture = 0;
+		video::ITexture* active_tab_texture = 0;
+		video::ITexture* prior_arrow_texture = 0;
+		video::ITexture* prior_arrow_pressed_texture = 0;
+		video::ITexture* next_arrow_texture = 0;
+		video::ITexture* next_arrow_pressed_texture = 0;
+		std::string tab_prefix = "tab_";
 
 		MY_CHECKPOS("tabheader",0);
 
@@ -1608,7 +1612,27 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 				button_distance = stoi(values[4]);
 			}
 		}
+		
+        if (parts.size() > 9 && parts[9].length() > 0) {
+			std::vector<std::string> values = split(parts[9],',');
 
+			if (values.size() > 0 && values[0].length() > 0) {
+				border_width = stoi(values[0]);
+			}
+					
+			if (values.size() > 1 && values[1].length() > 0) {
+				border_height = stoi(values[1]);
+			}
+					
+			if (values.size() > 2 && values[2].length() > 0) {
+				border_offset = stoi(values[2]);
+			}
+			
+			if (values.size() > 3 && values[3].length() > 0) {
+				tab_prefix = values[3];
+			}
+		}
+		
 		FieldSpec spec(
 			name,
 			L"",
@@ -1632,7 +1656,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			= core::rect<s32>(pos.X-padding, pos.Y-padding, pos.X+geom.X+padding, pos.Y+geom.Y+padding);
 		core::rect<s32> rect(view_rect);
 		
-		content_texture = EGT_TAB_CONTENT;
+		content_texture = m_tsrc->getTexture(tab_prefix + "content.png");
 				
 		if ( side == 0  )
 		{
@@ -1641,8 +1665,8 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
 			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;
 
-			tab_texture = EGT_TOP_TAB;
-			active_tab_texture = EGT_TOP_ACTIVE_TAB;
+			tab_texture = m_tsrc->getTexture(tab_prefix + "top.png");
+			active_tab_texture = m_tsrc->getTexture(tab_prefix + "top_active.png");
 		}
 		else if ( side == 1  )
 		{
@@ -1651,8 +1675,8 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
 			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y + tab_height;
 
-			tab_texture = EGT_BOTTOM_TAB;
-			active_tab_texture = EGT_BOTTOM_ACTIVE_TAB;
+			tab_texture = m_tsrc->getTexture(tab_prefix + "bottom.png");
+			active_tab_texture = m_tsrc->getTexture(tab_prefix + "bottom_active.png");
 		}
 		else if ( side == 2 )
 		{
@@ -1661,8 +1685,8 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
 			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;		
 
-			tab_texture = EGT_LEFT_TAB;
-			active_tab_texture = EGT_LEFT_ACTIVE_TAB;	
+			tab_texture = m_tsrc->getTexture(tab_prefix + "left.png");
+			active_tab_texture = m_tsrc->getTexture(tab_prefix + "left_active.png");	
 		}
 		else
 		{
@@ -1671,54 +1695,30 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X + tab_width;
 			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;
 
-			tab_texture = EGT_RIGHT_TAB;
-			active_tab_texture = EGT_RIGHT_ACTIVE_TAB;
+			tab_texture = m_tsrc->getTexture(tab_prefix + "right.png");
+			active_tab_texture = m_tsrc->getTexture(tab_prefix + "right_active.png");
 		}
-		
+
 		if ( side < 2 )
 		{
-			prior_arrow_texture = EGT_LEFT_ARROW;
-			prior_arrow_pressed_texture = EGT_LEFT_ARROW_PRESSED;
-			next_arrow_texture = EGT_RIGHT_ARROW;
-			next_arrow_pressed_texture = EGT_RIGHT_ARROW_PRESSED;
+			prior_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_left.png");
+			prior_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_left_pressed.png");
+			next_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_right.png");
+			next_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_right_pressed.png");
 		}
 		else
 		{
-			prior_arrow_texture = EGT_UP_ARROW;
-			prior_arrow_pressed_texture = EGT_UP_ARROW_PRESSED;
-			next_arrow_texture = EGT_DOWN_ARROW;
-			next_arrow_pressed_texture = EGT_DOWN_ARROW_PRESSED;
+			prior_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_up.png");
+			prior_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_up_pressed.png");
+			next_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_down.png");
+			next_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_down_pressed.png");
 		}
 		
-		gui::IGUISkin* skin = Environment->getSkin();
-	
-	
-		skin->setTexture(content_texture, 
-			m_tsrc->getTexture(GUISkinTextureNames[content_texture]));
-			
-		skin->setTexture(tab_texture, 
-			m_tsrc->getTexture(GUISkinTextureNames[tab_texture]));
-			
-		skin->setTexture(active_tab_texture, 
-			m_tsrc->getTexture(GUISkinTextureNames[active_tab_texture]));
-			
-		skin->setTexture(prior_arrow_texture, 
-			m_tsrc->getTexture(GUISkinTextureNames[prior_arrow_texture]));
-			
-		skin->setTexture(prior_arrow_pressed_texture, 
-			m_tsrc->getTexture(GUISkinTextureNames[prior_arrow_pressed_texture]));
-			
-		skin->setTexture(next_arrow_texture, 
-			m_tsrc->getTexture(GUISkinTextureNames[next_arrow_texture]));
-			
-		skin->setTexture(next_arrow_pressed_texture, 
-			m_tsrc->getTexture(GUISkinTextureNames[next_arrow_pressed_texture]));
-
 		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, 
 			this, rect, show_background, show_border, side, spec.fid, 
 			tab_height, tab_width, tab_padding, tab_spacing, 
-			width, height, button_width, button_height, 
-			button_spacing, button_offset, button_distance,
+			width, height, border_width, border_height, border_offset,
+			button_width, button_height, button_spacing, button_offset, button_distance,
 			content_texture, tab_texture, active_tab_texture,
 			prior_arrow_texture, prior_arrow_pressed_texture,
 			next_arrow_texture, next_arrow_pressed_texture);
