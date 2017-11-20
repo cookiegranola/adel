@@ -36,8 +36,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <IGUIFont.h>
 #include <IGUITabControl.h>
 #include <IGUIComboBox.h>
-#include <IGUIElement.h> // :PATCH:
-#include <IGUIEnvironment.h> // :PATCH:
+#include <IGUIElement.h> // :PATCH::
+#include <IGUIEnvironment.h>
 #include <CGUIImageTabControl.h> // :PATCH:
 #include "client/renderingengine.h"
 #include "log.h"
@@ -476,6 +476,7 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		s32 base_step = 1;
 		s32 small_step = 10;
 		s32 large_step = 100;
+		video::SColor color;
 		
 		MY_CHECKPOS("scrollbar",0);
 
@@ -508,30 +509,32 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		if (parts[2] == "vertical")
 			is_horizontal = false;
 
-		std::vector<std::string> values = split(parts[4],',');
-		
-		if (values.size() > 0 && values[0].length() > 0) {
-			value = stoi(values[0]);
-		}
-		
-		if (values.size() > 1 && values[1].length() > 0) {
-			min = stoi(values[1]);
-		}
-		
-		if (values.size() > 2 && values[2].length() > 0) {
-			max = stoi(values[2]);
-		}
+        if (parts.size() > 4 && parts[4].length() > 0) {
+			std::vector<std::string> values = split(parts[4],',');
 			
-		if (values.size() > 3 && values[3].length() > 0) {
-			base_step = stoi(values[3]);
-		}
+			if (values.size() > 0 && values[0].length() > 0) {
+				value = stoi(values[0]);
+			}
 			
-		if (values.size() > 4 && values[4].length() > 0) {
-			small_step = stoi(values[4]);
-		}
-		
-		if (values.size() > 5 && values[5].length() > 0) {
-			large_step = stoi(values[5]);
+			if (values.size() > 1 && values[1].length() > 0) {
+				min = stoi(values[1]);
+			}
+			
+			if (values.size() > 2 && values[2].length() > 0) {
+				max = stoi(values[2]);
+			}
+				
+			if (values.size() > 3 && values[3].length() > 0) {
+				base_step = stoi(values[3]);
+			}
+				
+			if (values.size() > 4 && values[4].length() > 0) {
+				small_step = stoi(values[4]);
+			}
+			
+			if (values.size() > 5 && values[5].length() > 0) {
+				large_step = stoi(values[5]);
+			}
 		}
 
 		spec.ftype = f_ScrollBar;
@@ -546,6 +549,54 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		e->setLargeStep(large_step);
 
 		e->setPos(value);
+		
+        if (parts.size() > 5 && parts[5].length() > 0) {
+			std::vector<std::string> values = split(parts[5],',');
+			
+			color = e->getColor(EGDC_SCROLLBAR);
+
+			if (values.size() > 0 && values[0].length() > 0) {
+				color.setRed(stoi(values[0]));
+			}
+					
+			if (values.size() > 1 && values[1].length() > 0) {
+				color.setGreen(stoi(values[1]));
+			}
+					
+			if (values.size() > 2 && values[2].length() > 0) {
+				color.setBlue(stoi(values[2]));
+			}
+					
+			if (values.size() > 3 && values[3].length() > 0) {
+				color.setAlpha(stoi(values[3]));
+			}
+			
+			e->setColor(EGDC_SCROLLBAR, color);
+		}
+
+        if (parts.size() > 6 && parts[6].length() > 0) {
+			std::vector<std::string> values = split(parts[6],',');
+			
+			color = e->getColor(EGDC_3D_FACE);
+			
+			if (values.size() > 0 && values[0].length() > 0) {
+				color.setRed(stoi(values[0]));
+			}
+					
+			if (values.size() > 1 && values[1].length() > 0) {
+				color.setGreen(stoi(values[1]));
+			}
+					
+			if (values.size() > 2 && values[2].length() > 0) {
+				color.setBlue(stoi(values[2]));
+			}
+					
+			if (values.size() > 3 && values[3].length() > 0) {
+				color.setAlpha(stoi(values[3]));
+			}
+			
+			e->setColor(EGDC_3D_FACE, color);
+		}
 
 		m_scrollbars.emplace_back(spec,e);
 		m_fields.push_back(spec);
