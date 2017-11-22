@@ -476,7 +476,10 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		s32 base_step = 1;
 		s32 small_step = 10;
 		s32 large_step = 100;
-		video::SColor color;
+		video::SColor bar_color;
+		video::SColor button_color;
+		video::SColor icon_color;
+		video::SColor pressed_icon_color;
 		
 		MY_CHECKPOS("scrollbar",0);
 
@@ -509,39 +512,33 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		if (parts[2] == "vertical")
 			is_horizontal = false;
 
-        if (parts.size() > 4 && parts[4].length() > 0) {
-			std::vector<std::string> values = split(parts[4],',');
-			
-			if (values.size() > 0 && values[0].length() > 0) {
-				value = stoi(values[0]);
-			}
-			
-			if (values.size() > 1 && values[1].length() > 0) {
-				min = stoi(values[1]);
-			}
-			
-			if (values.size() > 2 && values[2].length() > 0) {
-				max = stoi(values[2]);
-			}
-				
-			if (values.size() > 3 && values[3].length() > 0) {
-				base_step = stoi(values[3]);
-			}
-				
-			if (values.size() > 4 && values[4].length() > 0) {
-				small_step = stoi(values[4]);
-			}
-			
-			if (values.size() > 5 && values[5].length() > 0) {
-				large_step = stoi(values[5]);
-			}
-		}
-
 		spec.ftype = f_ScrollBar;
 		spec.send  = true;
 		gui::IGUIScrollBar* e =
 				Environment->addScrollBar(is_horizontal,rect,this,spec.fid);
 				
+        if (parts.size() > 4 && parts[4].length() > 0) {
+			std::vector<std::string> values = split(parts[4],',');
+			
+			if (values.size() > 0 && values[0].length() > 0)
+				value = stoi(values[0]);
+			
+			if (values.size() > 1 && values[1].length() > 0)
+				min = stoi(values[1]);
+			
+			if (values.size() > 2 && values[2].length() > 0)
+				max = stoi(values[2]);
+				
+			if (values.size() > 3 && values[3].length() > 0)
+				base_step = stoi(values[3]);
+				
+			if (values.size() > 4 && values[4].length() > 0)
+				small_step = stoi(values[4]);
+			
+			if (values.size() > 5 && values[5].length() > 0)
+				large_step = stoi(values[5]);
+		}
+		
 		e->setMin(min);
 		e->setMax(max);
 		e->setBaseStep(base_step);
@@ -553,49 +550,61 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
         if (parts.size() > 5 && parts[5].length() > 0) {
 			std::vector<std::string> values = split(parts[5],',');
 			
-			color = e->getColor(EGDC_SCROLLBAR);
+			bar_color = e->getColor(EGDC_SCROLLBAR);
 
-			if (values.size() > 0 && values[0].length() > 0) {
-				color.setRed(stoi(values[0]));
-			}
+			if (values.size() > 0 && values[0].length() > 0)
+				bar_color.setRed(stoi(values[0]));
 					
-			if (values.size() > 1 && values[1].length() > 0) {
-				color.setGreen(stoi(values[1]));
-			}
+			if (values.size() > 1 && values[1].length() > 0)
+				bar_color.setGreen(stoi(values[1]));
 					
-			if (values.size() > 2 && values[2].length() > 0) {
-				color.setBlue(stoi(values[2]));
-			}
+			if (values.size() > 2 && values[2].length() > 0)
+				bar_color.setBlue(stoi(values[2]));
 					
-			if (values.size() > 3 && values[3].length() > 0) {
-				color.setAlpha(stoi(values[3]));
-			}
+			if (values.size() > 3 && values[3].length() > 0)
+				bar_color.setAlpha(stoi(values[3]));
 			
-			e->setColor(EGDC_SCROLLBAR, color);
+			e->setColor(EGDC_SCROLLBAR, bar_color);
 		}
 
         if (parts.size() > 6 && parts[6].length() > 0) {
 			std::vector<std::string> values = split(parts[6],',');
 			
-			color = e->getColor(EGDC_3D_FACE);
+			button_color = e->getColor(EGDC_3D_FACE);
 			
-			if (values.size() > 0 && values[0].length() > 0) {
-				color.setRed(stoi(values[0]));
-			}
+			if (values.size() > 0 && values[0].length() > 0)
+				button_color.setRed(stoi(values[0]));
 					
-			if (values.size() > 1 && values[1].length() > 0) {
-				color.setGreen(stoi(values[1]));
-			}
+			if (values.size() > 1 && values[1].length() > 0)
+				button_color.setGreen(stoi(values[1]));
 					
-			if (values.size() > 2 && values[2].length() > 0) {
-				color.setBlue(stoi(values[2]));
-			}
+			if (values.size() > 2 && values[2].length() > 0)
+				button_color.setBlue(stoi(values[2]));
 					
-			if (values.size() > 3 && values[3].length() > 0) {
-				color.setAlpha(stoi(values[3]));
-			}
+			if (values.size() > 3 && values[3].length() > 0)
+				button_color.setAlpha(stoi(values[3]));
 			
-			e->setColor(EGDC_3D_FACE, color);
+			e->setColor(EGDC_3D_FACE, button_color);
+		}
+
+        if (parts.size() > 7 && parts[7].length() > 0) {
+			std::vector<std::string> values = split(parts[7],',');
+			
+			icon_color = e->getColor(EGDC_WINDOW_SYMBOL);
+			
+			if (values.size() > 0 && values[0].length() > 0)
+				icon_color.setRed(stoi(values[0]));
+					
+			if (values.size() > 1 && values[1].length() > 0)
+				icon_color.setGreen(stoi(values[1]));
+					
+			if (values.size() > 2 && values[2].length() > 0)
+				icon_color.setBlue(stoi(values[2]));
+					
+			if (values.size() > 3 && values[3].length() > 0)
+				icon_color.setAlpha(stoi(values[3]));
+			
+			e->setColor(EGDC_WINDOW_SYMBOL, icon_color);
 		}
 
 		m_scrollbars.emplace_back(spec,e);
