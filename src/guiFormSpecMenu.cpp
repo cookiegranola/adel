@@ -585,6 +585,9 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 				button_color.setAlpha(stoi(values[3]));
 			
 			e->setColor(EGDC_3D_FACE, button_color);
+			e->setColor(EGDC_3D_DARK_SHADOW, button_color, 0.25f);
+			e->setColor(EGDC_3D_SHADOW, button_color, 0.5f);
+			e->setColor(EGDC_3D_HIGH_LIGHT, button_color, 1.5f);
 		}
 
         if (parts.size() > 7 && parts[7].length() > 0) {
