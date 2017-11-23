@@ -924,8 +924,7 @@ void GUIFormSpecMenu::parseDropDown(parserData* data, const std::string &element
 {
 	std::vector<std::string> parts = split(element,';');
 
-	if ((parts.size() >= 5 && parts.size() <= 7) ||
-		((parts.size() > 7) && (m_formspec_version > FORMSPEC_API_VERSION)))
+	if (parts.size() >= 5)
 	{
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::string name = parts[2];

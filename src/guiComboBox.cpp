@@ -30,7 +30,7 @@ GUIComboBox::GUIComboBox(IGUIEnvironment *environment, IGUIElement *parent,
 	m_max_selection_rows(5), m_has_focus(false),
 	m_bg_color_used(false), m_bg_color(video::SColor(0)),
 	m_selected_item_color_used(false), m_selected_item_color(video::SColor(0)),
-	m_button_color_used(false), m_button_color(video::SColor(0)), Colors(0) // :PATCH:
+	Colors(0) // :PATCH:
 {
 #ifdef _DEBUG
 	setDebugName("CGUIComboBox");
@@ -54,16 +54,16 @@ GUIComboBox::GUIComboBox(IGUIEnvironment *environment, IGUIElement *parent,
 		m_list_button->setSpriteBank(skin->getSpriteBank());
 		m_list_button->setSprite(EGBS_BUTTON_UP,
 			skin->getIcon(EGDI_CURSOR_DOWN),
-			skin->getColor(EGDC_WINDOW_SYMBOL));
+			getColor(EGDC_WINDOW_SYMBOL));
 		m_list_button->setSprite(EGBS_BUTTON_DOWN,
 			skin->getIcon(EGDI_CURSOR_DOWN),
-			skin->getColor(EGDC_WINDOW_SYMBOL));
+			getColor(EGDC_WINDOW_SYMBOL));
 	}
 	m_list_button->setAlignment(EGUIA_LOWERRIGHT,
 		EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
 	m_list_button->setSubElement(true);
 	m_list_button->setTabStop(false);
-
+	
 	r.UpperLeftCorner.X = 2;
 	r.UpperLeftCorner.Y = 2;
 	r.LowerRightCorner.X = RelativeRect.getWidth() -
@@ -77,7 +77,7 @@ GUIComboBox::GUIComboBox(IGUIEnvironment *environment, IGUIElement *parent,
 		EGUIA_LOWERRIGHT, EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
 	m_selected_text->setTextAlignment(EGUIA_UPPERLEFT, EGUIA_CENTER);
 	if (skin)
-		m_selected_text->setOverrideColor(skin->getColor(EGDC_BUTTON_TEXT));
+		m_selected_text->setOverrideColor(getColor(EGDC_BUTTON_TEXT));
 	m_selected_text->enableOverrideColor(true);
 
 	// this element can be tabbed to
@@ -387,23 +387,23 @@ void GUIComboBox::draw()
 	// set colors each time as skin-colors can be changed
 	m_selected_text->setBackgroundColor(
 		m_selected_item_color_used ?
-		m_selected_item_color : skin->getColor(EGDC_HIGH_LIGHT));
+		m_selected_item_color : getColor(EGDC_HIGH_LIGHT));
 	if (isEnabled()) {
 		m_selected_text->setDrawBackground(m_has_focus);
 		m_selected_text->setOverrideColor(
-			skin->getColor(m_has_focus ?
+			getColor(m_has_focus ?
 				EGDC_HIGH_LIGHT_TEXT : EGDC_BUTTON_TEXT));
 	}
 	else {
 		m_selected_text->setDrawBackground(false);
-		m_selected_text->setOverrideColor(skin->getColor(EGDC_GRAY_TEXT));
+		m_selected_text->setOverrideColor(getColor(EGDC_GRAY_TEXT));
 	}
 	
-	video::SColor enabled_color = skin->getColor(EGDC_WINDOW_SYMBOL);
+	video::SColor enabled_color = getColor(EGDC_WINDOW_SYMBOL);
 #if IRRLICHT_VERSION_MAJOR == 1 && IRRLICHT_VERSION_MINOR < 8
 	video::SColor disabled_color(240, 100, 100, 100);
 #else
-	video::SColor disabled_color = skin->getColor(EGDC_GRAY_WINDOW_SYMBOL);
+	video::SColor disabled_color = getColor(EGDC_GRAY_WINDOW_SYMBOL);
 #endif
 
 
@@ -420,8 +420,8 @@ void GUIComboBox::draw()
 	// draw the border
 
 	skin->draw3DSunkenPane(this,
-		m_bg_color_used ? m_bg_color : skin->getColor(EGDC_3D_HIGH_LIGHT),
-		true, true, frameRect, &AbsoluteClippingRect);
+		m_bg_color_used ? m_bg_color : getColor(EGDC_3D_HIGH_LIGHT),
+		true, true, frameRect, &AbsoluteClippingRect, Colors);
 
 	// draw children
 	IGUIElement::draw();
@@ -513,8 +513,8 @@ void GUIComboBox::setBackgroundColor(const video::SColor &color)
 //! Change the button color
 void GUIComboBox::setButtonColor(const video::SColor &color)
 {
-	m_button_color_used = true;
-	m_button_color = color;
+	if (m_list_button)
+		set3DSkinColors(m_list_button, color);
 }
 
 

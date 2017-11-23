@@ -125,9 +125,6 @@ private:
 
 	bool m_selected_item_color_used;
 	video::SColor m_selected_item_color;
-
-	bool m_button_color_used; // :PATCH:
-	video::SColor m_button_color; // :PATCH:
 	
 	video::SColor* Colors; // :PATCH:
 };
