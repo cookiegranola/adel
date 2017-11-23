@@ -29,8 +29,8 @@ GUIComboBox::GUIComboBox(IGUIEnvironment *environment, IGUIElement *parent,
 	m_selected(-1), m_halign(EGUIA_UPPERLEFT), m_valign(EGUIA_CENTER),
 	m_max_selection_rows(5), m_has_focus(false),
 	m_bg_color_used(false), m_bg_color(video::SColor(0)),
-	m_selected_item_color_used(false), m_selected_item_color(video::SColor(0))
-
+	m_selected_item_color_used(false), m_selected_item_color(video::SColor(0)),
+	m_button_color_used(false), m_button_color(video::SColor(0)), Colors(0) // :PATCH:
 {
 #ifdef _DEBUG
 	setDebugName("CGUIComboBox");
@@ -509,6 +509,27 @@ void GUIComboBox::setBackgroundColor(const video::SColor &color)
 	m_bg_color = color;
 }
 
+
+//! Change the button color
+void GUIComboBox::setButtonColor(const video::SColor &color)
+{
+	m_button_color_used = true;
+	m_button_color = color;
+}
+
+
+//! returns a color
+video::SColor GUIComboBox::getColor(EGUI_DEFAULT_COLOR color) const
+{
+	getElementSkinColor(color);
+}
+
+
+//! sets a color
+void GUIComboBox::setColor(EGUI_DEFAULT_COLOR which, video::SColor newColor, f32 shading)
+{
+	setElementSkinColor(which, newColor, shading);
+}
 
 //! Writes attributes of the element.
 void GUIComboBox::serializeAttributes(io::IAttributes *out, io::SAttributeReadWriteOptions *options = 0) const

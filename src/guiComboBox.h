@@ -78,6 +78,16 @@ public:
 	//! Change the background color
 	virtual void setBackgroundColor(const video::SColor &color);
 
+	//! Change the button color
+	virtual void setButtonColor(const video::SColor &color); // :PATCH:
+	
+	//! returns a color
+	virtual video::SColor getColor(EGUI_DEFAULT_COLOR color) const; // :PATCH:
+
+	//! sets a color
+	virtual void setColor(EGUI_DEFAULT_COLOR which, video::SColor newColor,
+			f32 shading=1.0f); // :PATCH:
+
 	//! Writes attributes of the element.
 	virtual void serializeAttributes(io::IAttributes *out, io::SAttributeReadWriteOptions *options) const;
 
@@ -115,6 +125,11 @@ private:
 
 	bool m_selected_item_color_used;
 	video::SColor m_selected_item_color;
+
+	bool m_button_color_used; // :PATCH:
+	video::SColor m_button_color; // :PATCH:
+	
+	video::SColor* Colors; // :PATCH:
 };
 
 

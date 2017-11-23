@@ -476,11 +476,7 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		s32 base_step = 1;
 		s32 small_step = 10;
 		s32 large_step = 100;
-		video::SColor bg_color;
-		video::SColor button_color;
-		video::SColor icon_color;
-		video::SColor disabled_icon_color;
-				
+		
         if (parts.size() > 4 && parts[4].length() > 0) {
 			std::vector<std::string> values = split(parts[4],',');
 			
@@ -503,11 +499,15 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 				large_step = stoi(values[5]);
 		}
 		
+		video::SColor bg_color;
 		bool has_bg_color = parts.size() > 5 && parseColorString(parts[5], bg_color, false);
+		video::SColor button_color;
 		bool has_button_color = parts.size() > 6 && parseColorString(parts[6], button_color, false);
+		video::SColor icon_color;
 		bool has_icon_color = parts.size() > 7 && parseColorString(parts[7], icon_color, false);
+		video::SColor disabled_icon_color;
 		bool has_disabled_icon_color = parts.size() > 8 && parseColorString(parts[8], disabled_icon_color, false);
-		
+						
 		MY_CHECKPOS("scrollbar",0);
 
 		v2s32 pos = padding + pos_offset * spacing;
@@ -556,11 +556,7 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 			e->setColor(EGDC_SCROLLBAR, bg_color);
 
         if (has_button_color) {
-			e->setColor(EGDC_3D_FACE, button_color);			
-			e->setColor(EGDC_3D_DARK_SHADOW, button_color, 0.25f);
-			e->setColor(EGDC_3D_SHADOW, button_color, 0.5f);
-			e->setColor(EGDC_3D_LIGHT, button_color);
-			e->setColor(EGDC_3D_HIGH_LIGHT, button_color, 1.5f);
+			set3DSkinColors(e, button_color);
 			e->setColor(EGDC_WINDOW_SYMBOL, button_color, 1.75f);
 		}
 
@@ -701,11 +697,7 @@ void GUIFormSpecMenu::parseButton(parserData* data, const std::string &element,
 				spec.flabel.c_str());
 
         if (has_color) {
-			e->setColor(EGDC_3D_FACE, color);			
-			e->setColor(EGDC_3D_DARK_SHADOW, color, 0.25f);
-			e->setColor(EGDC_3D_SHADOW, color, 0.5f);
-			e->setColor(EGDC_3D_LIGHT, color);
-			e->setColor(EGDC_3D_HIGH_LIGHT, color, 1.5f);
+			set3DSkinColors(e, color);
 			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
 		}
 
@@ -944,7 +936,8 @@ void GUIFormSpecMenu::parseDropDown(parserData* data, const std::string &element
 		bool has_bg_color = parts.size() > 5 && parseColorString(parts[5], bg_color, false);
 		video::SColor selected_item_color;
 		bool has_selected_item_color = parts.size() > 6 && parseColorString(parts[6], selected_item_color, false);
-
+		video::SColor button_color;
+		bool has_button_color = parts.size() > 7 && parseColorString(parts[7], button_color, false);
 
 		MY_CHECKPOS("dropdown",0);
 
@@ -970,13 +963,14 @@ void GUIFormSpecMenu::parseDropDown(parserData* data, const std::string &element
 		//now really show list
 		GUIComboBox* e = new GUIComboBox(Environment, this, spec.fid, rect);
 
-		if (has_bg_color) {
+		if (has_bg_color)
 			e->setBackgroundColor(bg_color);
-		}
 
-		if (has_selected_item_color) {
+		if (has_selected_item_color)
 			e->setSelectedItemColor(selected_item_color);
-		}
+
+		if (has_button_color)
+			e->setButtonColor(button_color);
 
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
