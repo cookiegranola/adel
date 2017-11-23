@@ -584,10 +584,12 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 			if (values.size() > 3 && values[3].length() > 0)
 				button_color.setAlpha(stoi(values[3]));
 			
-			e->setColor(EGDC_3D_FACE, button_color);
+			e->setColor(EGDC_3D_FACE, button_color);			
 			e->setColor(EGDC_3D_DARK_SHADOW, button_color, 0.25f);
 			e->setColor(EGDC_3D_SHADOW, button_color, 0.5f);
+			e->setColor(EGDC_3D_LIGHT, button_color);
 			e->setColor(EGDC_3D_HIGH_LIGHT, button_color, 1.5f);
+			e->setColor(EGDC_WINDOW_SYMBOL, button_color, 1.75f);
 		}
 
         if (parts.size() > 7 && parts[7].length() > 0) {
@@ -698,13 +700,12 @@ void GUIFormSpecMenu::parseButton(parserData* data, const std::string &element,
 {
 	std::vector<std::string> parts = split(element,';');
 
-	if ((parts.size() == 4) ||
-		((parts.size() > 4) && (m_formspec_version > FORMSPEC_API_VERSION)))
-	{
+	if (parts.size() >= 4) {
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::vector<std::string> v_geom = split(parts[1],',');
 		std::string name = parts[2];
 		std::string label = parts[3];
+		video::SColor color;
 
 		MY_CHECKPOS("button",0);
 		MY_CHECKGEOM("button",1);
@@ -737,6 +738,31 @@ void GUIFormSpecMenu::parseButton(parserData* data, const std::string &element,
 			spec.is_exit = true;
 		gui::IGUIButton* e = Environment->addButton(rect, this, spec.fid,
 				spec.flabel.c_str());
+
+        if (parts.size() > 4 && parts[4].length() > 0) {
+			std::vector<std::string> values = split(parts[4],',');
+			
+			color = e->getColor(EGDC_3D_FACE);
+			
+			if (values.size() > 0 && values[0].length() > 0)
+				color.setRed(stoi(values[0]));
+					
+			if (values.size() > 1 && values[1].length() > 0)
+				color.setGreen(stoi(values[1]));
+					
+			if (values.size() > 2 && values[2].length() > 0)
+				color.setBlue(stoi(values[2]));
+					
+			if (values.size() > 3 && values[3].length() > 0)
+				color.setAlpha(stoi(values[3]));
+			
+			e->setColor(EGDC_3D_FACE, color);			
+			e->setColor(EGDC_3D_DARK_SHADOW, color, 0.25f);
+			e->setColor(EGDC_3D_SHADOW, color, 0.5f);
+			e->setColor(EGDC_3D_LIGHT, color);
+			e->setColor(EGDC_3D_HIGH_LIGHT, color, 1.5f);
+			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
+		}
 
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
