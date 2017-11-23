@@ -1,9 +1,9 @@
-# Use image tabs
+# Declare image tabs
 
 ## Sample
 
 	minetest.register_node(":default:test", {
-		description = "ImageTabTest",
+		description = "ImageTab Test",
 		tiles = {"aaa.png"},
 		groups = {snappy = 3},
 
@@ -14,7 +14,7 @@
 			]]
 
 			local player_name = clicker:get_player_name()
-			minetest.show_formspec(player_name, "image_tab_test", formspec)
+			minetest.show_formspec(player_name, "test_sb", formspec)
 		end,
 	})
 
@@ -40,7 +40,6 @@ Up to 9 arguments can be provided.
 Only the first 4 arguments are mandatory.
 
 Within an optional argument, all values are optional too.
-
 
 ## Values
 

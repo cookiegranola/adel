@@ -466,7 +466,7 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 {
 	std::vector<std::string> parts = split(element,';');
 
-	if (parts.size() >= 5) {
+	if (parts.size() >= 4) {
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::vector<std::string> v_dim = split(parts[1],',');
 		std::string name = parts[3];
@@ -1198,7 +1198,6 @@ void GUIFormSpecMenu::parseSimpleField(parserData* data,
 void GUIFormSpecMenu::parseTextArea(parserData* data, std::vector<std::string>& parts,
 		const std::string &type)
 {
-
 	std::vector<std::string> v_pos = split(parts[0],',');
 	std::vector<std::string> v_geom = split(parts[1],',');
 	std::string name = parts[2];
