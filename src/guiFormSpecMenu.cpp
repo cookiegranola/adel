@@ -476,10 +476,37 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		s32 base_step = 1;
 		s32 small_step = 10;
 		s32 large_step = 100;
-		video::SColor bar_color;
+		video::SColor bg_color;
 		video::SColor button_color;
 		video::SColor icon_color;
-		video::SColor pressed_icon_color;
+		video::SColor disabled_icon_color;
+				
+        if (parts.size() > 4 && parts[4].length() > 0) {
+			std::vector<std::string> values = split(parts[4],',');
+			
+			if (values.size() > 0 && values[0].length() > 0)
+				value = stoi(values[0]);
+			
+			if (values.size() > 1 && values[1].length() > 0)
+				min = stoi(values[1]);
+			
+			if (values.size() > 2 && values[2].length() > 0)
+				max = stoi(values[2]);
+				
+			if (values.size() > 3 && values[3].length() > 0)
+				base_step = stoi(values[3]);
+				
+			if (values.size() > 4 && values[4].length() > 0)
+				small_step = stoi(values[4]);
+			
+			if (values.size() > 5 && values[5].length() > 0)
+				large_step = stoi(values[5]);
+		}
+		
+		bool has_bg_color = parts.size() > 5 && parseColorString(parts[5], bg_color, false);
+		bool has_button_color = parts.size() > 6 && parseColorString(parts[6], button_color, false);
+		bool has_icon_color = parts.size() > 7 && parseColorString(parts[7], icon_color, false);
+		bool has_disabled_icon_color = parts.size() > 8 && parseColorString(parts[8], disabled_icon_color, false);
 		
 		MY_CHECKPOS("scrollbar",0);
 
@@ -516,74 +543,19 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		spec.send  = true;
 		gui::IGUIScrollBar* e =
 				Environment->addScrollBar(is_horizontal,rect,this,spec.fid);
-				
-        if (parts.size() > 4 && parts[4].length() > 0) {
-			std::vector<std::string> values = split(parts[4],',');
-			
-			if (values.size() > 0 && values[0].length() > 0)
-				value = stoi(values[0]);
-			
-			if (values.size() > 1 && values[1].length() > 0)
-				min = stoi(values[1]);
-			
-			if (values.size() > 2 && values[2].length() > 0)
-				max = stoi(values[2]);
-				
-			if (values.size() > 3 && values[3].length() > 0)
-				base_step = stoi(values[3]);
-				
-			if (values.size() > 4 && values[4].length() > 0)
-				small_step = stoi(values[4]);
-			
-			if (values.size() > 5 && values[5].length() > 0)
-				large_step = stoi(values[5]);
-		}
 		
 		e->setMin(min);
 		e->setMax(max);
 		e->setBaseStep(base_step);
 		e->setSmallStep(small_step);
 		e->setLargeStep(large_step);
-
+		
 		e->setPos(value);
 		
-        if (parts.size() > 5 && parts[5].length() > 0) {
-			std::vector<std::string> values = split(parts[5],',');
-			
-			bar_color = e->getColor(EGDC_SCROLLBAR);
+        if (has_bg_color)
+			e->setColor(EGDC_SCROLLBAR, bg_color);
 
-			if (values.size() > 0 && values[0].length() > 0)
-				bar_color.setRed(stoi(values[0]));
-					
-			if (values.size() > 1 && values[1].length() > 0)
-				bar_color.setGreen(stoi(values[1]));
-					
-			if (values.size() > 2 && values[2].length() > 0)
-				bar_color.setBlue(stoi(values[2]));
-					
-			if (values.size() > 3 && values[3].length() > 0)
-				bar_color.setAlpha(stoi(values[3]));
-			
-			e->setColor(EGDC_SCROLLBAR, bar_color);
-		}
-
-        if (parts.size() > 6 && parts[6].length() > 0) {
-			std::vector<std::string> values = split(parts[6],',');
-			
-			button_color = e->getColor(EGDC_3D_FACE);
-			
-			if (values.size() > 0 && values[0].length() > 0)
-				button_color.setRed(stoi(values[0]));
-					
-			if (values.size() > 1 && values[1].length() > 0)
-				button_color.setGreen(stoi(values[1]));
-					
-			if (values.size() > 2 && values[2].length() > 0)
-				button_color.setBlue(stoi(values[2]));
-					
-			if (values.size() > 3 && values[3].length() > 0)
-				button_color.setAlpha(stoi(values[3]));
-			
+        if (has_button_color) {
 			e->setColor(EGDC_3D_FACE, button_color);			
 			e->setColor(EGDC_3D_DARK_SHADOW, button_color, 0.25f);
 			e->setColor(EGDC_3D_SHADOW, button_color, 0.5f);
@@ -592,26 +564,14 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 			e->setColor(EGDC_WINDOW_SYMBOL, button_color, 1.75f);
 		}
 
-        if (parts.size() > 7 && parts[7].length() > 0) {
-			std::vector<std::string> values = split(parts[7],',');
-			
-			icon_color = e->getColor(EGDC_WINDOW_SYMBOL);
-			
-			if (values.size() > 0 && values[0].length() > 0)
-				icon_color.setRed(stoi(values[0]));
-					
-			if (values.size() > 1 && values[1].length() > 0)
-				icon_color.setGreen(stoi(values[1]));
-					
-			if (values.size() > 2 && values[2].length() > 0)
-				icon_color.setBlue(stoi(values[2]));
-					
-			if (values.size() > 3 && values[3].length() > 0)
-				icon_color.setAlpha(stoi(values[3]));
-			
+        if (has_icon_color) {
 			e->setColor(EGDC_WINDOW_SYMBOL, icon_color);
+			e->setColor(EGDC_GRAY_WINDOW_SYMBOL, icon_color, 0.5f);
 		}
-
+		
+        if (has_disabled_icon_color)
+			e->setColor(EGDC_GRAY_WINDOW_SYMBOL, disabled_icon_color);
+		
 		m_scrollbars.emplace_back(spec,e);
 		m_fields.push_back(spec);
 		return;
@@ -706,6 +666,7 @@ void GUIFormSpecMenu::parseButton(parserData* data, const std::string &element,
 		std::string name = parts[2];
 		std::string label = parts[3];
 		video::SColor color;
+		bool has_color = parts.size() > 4 && parseColorString(parts[4], color, false);
 
 		MY_CHECKPOS("button",0);
 		MY_CHECKGEOM("button",1);
@@ -739,23 +700,7 @@ void GUIFormSpecMenu::parseButton(parserData* data, const std::string &element,
 		gui::IGUIButton* e = Environment->addButton(rect, this, spec.fid,
 				spec.flabel.c_str());
 
-        if (parts.size() > 4 && parts[4].length() > 0) {
-			std::vector<std::string> values = split(parts[4],',');
-			
-			color = e->getColor(EGDC_3D_FACE);
-			
-			if (values.size() > 0 && values[0].length() > 0)
-				color.setRed(stoi(values[0]));
-					
-			if (values.size() > 1 && values[1].length() > 0)
-				color.setGreen(stoi(values[1]));
-					
-			if (values.size() > 2 && values[2].length() > 0)
-				color.setBlue(stoi(values[2]));
-					
-			if (values.size() > 3 && values[3].length() > 0)
-				color.setAlpha(stoi(values[3]));
-			
+        if (has_color) {
 			e->setColor(EGDC_3D_FACE, color);			
 			e->setColor(EGDC_3D_DARK_SHADOW, color, 0.25f);
 			e->setColor(EGDC_3D_SHADOW, color, 0.5f);
