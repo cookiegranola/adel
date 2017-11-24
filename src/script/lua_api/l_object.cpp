@@ -1317,10 +1317,10 @@ int ObjectRef::l_get_player_control(lua_State *L)
 	lua_setfield(L, -2, "sneak");
 	lua_pushboolean(L, control.LMB);
 	lua_setfield(L, -2, "LMB");
-	lua_pushboolean(L, control.MMB);
-	lua_setfield(L, -2, "MMB");
 	lua_pushboolean(L, control.RMB);
 	lua_setfield(L, -2, "RMB");
+	lua_pushboolean(L, control.MMB);
+	lua_setfield(L, -2, "MMB");
 	return 1;
 }
 

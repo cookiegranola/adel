@@ -4129,7 +4129,7 @@ bool GUIFormSpecMenu::OnEvent(const SEvent& event)
 			}
 		}
 
-		if (event.GUIEvent.EventType == gui::EGET_EDITBOX_CHANGED) { // :PATCH:
+		if (event.GUIEvent.EventType == gui::EGET_EDITBOX_CHANGED && 0) { // :PATCH: :DEBUG:
 			if (event.GUIEvent.Caller->getID() > 257) {
 				// find the element that was clicked
 				for (GUIFormSpecMenu::FieldSpec &s : m_fields) {
