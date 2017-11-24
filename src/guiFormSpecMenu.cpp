@@ -1045,8 +1045,6 @@ void GUIFormSpecMenu::parsePwdField(parserData* data, const std::string &element
 			258+m_fields.size()
 			);
 
-		spec.is_dynamic = false; // :PATCH:
-
 		spec.send = true;
 		GUIEditBoxWithScrollBar *e = new GUIEditBoxWithScrollBar(0, true,
 			Environment, this, spec.fid, rect, true, false);
@@ -1100,6 +1098,10 @@ void GUIFormSpecMenu::parseSimpleField(parserData* data,
 	video::SColor bg_color;
 	bool has_bg_color = parts.size() > 3 && parseColorString(parts[3], bg_color, true);
 
+	bool is_dynamic = (name.length() > 0 && name[0] == '!'); // :PATCH:
+	if (is_dynamic)
+		name = name.substr(1);
+		
 	core::rect<s32> rect;
 
 	if(data->explicit_size)
@@ -1126,7 +1128,7 @@ void GUIFormSpecMenu::parseSimpleField(parserData* data,
 		258+m_fields.size()
 	);
 
-	spec.is_dynamic = false; // :PATCH:
+	spec.is_dynamic = is_dynamic; // :PATCH:
 		
 	if (name.empty()) {
 		// spec field id to 0, this stops submit searching for a value that isn't there
@@ -1212,6 +1214,10 @@ void GUIFormSpecMenu::parseTextArea(parserData* data, std::vector<std::string>& 
 	bool has_vscrollbar = parts.size() > 6 ? is_yes(parts[6]) : false;
 
 
+	bool is_dynamic = (name.length() > 0 && name[0] == '!'); // :PATCH:
+	if (is_dynamic)
+		name = name.substr(1);
+		
 	MY_CHECKPOS(type,0);
 	MY_CHECKGEOM(type,1);
 
@@ -1253,7 +1259,7 @@ void GUIFormSpecMenu::parseTextArea(parserData* data, std::vector<std::string>& 
 		258+m_fields.size()
 	);
 
-	spec.is_dynamic = false; // :PATCH:
+	spec.is_dynamic = is_dynamic; // :PATCH:
 
 	bool is_editable = !name.empty();
 	const wchar_t *text = is_editable ? spec.fdefault.c_str() : spec.flabel.c_str();
