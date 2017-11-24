@@ -1045,6 +1045,8 @@ void GUIFormSpecMenu::parsePwdField(parserData* data, const std::string &element
 			258+m_fields.size()
 			);
 
+		spec.is_dynamic = false; // :PATCH:
+
 		spec.send = true;
 		GUIEditBoxWithScrollBar *e = new GUIEditBoxWithScrollBar(0, true,
 			Environment, this, spec.fid, rect, true, false);
@@ -1124,6 +1126,8 @@ void GUIFormSpecMenu::parseSimpleField(parserData* data,
 		258+m_fields.size()
 	);
 
+	spec.is_dynamic = false; // :PATCH:
+		
 	if (name.empty()) {
 		// spec field id to 0, this stops submit searching for a value that isn't there
 		gui::IGUIStaticText *static_text = addStaticText(Environment,
@@ -1248,6 +1252,8 @@ void GUIFormSpecMenu::parseTextArea(parserData* data, std::vector<std::string>& 
 		utf8_to_wide(unescape_string(default_val)),
 		258+m_fields.size()
 	);
+
+	spec.is_dynamic = false; // :PATCH:
 
 	bool is_editable = !name.empty();
 	const wchar_t *text = is_editable ? spec.fdefault.c_str() : spec.flabel.c_str();
@@ -4129,13 +4135,14 @@ bool GUIFormSpecMenu::OnEvent(const SEvent& event)
 			}
 		}
 
-		if (event.GUIEvent.EventType == gui::EGET_EDITBOX_CHANGED && 0) { // :PATCH: :DEBUG:
+		if (event.GUIEvent.EventType == gui::EGET_EDITBOX_CHANGED) { // :PATCH:
 			if (event.GUIEvent.Caller->getID() > 257) {
 				// find the element that was clicked
 				for (GUIFormSpecMenu::FieldSpec &s : m_fields) {
 					// if it's a table, set the send field
 					// so lua knows which table was changed
-					if (s.fid == event.GUIEvent.Caller->getID()) {
+					if (s.ftype == f_Unknown && s.is_dynamic &&
+							s.fid == event.GUIEvent.Caller->getID()) {
 						s.send = true;
 						acceptInput();
 						s.send=false;
