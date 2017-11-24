@@ -4129,6 +4129,22 @@ bool GUIFormSpecMenu::OnEvent(const SEvent& event)
 			}
 		}
 
+		if (event.GUIEvent.EventType == gui::EGET_EDITBOX_CHANGED) { // :PATCH:
+			if (event.GUIEvent.Caller->getID() > 257) {
+				// find the element that was clicked
+				for (GUIFormSpecMenu::FieldSpec &s : m_fields) {
+					// if it's a table, set the send field
+					// so lua knows which table was changed
+					if (s.fid == event.GUIEvent.Caller->getID()) {
+						s.send = true;
+						acceptInput();
+						s.send=false;
+					}
+				}
+				return true;
+			}
+		}
+		
 		if (event.GUIEvent.EventType == gui::EGET_EDITBOX_ENTER) {
 			if (event.GUIEvent.Caller->getID() > 257) {
 				bool close_on_enter = true;
