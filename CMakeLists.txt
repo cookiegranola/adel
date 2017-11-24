@@ -7,6 +7,7 @@ endif()
 
 # This can be read from ${PROJECT_NAME} after project() is called
 if(APPLE) # :PATCH::
+    cmake_policy(SET CMP0042 OLD)
 	project(minetest)
 	set(PROJECT_NAME_CAPITALIZED "Minetest")
 else()
