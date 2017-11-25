@@ -31,6 +31,8 @@ class Client;
 class LocalPlayer;
 class Hud;
 class Minimap;
+class Sky;
+class Clouds;
 
 class RenderingEngine
 {
@@ -109,11 +111,12 @@ public:
 
 	inline static void draw_scene(Camera *camera, Client *client, LocalPlayer *player,
 			Hud *hud, Minimap *mapper, gui::IGUIEnvironment *guienv,
-			const v2u32 &screensize, const video::SColor &skycolor,
+			const v2u32 &screensize, Sky &sky, Clouds &clouds,//const video::SColor &skycolor,
 			bool show_hud, bool show_minimap)
 	{
 		s_singleton->_draw_scene(camera, client, player, hud, mapper, guienv,
-				screensize, skycolor, show_hud, show_minimap);
+				screensize, sky, clouds,//skycolor, 
+				show_hud, show_minimap);
 	}
 
 	static bool run()
@@ -139,7 +142,7 @@ private:
 
 	void _draw_scene(Camera *camera, Client *client, LocalPlayer *player, Hud *hud,
 			Minimap *mapper, gui::IGUIEnvironment *guienv,
-			const v2u32 &screensize, const video::SColor &skycolor,
+			const v2u32 &screensize, Sky &sky, Clouds &clouds,//const video::SColor &skycolor,
 			bool show_hud, bool show_minimap);
 
 	void draw_anaglyph_3d_mode(Camera *camera, bool show_hud, Hud *hud,
@@ -164,7 +167,7 @@ private:
 
 	void draw_plain(Camera *camera, bool show_hud, Hud *hud, const v2u32 &screensize,
 			bool draw_wield_tool, Client *client,
-			gui::IGUIEnvironment *guienv, const video::SColor &skycolor);
+			gui::IGUIEnvironment *guienv, Sky &sky, Clouds &clouds);//const video::SColor &skycolor);
 
 	void init_texture(const v2u32 &screensize, video::ITexture **texture,
 			const char *name);

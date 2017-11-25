@@ -33,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "renderingengine.h"
 #include "inputhandler.h"
 #include "gettext.h"
+#include "sky.h"
 
 #if !defined(_WIN32) && !defined(__APPLE__) && !defined(__ANDROID__) && \
 		!defined(SERVER) && !defined(__HAIKU__)
@@ -444,9 +445,12 @@ std::vector<irr::video::E_DRIVER_TYPE> RenderingEngine::getSupportedVideoDrivers
 
 void RenderingEngine::_draw_scene(Camera *camera, Client *client, LocalPlayer *player,
 		Hud *hud, Minimap *mapper, gui::IGUIEnvironment *guienv,
-		const v2u32 &screensize, const video::SColor &skycolor, bool show_hud,
-		bool show_minimap)
+		const v2u32 &screensize, Sky &sky, Clouds &clouds,//const video::SColor &skycolor
+		bool show_hud, bool show_minimap)
 {
+	// MALEK
+	const video::SColor skycolor = sky.getSkyColor();
+
 	bool draw_wield_tool =
 			(show_hud && (player->hud_flags & HUD_FLAG_WIELDITEM_VISIBLE) &&
 					camera->getCameraMode() < CAMERA_MODE_THIRD);
@@ -486,7 +490,7 @@ void RenderingEngine::_draw_scene(Camera *camera, Client *client, LocalPlayer *p
 		show_hud = false;
 	} else {
 		draw_plain(camera, show_hud, hud, screensize, draw_wield_tool, client,
-				guienv, skycolor);
+				guienv, sky, clouds);//skycolor);
 	}
 
 	/*
@@ -957,7 +961,8 @@ inline int scaledown(int coef, int size)
 
 void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 		const v2u32 &screensize, bool draw_wield_tool, Client *client,
-		gui::IGUIEnvironment *guienv, const video::SColor &skycolor)
+		gui::IGUIEnvironment *guienv
+		, Sky &sky, Clouds &clouds)//const video::SColor& skycolor)
 {
 	// Undersampling-specific stuff
 	static video::ITexture *image = NULL;
@@ -974,11 +979,44 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 			init_texture(pixelated_size, &image, "mt_drawimage_img1");
 			last_pixelated_size = pixelated_size;
 		}
-		getVideoDriver()->setRenderTarget(image, true, true, skycolor);
+		getVideoDriver()->setRenderTarget(image, true, true, sky.getSkyColor()/*skycolor*/);
 	}
 
 	// Render
+
+	// MALEK ---
+	client->getEnv().getClientMap().depthTexture = NULL;
+	auto driver = getVideoDriver();
+#if 1
+	if (PostProcess::BeginShadowPass()) 
+	{
+		// Render
+		sky.OnAnimate(porting::getTimeMs());
+		client->getCamera()->getCameraNode()->OnAnimate(porting::getTimeMs());
+		client->getEnv().getClientMap().OnAnimate(porting::getTimeMs());
+		client->getEnv().getClientMap().depthTexture = NULL;
+
+		v3f sunPosition = sky.getSunPosition();
+		//sunPosition = client.getEnv().getLocalPlayer()->getEyePosition();
+		//sunPosition.Y = sunPosition.Y;//*10.0f;// +900.0f;
+		v3f sunDirection = v3f(0.0f, 0.0f, 0.0f) - sunPosition;//v3f(0.0f, -1.0f, 0.0f).normalize();
+															   //sunPosition += sunDirection * -300.f;
+		irr::core::matrix4 projectionMatrix, viewMatrix;
+		//viewMatrix.buildCameraLookAtMatrixLH(irr::core::vector3df(-1000, 300, 1394), irr::core::vector3df(-581, 32, 1394), irr::core::vector3df(0.0f, 1.f, 0.0f));
+		viewMatrix.buildCameraLookAtMatrixLH(sunPosition, sunPosition + sunDirection, irr::core::vector3df(0.0f, 1.f, 0.0f));
+		//projectionMatrix.buildProjectionMatrixPerspectiveFovLH(0.71f, 1.0f, 1.f, 10000.0f);
+		projectionMatrix.buildProjectionMatrixOrthoLH(1024.0f, 1024.0f, 1.0f, 10000.0f);
+		driver->setTransform(video::ETS_PROJECTION, projectionMatrix);
+		driver->setTransform(video::ETS_VIEW, viewMatrix);
+
+		driver->setTransform(video::ETS_WORLD, client->getEnv().getClientMap().getAbsoluteTransformation());
+		client->getEnv().getClientMap().renderMapToShadowMap(driver, scene::ESNRP_SOLID, sky);
+		PostProcess::EndShadowPass(&client->getEnv().getClientMap().depthTexture, true);
+	}
+#endif
+
 	get_scene_manager()->drawAll();
+
 	getVideoDriver()->setTransform(video::ETS_WORLD, core::IdentityMatrix);
 	if (show_hud) {
 		hud->drawSelectionMesh();

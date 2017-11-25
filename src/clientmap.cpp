@@ -246,6 +246,110 @@ void ClientMap::updateDrawList()
 			m_last_drawn_sectors.insert(sp);
 	}
 
+		// MALEK shadowmap generation
+	for (std::map<v3s16, MapBlock*>::iterator i = m_shadowDrawlist.begin();
+		i != m_shadowDrawlist.end(); ++i) {
+		MapBlock *block = i->second;
+		block->refDrop();
+	}
+	m_shadowDrawlist.clear();
+
+	v3f camera_position_shadow = sky.getSunPosition();
+	v3f camera_direction_shadow = v3f(0.0f, 0.0f, 0.0f) - camera_position_shadow;
+	f32 camera_fov_shadow = 90.0f;
+
+	cam_pos_nodes = floatToInt(camera_position_shadow, BS);
+	getBlocksInViewRange(cam_pos_nodes, &p_blocks_min, &p_blocks_max);
+
+	for (std::map<v2s16, MapSector*>::iterator si = m_sectors.begin();
+		si != m_sectors.end(); ++si) {
+		MapSector *sector = si->second;
+		v2s16 sp = sector->getPos();
+
+		if (m_control.range_all == false) {
+			if (sp.X < p_blocks_min.X || sp.X > p_blocks_max.X ||
+				sp.Y < p_blocks_min.Z || sp.Y > p_blocks_max.Z)
+				continue;
+		}
+
+		MapBlockVect sectorblocks;
+		sector->getBlocks(sectorblocks);
+		for (std::map<v2s16, MapSector*>::iterator si = m_sectors.begin();
+			si != m_sectors.end(); ++si) {
+			MapSector *sector = si->second;
+			v2s16 sp = sector->getPos();
+
+			/*if (m_control.range_all == false) {
+				if (sp.X < p_blocks_min.X || sp.X > p_blocks_max.X ||
+					sp.Y < p_blocks_min.Z || sp.Y > p_blocks_max.Z)
+					continue;
+			}*/
+
+			MapBlockVect sectorblocks;
+			sector->getBlocks(sectorblocks);
+
+			/*
+			Loop through blocks in sector
+			*/
+			for (MapBlockVect::iterator i = sectorblocks.begin();
+				i != sectorblocks.end(); ++i) {
+				MapBlock *block = *i;
+
+				/*
+				Compare block position to camera position, skip
+				if not seen on display
+				*/
+
+				//if (block->mesh != NULL)
+				//	block->mesh->updateCameraOffset(m_camera_offset);
+
+				float range = 10000 * BS;
+				//if (m_control.range_all == false)
+				//	range = m_control.wanted_range * BS;
+
+				float d = 0.0;
+				if (!isBlockInSight(block->getPos(), camera_position_shadow,
+					camera_direction_shadow, camera_fov_shadow, range, &d))
+					continue;
+
+				/*
+				Ignore if mesh doesn't exist
+				*/
+				if (block->mesh == NULL) {
+					continue;
+				}
+
+				/*
+				Occlusion culling
+				*/
+				if (occlusion_culling_enabled && isBlockOccluded(block, cam_pos_nodes)) {
+					continue;
+				}
+
+				// This block is in range. Reset usage timer.
+				block->resetUsageTimer();
+
+				// Limit block count in case of a sudden increase
+				/*blocks_would_have_drawn++;
+				if (blocks_drawn >= m_control.wanted_max_blocks &&
+					!m_control.range_all &&
+					d > m_control.wanted_range * BS)
+					continue;
+				*/
+				// Add to set
+				block->refGrab();
+				m_shadowDrawlist[block->getPos()] = block;
+				/*
+				sector_blocks_drawn++;
+				blocks_drawn++;
+				if (d / BS > farthest_drawn)
+					farthest_drawn = d / BS;
+				*/
+			} // foreach sectorblocks
+		}
+	}
+	// END MALEK
+
 	g_profiler->avg("CM: blocks in range", blocks_in_range);
 	g_profiler->avg("CM: blocks occlusion culled", blocks_occlusion_culled);
 	if (blocks_in_range != 0)
@@ -477,6 +581,183 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
 	if (blocks_drawn != 0)
 		g_profiler->avg(prefix + "empty blocks (frac)",
 			(float)blocks_without_stuff / blocks_drawn);
+}
+
+void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, const Sky& sky)
+{
+	bool is_transparent_pass = pass == scene::ESNRP_TRANSPARENT;
+
+	std::string prefix;
+	if (pass == scene::ESNRP_SOLID)
+		prefix = "CM: solid: ";
+	else
+		prefix = "CM: transparent: ";
+
+	/*
+	This is called two times per frame, reset on the non-transparent one
+	*/
+	//if (pass == scene::ESNRP_SOLID)
+	//	m_last_drawn_sectors.clear();
+
+	/*
+	Get time for measuring timeout.
+
+	Measuring time is very useful for long delays when the
+	machine is swapping a lot.
+	*/
+	//std::time_t time1 = time(0);
+
+	/*
+	Get animation parameters
+	*/
+	float animation_time = m_client->getAnimationTime();
+	int crack = m_client->getCrackLevel();
+	u32 daynight_ratio = m_client->getEnv().getDayNightRatio();
+	/*
+	v3f camera_position = m_camera_position;
+	v3f camera_direction = v3f(0.0f, 0.0f, 0.0f) - camera_position;
+	f32 camera_fov = 90.0f;
+	*/
+	/*
+	Get all blocks and draw all visible ones
+	*/
+
+	u32 vertex_count = 0;
+	u32 meshbuffer_count = 0;
+
+	/*
+	Draw the selected MapBlocks
+	*/
+
+	{
+		//ScopeProfiler sp(g_profiler, prefix + "drawing blocks", SPT_AVG);
+
+		MeshBufListList drawbufs;
+
+		for (auto &i : m_shadowDrawlist) {
+			MapBlock *block = i.second;
+
+			// If the mesh of the block happened to get deleted, ignore it
+			if (!block->mesh)
+				continue;
+
+			float d = 0.0;
+			/*if (!isBlockInSight(block->getPos(), camera_position_shadow,
+				camera_direction_shadow, camera_fov_shadow, 10000 * BS, &d))
+				continue;
+*/
+			// Mesh animation
+			if (pass == scene::ESNRP_SOLID) {
+				//MutexAutoLock lock(block->mesh_mutex);
+				MapBlockMesh *mapBlockMesh = block->mesh;
+				assert(mapBlockMesh);
+				// Pretty random but this should work somewhat nicely
+				bool faraway = d >= BS * 50;
+				//bool faraway = d >= m_control.wanted_range * BS;
+				if (mapBlockMesh->isAnimationForced() || !faraway) {
+					bool animated = mapBlockMesh->animate(faraway, animation_time,
+						crack, daynight_ratio);
+				}
+				else {
+					//mapBlockMesh->decreaseAnimationForceTimer();
+				}
+			}
+
+			/*
+			Get the meshbuffers of the block
+			*/
+			{
+				//MutexAutoLock lock(block->mesh_mutex);
+
+				MapBlockMesh *mapBlockMesh = block->mesh;
+				assert(mapBlockMesh);
+
+				for (int layer = 0; layer < MAX_TILE_LAYERS; layer++) {
+					scene::IMesh *mesh = mapBlockMesh->getMesh(layer);
+					assert(mesh);
+
+					u32 c = mesh->getMeshBufferCount();
+					for (u32 i = 0; i < c; i++) {
+						scene::IMeshBuffer *buf = mesh->getMeshBuffer(i);
+
+						video::SMaterial& material = buf->getMaterial();
+						video::IMaterialRenderer* rnd =
+							driver->getMaterialRenderer(material.MaterialType);
+						bool transparent = (rnd && rnd->isTransparent());
+						if (transparent == is_transparent_pass) {
+							if (buf->getVertexCount() == 0)
+								errorstream << "Block [" << analyze_block(block)
+								<< "] contains an empty meshbuf" << std::endl;
+							/*
+							material.setFlag(video::EMF_TRILINEAR_FILTER,
+								false);
+							material.setFlag(video::EMF_BILINEAR_FILTER,
+								false);
+							material.setFlag(video::EMF_ANISOTROPIC_FILTER,
+								false);
+							material.setFlag(video::EMF_WIREFRAME,
+								false);*/
+
+							drawbufs.add(buf, layer);
+						}
+					}
+				}
+			}
+		}
+
+
+		// Render all layers in order
+	for (auto &lists : drawbufs.lists) {
+		int timecheck_counter = 0;
+		for (MeshBufList &list : lists) {
+			/*timecheck_counter++;
+			if (timecheck_counter > 50) {
+				timecheck_counter = 0;
+				std::time_t time2 = time(0);
+				if (time2 > time1 + 4) {
+					infostream << "ClientMap::renderMap(): "
+						"Rendering takes ages, returning."
+						<< std::endl;
+					return;
+				}
+			}*/
+
+			driver->setMaterial(list.m);
+
+			for (scene::IMeshBuffer *buf : list.bufs) {
+				driver->drawMeshBuffer(buf);
+				vertex_count += buf->getVertexCount();
+				meshbuffer_count++;
+			}
+		
+	
+			
+			// shadow map
+			//list.m.setTexture(3, NULL);
+
+
+
+			video::SMaterial material;// = PostProcess::materialPP;//buf->getMaterial();
+			material.ZBuffer = irr::video::ECFN_LESSEQUAL;
+			material.ZWriteEnable = true;
+			material.TextureLayer[0].BilinearFilter = true;
+			material.TextureLayer[0].TextureWrapU = irr::video::ETC_CLAMP_TO_EDGE;
+			material.TextureLayer[0].TextureWrapV = irr::video::ETC_CLAMP_TO_EDGE;
+			material.MaterialType = (irr::video::E_MATERIAL_TYPE)PostProcess::shadowShader;
+			
+			driver->setMaterial(material);//list.m);
+
+			for (std::vector<scene::IMeshBuffer*>::iterator j = list.bufs.begin();
+				j != list.bufs.end(); ++j) {
+				scene::IMeshBuffer *buf = *j;
+				driver->drawMeshBuffer(buf);
+				vertex_count += buf->getVertexCount();
+				meshbuffer_count++;
+			}
+
+		}
+	}
+	} // Shadow Map generation
 }
 
 static bool getVisibleBrightness(Map *map, const v3f &p0, v3f dir, float step,
