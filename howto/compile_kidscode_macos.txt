@@ -35,7 +35,7 @@ rm /usr/local/lib/libIrrlicht.a
 
 ouvrir lib/irrlicht/source/Irrlicht/MacOSX/MacOSX.xcodeproj avec Xcode
 
-	Scheme > libirrlicht.a
+	Product > Scheme > libirrlicht.a
 	Product > Clean
 	Product > Build
 	(ou pour la version release : Product > Build for > Profiling)
