@@ -987,7 +987,7 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 	// MALEK ---
 	client->getEnv().getClientMap().depthTexture = NULL;
 	auto driver = getVideoDriver();
-#if 1
+#if 0
 	if (PostProcess::BeginShadowPass()) 
 	{
 		// Render

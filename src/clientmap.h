@@ -105,7 +105,7 @@ public:
 
 	void getBlocksInViewRange(v3s16 cam_pos_nodes,
 		v3s16 *p_blocks_min, v3s16 *p_blocks_max);
-	void updateDrawList();
+	void updateDrawList(video::IVideoDriver* driver, const class Sky& sky);
 	void renderMap(video::IVideoDriver* driver, s32 pass);
 	// MALEK - SHADOWMAPPING
 	void renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, const class Sky& sky);

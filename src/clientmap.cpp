@@ -30,6 +30,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "util/basic_macros.h"
 #include <algorithm>
 #include "client/renderingengine.h"
+#include "sky.h"
 
 ClientMap::ClientMap(
 		Client *client,
@@ -113,7 +114,7 @@ void ClientMap::getBlocksInViewRange(v3s16 cam_pos_nodes,
 			p_nodes_max.Z / MAP_BLOCKSIZE + 1);
 }
 
-void ClientMap::updateDrawList()
+void ClientMap::updateDrawList(video::IVideoDriver* driver, const class Sky& sky)
 {
 	ScopeProfiler sp(g_profiler, "CM::updateDrawList()", SPT_AVG);
 	g_profiler->add("CM::updateDrawList() count", 1);
@@ -162,7 +163,7 @@ void ClientMap::updateDrawList()
 	if (g_settings->getBool("free_move")) {
 		MapNode n = getNodeNoEx(cam_pos_nodes);
 		if (n.getContent() == CONTENT_IGNORE ||
-				m_nodedef->get(n).solidness == 2)
+			m_nodedef->get(n).solidness == 2)
 			occlusion_culling_enabled = false;
 	}
 
@@ -172,7 +173,7 @@ void ClientMap::updateDrawList()
 
 		if (!m_control.range_all) {
 			if (sp.X < p_blocks_min.X || sp.X > p_blocks_max.X ||
-					sp.Y < p_blocks_min.Z || sp.Y > p_blocks_max.Z)
+				sp.Y < p_blocks_min.Z || sp.Y > p_blocks_max.Z)
 				continue;
 		}
 
@@ -200,7 +201,7 @@ void ClientMap::updateDrawList()
 
 			float d = 0.0;
 			if (!isBlockInSight(block->getPos(), camera_position,
-					camera_direction, camera_fov, range, &d))
+				camera_direction, camera_fov, range, &d))
 				continue;
 
 			blocks_in_range++;
@@ -227,8 +228,8 @@ void ClientMap::updateDrawList()
 			// Limit block count in case of a sudden increase
 			blocks_would_have_drawn++;
 			if (blocks_drawn >= m_control.wanted_max_blocks &&
-					!m_control.range_all &&
-					d > m_control.wanted_range * BS)
+				!m_control.range_all &&
+				d > m_control.wanted_range * BS)
 				continue;
 
 			// Add to set
@@ -246,10 +247,9 @@ void ClientMap::updateDrawList()
 			m_last_drawn_sectors.insert(sp);
 	}
 
-		// MALEK shadowmap generation
-	for (std::map<v3s16, MapBlock*>::iterator i = m_shadowDrawlist.begin();
-		i != m_shadowDrawlist.end(); ++i) {
-		MapBlock *block = i->second;
+	// MALEK shadowmap generation
+	for (auto &i : m_shadowDrawlist) {
+		MapBlock *block = i.second;
 		block->refDrop();
 	}
 	m_shadowDrawlist.clear();
@@ -261,12 +261,11 @@ void ClientMap::updateDrawList()
 	cam_pos_nodes = floatToInt(camera_position_shadow, BS);
 	getBlocksInViewRange(cam_pos_nodes, &p_blocks_min, &p_blocks_max);
 
-	for (std::map<v2s16, MapSector*>::iterator si = m_sectors.begin();
-		si != m_sectors.end(); ++si) {
-		MapSector *sector = si->second;
+	for (const auto &sector_it : m_sectors) {
+		MapSector *sector = sector_it.second;
 		v2s16 sp = sector->getPos();
 
-		if (m_control.range_all == false) {
+		if (!m_control.range_all) {
 			if (sp.X < p_blocks_min.X || sp.X > p_blocks_max.X ||
 				sp.Y < p_blocks_min.Z || sp.Y > p_blocks_max.Z)
 				continue;
@@ -274,79 +273,72 @@ void ClientMap::updateDrawList()
 
 		MapBlockVect sectorblocks;
 		sector->getBlocks(sectorblocks);
-		for (std::map<v2s16, MapSector*>::iterator si = m_sectors.begin();
-			si != m_sectors.end(); ++si) {
-			MapSector *sector = si->second;
-			v2s16 sp = sector->getPos();
 
-			/*if (m_control.range_all == false) {
-				if (sp.X < p_blocks_min.X || sp.X > p_blocks_max.X ||
-					sp.Y < p_blocks_min.Z || sp.Y > p_blocks_max.Z)
-					continue;
-			}*/
+		/*
+		Loop through blocks in sector
+		*/
 
-			MapBlockVect sectorblocks;
-			sector->getBlocks(sectorblocks);
+		u32 sector_blocks_drawn = 0;
+
+		for (auto block : sectorblocks) {
+			/*
+			Compare block position to camera position, skip
+			if not seen on display
+			*/
+
+			if (block->mesh)
+				block->mesh->updateCameraOffset(m_camera_offset);
+
+			float range = 100000 * BS;
+			if (!m_control.range_all)
+				range = m_control.wanted_range * BS;
+
+			float d = 0.0;
+			if (!isBlockInSight(block->getPos(), camera_position_shadow,
+				camera_direction_shadow, camera_fov_shadow, range, &d))
+				continue;
+
+			blocks_in_range++;
 
 			/*
-			Loop through blocks in sector
+			Ignore if mesh doesn't exist
 			*/
-			for (MapBlockVect::iterator i = sectorblocks.begin();
-				i != sectorblocks.end(); ++i) {
-				MapBlock *block = *i;
+			if (!block->mesh) {
+				blocks_in_range_without_mesh++;
+				continue;
+			}
 
-				/*
-				Compare block position to camera position, skip
-				if not seen on display
-				*/
+			/*
+			Occlusion culling
+			*/
+			if (occlusion_culling_enabled && isBlockOccluded(block, cam_pos_nodes)) {
+				blocks_occlusion_culled++;
+				continue;
+			}
 
-				//if (block->mesh != NULL)
-				//	block->mesh->updateCameraOffset(m_camera_offset);
+			// This block is in range. Reset usage timer.
+			block->resetUsageTimer();
 
-				float range = 10000 * BS;
-				//if (m_control.range_all == false)
-				//	range = m_control.wanted_range * BS;
+			// Limit block count in case of a sudden increase
+			blocks_would_have_drawn++;
+			if (blocks_drawn >= m_control.wanted_max_blocks &&
+				!m_control.range_all &&
+				d > m_control.wanted_range * BS)
+				continue;
 
-				float d = 0.0;
-				if (!isBlockInSight(block->getPos(), camera_position_shadow,
-					camera_direction_shadow, camera_fov_shadow, range, &d))
-					continue;
+			// Add to set
+			block->refGrab();
+			m_shadowDrawlist[block->getPos()] = block;
 
-				/*
-				Ignore if mesh doesn't exist
-				*/
-				if (block->mesh == NULL) {
-					continue;
-				}
+			sector_blocks_drawn++;
+			blocks_drawn++;
+			if (d / BS > farthest_drawn)
+				farthest_drawn = d / BS;
 
-				/*
-				Occlusion culling
-				*/
-				if (occlusion_culling_enabled && isBlockOccluded(block, cam_pos_nodes)) {
-					continue;
-				}
+		} // foreach sectorblocks
 
-				// This block is in range. Reset usage timer.
-				block->resetUsageTimer();
-
-				// Limit block count in case of a sudden increase
-				/*blocks_would_have_drawn++;
-				if (blocks_drawn >= m_control.wanted_max_blocks &&
-					!m_control.range_all &&
-					d > m_control.wanted_range * BS)
-					continue;
-				*/
-				// Add to set
-				block->refGrab();
-				m_shadowDrawlist[block->getPos()] = block;
-				/*
-				sector_blocks_drawn++;
-				blocks_drawn++;
-				if (d / BS > farthest_drawn)
-					farthest_drawn = d / BS;
-				*/
-			} // foreach sectorblocks
-		}
+		//if (sector_blocks_drawn != 0)
+		//	m_last_drawn_sectors.insert(sp);
 	}
 	// END MALEK
 
@@ -583,6 +575,8 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
 			(float)blocks_without_stuff / blocks_drawn);
 }
 
+// MALEK shadowmapping
+#if 0
 void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, const Sky& sky)
 {
 	bool is_transparent_pass = pass == scene::ESNRP_TRANSPARENT;
@@ -707,10 +701,10 @@ void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, cons
 
 
 		// Render all layers in order
-	for (auto &lists : drawbufs.lists) {
-		int timecheck_counter = 0;
-		for (MeshBufList &list : lists) {
-			/*timecheck_counter++;
+		for (auto &lists : drawbufs.lists) {
+			int timecheck_counter = 0;
+			for (MeshBufList &list : lists) {
+				/*timecheck_counter++;
 			if (timecheck_counter > 50) {
 				timecheck_counter = 0;
 				std::time_t time2 = time(0);
@@ -759,6 +753,7 @@ void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, cons
 	}
 	} // Shadow Map generation
 }
+#endif
 
 static bool getVisibleBrightness(Map *map, const v3f &p0, v3f dir, float step,
 		float step_multiplier, float start_distance, float end_distance,
