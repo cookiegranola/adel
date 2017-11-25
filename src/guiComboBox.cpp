@@ -86,6 +86,15 @@ GUIComboBox::GUIComboBox(IGUIEnvironment *environment, IGUIElement *parent,
 }
 
 
+//! destructor
+GUIComboBox::~GUIComboBox()
+{
+	if (Colors)
+		delete[] Colors;
+}
+
+
+//! Set the text alignment of the text part
 void GUIComboBox::setTextAlignment(EGUI_ALIGNMENT horizontal, EGUI_ALIGNMENT vertical)
 {
 	m_halign = horizontal;
