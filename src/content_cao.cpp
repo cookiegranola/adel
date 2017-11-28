@@ -377,6 +377,11 @@ scene::ISceneNode* GenericCAO::getSceneNode()
 	if (m_spritenode) {
 		return m_spritenode;
 	}
+
+	if (m_textnode) {
+		return m_textnode;
+	}
+	
 	return NULL;
 }
 
@@ -449,6 +454,10 @@ void GenericCAO::removeFromScene(bool permanent)
 		m_spritenode->remove();
 		m_spritenode->drop();
 		m_spritenode = NULL;
+	} else if (m_textnode) {
+		m_textnode->remove();
+		m_textnode->drop();
+		m_textnode = NULL;
 	}
 
 	if (m_nametag) {
@@ -489,6 +498,26 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			const float txs = 1.0 / 1;
 			const float tys = 1.0 / 1;
 			setBillboardTextureMatrix(m_spritenode,
+					txs, tys, 0, 0);
+		}
+	} else if (m_prop.visual == "text") {
+		infostream<<"GenericCAO::addToScene(): single_sprite"<<std::endl;
+		m_textnode = RenderingEngine::get_scene_manager()->addBillboardSceneNode(
+				NULL, v2f(1, 1), v3f(0,0,0), -1);
+		m_textnode->grab();
+		m_textnode->setMaterialTexture(0,
+				tsrc->getTextureForMesh("unknown_node.png"));
+		m_textnode->setMaterialFlag(video::EMF_LIGHTING, false);
+		m_textnode->setMaterialFlag(video::EMF_BILINEAR_FILTER, false);
+		m_textnode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
+		m_textnode->setMaterialFlag(video::EMF_FOG_ENABLE, true);
+		u8 li = m_last_light;
+		m_textnode->setColor(video::SColor(255,li,li,li));
+		m_textnode->setSize(m_prop.visual_size*BS);
+		{
+			const float txs = 1.0 / 1;
+			const float tys = 1.0 / 1;
+			setBillboardTextureMatrix(m_textnode,
 					txs, tys, 0, 0);
 		}
 	} else if (m_prop.visual == "upright_sprite") {
@@ -671,6 +700,8 @@ void GenericCAO::updateLightNoCheck(u8 light_at_pos)
 			m_wield_meshnode->setColor(color);
 		} else if (m_spritenode) {
 			m_spritenode->setColor(color);
+		} else if (m_textnode) {
+			m_textnode->setColor(color);
 		}
 	}
 }
@@ -693,7 +724,7 @@ void GenericCAO::updateNodePos()
 	if (node) {
 		v3s16 camera_offset = m_env->getCameraOffset();
 		node->setPosition(pos_translator.vect_show - intToFloat(camera_offset, BS));
-		if (node != m_spritenode) { // rotate if not a sprite
+		if (node != m_spritenode && node != m_textnode) { // rotate if not a sprite
 			v3f rot = node->getRotation();
 			rot.Y = -m_yaw;
 			node->setRotation(rot);
@@ -920,14 +951,26 @@ void GenericCAO::step(float dtime, ClientEnvironment *env)
 
 void GenericCAO::updateTexturePos()
 {
-	if(m_spritenode)
+	if(m_spritenode || m_textnode)
 	{
-		scene::ICameraSceneNode* camera =
-				m_spritenode->getSceneManager()->getActiveCamera();
+		scene::ICameraSceneNode* camera;
+		
+		if (m_spritenode)
+				camera = m_spritenode->getSceneManager()->getActiveCamera();
+				
+		if (m_textnode)
+				camera = m_textnode->getSceneManager()->getActiveCamera();
+				
 		if(!camera)
 			return;
-		v3f cam_to_entity = m_spritenode->getAbsolutePosition()
-				- camera->getAbsolutePosition();
+		v3f cam_to_entity;
+		
+		if (m_spritenode)
+			cam_to_entity = m_spritenode->getAbsolutePosition()	- camera->getAbsolutePosition();
+			
+		if (m_textnode)
+			cam_to_entity = m_textnode->getAbsolutePosition()	- camera->getAbsolutePosition();
+			
 		cam_to_entity.normalize();
 
 		int row = m_tx_basepos.Y;
@@ -963,8 +1006,14 @@ void GenericCAO::updateTexturePos()
 
 		float txs = m_tx_size.X;
 		float tys = m_tx_size.Y;
-		setBillboardTextureMatrix(m_spritenode,
-				txs, tys, col, row);
+		
+		
+		if (m_spritenode)
+				setBillboardTextureMatrix(m_spritenode,	txs, tys, col, row);
+				
+		if (m_textnode)
+				setBillboardTextureMatrix(m_textnode,	txs, tys, col, row);
+		
 	}
 }
 
@@ -1000,6 +1049,30 @@ void GenericCAO::updateTextures(std::string mod)
 			m_spritenode->getMaterial(0).setFlag(video::EMF_TRILINEAR_FILTER, use_trilinear_filter);
 			m_spritenode->getMaterial(0).setFlag(video::EMF_BILINEAR_FILTER, use_bilinear_filter);
 			m_spritenode->getMaterial(0).setFlag(video::EMF_ANISOTROPIC_FILTER, use_anisotropic_filter);
+		}
+	}
+
+	if (m_textnode) {
+		if (m_prop.visual == "text") {
+			std::string texturestring = "unknown_node.png";
+			if (!m_prop.textures.empty())
+				texturestring = m_prop.textures[0];
+			texturestring += mod;
+			m_textnode->setMaterialTexture(0,
+					tsrc->getTextureForMesh(texturestring));
+
+			// This allows setting per-material colors. However, until a real lighting
+			// system is added, the code below will have no effect. Once MineTest
+			// has directional lighting, it should work automatically.
+			if (!m_prop.colors.empty()) {
+				m_textnode->getMaterial(0).AmbientColor = m_prop.colors[0];
+				m_textnode->getMaterial(0).DiffuseColor = m_prop.colors[0];
+				m_textnode->getMaterial(0).SpecularColor = m_prop.colors[0];
+			}
+
+			m_textnode->getMaterial(0).setFlag(video::EMF_TRILINEAR_FILTER, use_trilinear_filter);
+			m_textnode->getMaterial(0).setFlag(video::EMF_BILINEAR_FILTER, use_bilinear_filter);
+			m_textnode->getMaterial(0).setFlag(video::EMF_ANISOTROPIC_FILTER, use_anisotropic_filter);
 		}
 	}
 
