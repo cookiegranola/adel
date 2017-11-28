@@ -501,15 +501,28 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 					txs, tys, 0, 0);
 		}
 	} else if (m_prop.visual == "text") {
-		infostream<<"GenericCAO::addToScene(): single_sprite"<<std::endl;
+		infostream<<"GenericCAO::addToScene(): text"<<std::endl;
 		gui::IGUIFont* font = RenderingEngine::get_scene_manager()->getGUIEnvironment()->getBuiltInFont();
+		
+		std::string text;
+		std::string params;
+		parseTextString(m_prop.mesh, text, params, '@', '\\');
+		std::wstring wtext = utf8_to_wide(text);
+		
 		video::SColor color_top(255,255,0,255);
 		video::SColor color_bottom(255,0,255,255);
+		
+		if (m_prop.colors.size() > 0) 
+			color_top = m_prop.colors[0];
+			
+		if (m_prop.colors.size() > 1) 
+			color_bottom = m_prop.colors[1];
+			
 		m_textnode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
-				font, L"Kid", NULL, v2f(1, 1), v3f(0,0,0), -1,
+				font, wtext.c_str(), NULL, m_prop.visual_size*BS, v3f(0,0,0), -1,
 				color_top, color_bottom);
+				
 		m_textnode->grab();
-		m_textnode->setSize(m_prop.visual_size*BS);
 		{
 			const float txs = 1.0 / 1;
 			const float tys = 1.0 / 1;
