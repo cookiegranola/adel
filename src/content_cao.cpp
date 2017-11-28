@@ -502,17 +502,13 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		}
 	} else if (m_prop.visual == "text") {
 		infostream<<"GenericCAO::addToScene(): single_sprite"<<std::endl;
-		m_textnode = RenderingEngine::get_scene_manager()->addBillboardSceneNode(
-				NULL, v2f(1, 1), v3f(0,0,0), -1);
+		gui::IGUIFont* font = RenderingEngine::get_scene_manager()->getGUIEnvironment()->getBuiltInFont();
+		video::SColor color_top(255,255,0,255);
+		video::SColor color_bottom(255,0,255,255);
+		m_textnode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
+				font, L"Kid", NULL, v2f(1, 1), v3f(0,0,0), -1,
+				color_top, color_bottom);
 		m_textnode->grab();
-		m_textnode->setMaterialTexture(0,
-				tsrc->getTextureForMesh("unknown_node.png"));
-		m_textnode->setMaterialFlag(video::EMF_LIGHTING, false);
-		m_textnode->setMaterialFlag(video::EMF_BILINEAR_FILTER, false);
-		m_textnode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
-		m_textnode->setMaterialFlag(video::EMF_FOG_ENABLE, true);
-		u8 li = m_last_light;
-		m_textnode->setColor(video::SColor(255,li,li,li));
 		m_textnode->setSize(m_prop.visual_size*BS);
 		{
 			const float txs = 1.0 / 1;
@@ -1049,30 +1045,6 @@ void GenericCAO::updateTextures(std::string mod)
 			m_spritenode->getMaterial(0).setFlag(video::EMF_TRILINEAR_FILTER, use_trilinear_filter);
 			m_spritenode->getMaterial(0).setFlag(video::EMF_BILINEAR_FILTER, use_bilinear_filter);
 			m_spritenode->getMaterial(0).setFlag(video::EMF_ANISOTROPIC_FILTER, use_anisotropic_filter);
-		}
-	}
-
-	if (m_textnode) {
-		if (m_prop.visual == "text") {
-			std::string texturestring = "unknown_node.png";
-			if (!m_prop.textures.empty())
-				texturestring = m_prop.textures[0];
-			texturestring += mod;
-			m_textnode->setMaterialTexture(0,
-					tsrc->getTextureForMesh(texturestring));
-
-			// This allows setting per-material colors. However, until a real lighting
-			// system is added, the code below will have no effect. Once MineTest
-			// has directional lighting, it should work automatically.
-			if (!m_prop.colors.empty()) {
-				m_textnode->getMaterial(0).AmbientColor = m_prop.colors[0];
-				m_textnode->getMaterial(0).DiffuseColor = m_prop.colors[0];
-				m_textnode->getMaterial(0).SpecularColor = m_prop.colors[0];
-			}
-
-			m_textnode->getMaterial(0).setFlag(video::EMF_TRILINEAR_FILTER, use_trilinear_filter);
-			m_textnode->getMaterial(0).setFlag(video::EMF_BILINEAR_FILTER, use_bilinear_filter);
-			m_textnode->getMaterial(0).setFlag(video::EMF_ANISOTROPIC_FILTER, use_anisotropic_filter);
 		}
 	}
 

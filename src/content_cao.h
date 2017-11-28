@@ -70,7 +70,7 @@ private:
 	scene::IAnimatedMeshSceneNode *m_animated_meshnode = nullptr;
 	WieldMeshSceneNode *m_wield_meshnode = nullptr;
 	scene::IBillboardSceneNode *m_spritenode = nullptr;
-	scene::IBillboardSceneNode *m_textnode = nullptr;
+	scene::IBillboardTextSceneNode *m_textnode = nullptr;
 	Nametag *m_nametag = nullptr;
 	v3f m_position = v3f(0.0f, 10.0f * BS, 0);
 	v3f m_velocity;
