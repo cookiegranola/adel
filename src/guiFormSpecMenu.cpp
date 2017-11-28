@@ -1460,8 +1460,7 @@ void GUIFormSpecMenu::parseImageButton(parserData* data, const std::string &elem
 {
 	std::vector<std::string> parts = split(element,';');
 
-	if ((((parts.size() >= 5) && (parts.size() <= 8)) && (parts.size() != 6)) ||
-		((parts.size() > 8) && (m_formspec_version > FORMSPEC_API_VERSION)))
+	if (parts.size() >= 5)
 	{
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::vector<std::string> v_geom = split(parts[1],',');
@@ -1494,6 +1493,9 @@ void GUIFormSpecMenu::parseImageButton(parserData* data, const std::string &elem
 			pressed_image_name = parts[7];
 		}
 
+		video::SColor color;
+		bool has_color = parts.size() > 8 && parseColorString(parts[8], color, false);
+		
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X, pos.Y+geom.Y);
 
 		if(!data->explicit_size)
@@ -1524,6 +1526,11 @@ void GUIFormSpecMenu::parseImageButton(parserData* data, const std::string &elem
 
 		gui::IGUIButton *e = Environment->addButton(rect, this, spec.fid, spec.flabel.c_str());
 
+        if (has_color) {
+			set3DSkinColors(e, color);
+			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
+		}
+		
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
 		}
@@ -1826,14 +1833,15 @@ void GUIFormSpecMenu::parseItemImageButton(parserData* data, const std::string &
 
 	std::vector<std::string> parts = split(element,';');
 
-	if ((parts.size() == 5) ||
-		((parts.size() > 5) && (m_formspec_version > FORMSPEC_API_VERSION)))
+	if (parts.size() >= 5)
 	{
 		std::vector<std::string> v_pos = split(parts[0],',');
 		std::vector<std::string> v_geom = split(parts[1],',');
 		std::string item_name = parts[2];
 		std::string name = parts[3];
 		std::string label = parts[4];
+		video::SColor color;
+		bool has_color = parts.size() > 5 && parseColorString(parts[5], color, false);
 
 		label = unescape_string(label);
 		item_name = unescape_string(item_name);
@@ -1871,6 +1879,11 @@ void GUIFormSpecMenu::parseItemImageButton(parserData* data, const std::string &
 
 		gui::IGUIButton *e = Environment->addButton(rect, this, spec.fid, L"");
 
+        if (has_color) {
+			set3DSkinColors(e, color);
+			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
+		}
+		
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
 		}
