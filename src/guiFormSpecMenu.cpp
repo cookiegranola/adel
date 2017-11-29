@@ -1750,14 +1750,14 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 		geom.X = width;
 		geom.Y = height;
 
-		core::rect<s32> view_rect
+		core::rect<s32> content_rect
 			= core::rect<s32>(pos.X-padding, pos.Y-padding, pos.X+geom.X+padding, pos.Y+geom.Y+padding);
-		core::rect<s32> rect(view_rect);
+		core::rect<s32> rect(content_rect);
 
-		rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X - tab_width;
-		rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y - tab_height;
-		rect.LowerRightCorner.X = view_rect.LowerRightCorner.X + tab_width;
-		rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y + tab_height;
+		rect.UpperLeftCorner.X = content_rect.UpperLeftCorner.X - tab_width;
+		rect.UpperLeftCorner.Y = content_rect.UpperLeftCorner.Y - tab_height;
+		rect.LowerRightCorner.X = content_rect.LowerRightCorner.X + tab_width;
+		rect.LowerRightCorner.Y = content_rect.LowerRightCorner.Y + tab_height;
 		
 		content_texture = m_tsrc->getTexture(tab_prefix + "content.png");
 		top_tab_texture = m_tsrc->getTexture(tab_prefix + "top.png");
@@ -1810,7 +1810,7 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
             std::string side_name;            
 			parseTextString(button, button, side_name, ':');
 			
-			if (side_name.length())
+			if (side_name.length() > 0)
 				previous_side_name = side_name;
 			else
 				side_name = previous_side_name;
