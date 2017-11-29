@@ -476,29 +476,29 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		s32 base_step = 1;
 		s32 small_step = 10;
 		s32 large_step = 100;
-		
+
         if (parts.size() > 4 && parts[4].length() > 0) {
 			std::vector<std::string> values = split(parts[4],',');
-			
+
 			if (values.size() > 0 && values[0].length() > 0)
 				value = stoi(values[0]);
-			
+
 			if (values.size() > 1 && values[1].length() > 0)
 				min = stoi(values[1]);
-			
+
 			if (values.size() > 2 && values[2].length() > 0)
 				max = stoi(values[2]);
-				
+
 			if (values.size() > 3 && values[3].length() > 0)
 				base_step = stoi(values[3]);
-				
+
 			if (values.size() > 4 && values[4].length() > 0)
 				small_step = stoi(values[4]);
-			
+
 			if (values.size() > 5 && values[5].length() > 0)
 				large_step = stoi(values[5]);
 		}
-		
+
 		video::SColor bg_color;
 		bool has_bg_color = parts.size() > 5 && parseColorString(parts[5], bg_color, false);
 		video::SColor button_color;
@@ -507,7 +507,7 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		bool has_icon_color = parts.size() > 7 && parseColorString(parts[7], icon_color, false);
 		video::SColor disabled_icon_color;
 		bool has_disabled_icon_color = parts.size() > 8 && parseColorString(parts[8], disabled_icon_color, false);
-						
+
 		MY_CHECKPOS("scrollbar",0);
 
 		v2s32 pos = padding + pos_offset * spacing;
@@ -543,15 +543,15 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 		spec.send  = true;
 		gui::IGUIScrollBar* e =
 				Environment->addScrollBar(is_horizontal,rect,this,spec.fid);
-		
+
 		e->setMin(min);
 		e->setMax(max);
 		e->setBaseStep(base_step);
 		e->setSmallStep(small_step);
 		e->setLargeStep(large_step);
-		
+
 		e->setPos(value);
-		
+
         if (has_bg_color)
 			e->setColor(EGDC_SCROLLBAR, bg_color);
 
@@ -564,10 +564,10 @@ void GUIFormSpecMenu::parseScrollBar(parserData* data, const std::string &elemen
 			e->setColor(EGDC_WINDOW_SYMBOL, icon_color);
 			e->setColor(EGDC_GRAY_WINDOW_SYMBOL, icon_color, 0.5f);
 		}
-		
+
         if (has_disabled_icon_color)
 			e->setColor(EGDC_GRAY_WINDOW_SYMBOL, disabled_icon_color);
-		
+
 		m_scrollbars.emplace_back(spec,e);
 		m_fields.push_back(spec);
 		return;
@@ -1101,7 +1101,7 @@ void GUIFormSpecMenu::parseSimpleField(parserData* data,
 	bool is_dynamic = (name.length() > 0 && name[0] == '!'); // :PATCH:
 	if (is_dynamic)
 		name = name.substr(1);
-		
+
 	core::rect<s32> rect;
 
 	if(data->explicit_size)
@@ -1129,7 +1129,7 @@ void GUIFormSpecMenu::parseSimpleField(parserData* data,
 	);
 
 	spec.is_dynamic = is_dynamic; // :PATCH:
-		
+
 	if (name.empty()) {
 		// spec field id to 0, this stops submit searching for a value that isn't there
 		gui::IGUIStaticText *static_text = addStaticText(Environment,
@@ -1217,7 +1217,7 @@ void GUIFormSpecMenu::parseTextArea(parserData* data, std::vector<std::string>& 
 	bool is_dynamic = (name.length() > 0 && name[0] == '!'); // :PATCH:
 	if (is_dynamic)
 		name = name.substr(1);
-		
+
 	MY_CHECKPOS(type,0);
 	MY_CHECKGEOM(type,1);
 
@@ -1495,7 +1495,7 @@ void GUIFormSpecMenu::parseImageButton(parserData* data, const std::string &elem
 
 		video::SColor color;
 		bool has_color = parts.size() > 8 && parseColorString(parts[8], color, false);
-		
+
 		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X, pos.Y+geom.Y);
 
 		if(!data->explicit_size)
@@ -1530,7 +1530,7 @@ void GUIFormSpecMenu::parseImageButton(parserData* data, const std::string &elem
 			set3DSkinColors(e, color);
 			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
 		}
-		
+
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
 		}
@@ -1612,7 +1612,7 @@ void GUIFormSpecMenu::parseItemImageButton(parserData* data, const std::string &
 			set3DSkinColors(e, color);
 			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
 		}
-		
+
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
 		}
@@ -1643,9 +1643,6 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 		std::vector<std::string> buttons = split(parts[2],',');
 		std::string str_index = parts[3];
 		int tab_index = stoi(str_index) -1;
-		bool show_background = true;
-		bool show_border = true;
-        s32 side = 0;
 		s32 padding = 0;
         s32 tab_height = m_btn_height*2;
         s32 tab_width = 0;
@@ -1660,104 +1657,80 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 		s32 button_offset = 4;
 		s32 button_distance = 4;
 		video::ITexture* content_texture = 0;
-		video::ITexture* tab_texture = 0;
-		video::ITexture* active_tab_texture = 0;
-		video::ITexture* prior_arrow_texture = 0;
-		video::ITexture* prior_arrow_pressed_texture = 0;
-		video::ITexture* next_arrow_texture = 0;
-		video::ITexture* next_arrow_pressed_texture = 0;
+		video::ITexture* top_tab_texture = 0;
+		video::ITexture* top_active_tab_texture = 0;
+		video::ITexture* bottom_tab_texture = 0;
+		video::ITexture* bottom_active_tab_texture = 0;
+		video::ITexture* left_tab_texture = 0;
+		video::ITexture* left_active_tab_texture = 0;
+		video::ITexture* right_tab_texture = 0;
+		video::ITexture* right_active_tab_texture = 0;
+		video::ITexture* up_arrow_texture = 0;
+		video::ITexture* up_arrow_pressed_texture = 0;
+		video::ITexture* down_arrow_texture = 0;
+		video::ITexture* down_arrow_pressed_texture = 0;
+		video::ITexture* left_arrow_texture = 0;
+		video::ITexture* left_arrow_pressed_texture = 0;
+		video::ITexture* right_arrow_texture = 0;
+		video::ITexture* right_arrow_pressed_texture = 0;
 		std::string tab_prefix = "tab_";
 
 		MY_CHECKPOS("image_tab",0);
 
-		if (parts.size() > 4 && parts[4] == "false") {
-            show_background = false;
-        }
-        
-        if (parts.size() > 5 && parts[5] == "false") {
-            show_border = false;
-		}
-        
-        if (parts.size() > 6)
-        {
+        if (parts.size() > 5 && parts[5].length() > 0)
+			padding = stoi(parts[5]);
+
+        if (parts.size() > 6 && parts[6].length() > 0) {
 			std::vector<std::string> values = split(parts[6],',');
-			
-			if (values.size() > 0) {
-				if (values[0] == "top") side = 0;
-				if (values[0] == "bottom") side = 1;
-				if (values[0] == "left") side = 2;
-				if (values[0] == "right") side = 3;
-			}
-			
-			if (values.size() > 1 && values[1].length() > 0) {
-				padding = stoi(values[1]);
-			}
-        }
-        
+
+			if (values.size() > 0 && values[0].length() > 0)
+				tab_height = stoi(values[0]);
+
+			if (values.size() > 1 && values[1].length() > 0)
+				tab_width = stoi(values[1]);
+
+			if (values.size() > 2 && values[2].length() > 0)
+				tab_padding = stoi(values[2]);
+
+			if (values.size() > 3 && values[3].length() > 0)
+				tab_spacing = stoi(values[3]);
+		}
+
         if (parts.size() > 7 && parts[7].length() > 0) {
 			std::vector<std::string> values = split(parts[7],',');
-			
-			if (values.size() > 0 && values[0].length() > 0) {
-				tab_height = stoi(values[0]);
-			}
-					
-			if (values.size() > 1 && values[1].length() > 0) {
-				tab_width = stoi(values[1]);
-			}
-					
-			if (values.size() > 2 && values[2].length() > 0) {
-				tab_padding = stoi(values[2]);
-			}
-					
-			if (values.size() > 3 && values[3].length() > 0) {
-				tab_spacing = stoi(values[3]);
-			}
+
+			if (values.size() > 0 && values[0].length() > 0)
+				button_width = stoi(values[0]);
+
+			if (values.size() > 1 && values[1].length() > 0)
+				button_height = stoi(values[1]);
+
+			if (values.size() > 2 && values[2].length() > 0)
+				button_spacing = stoi(values[2]);
+
+			if (values.size() > 3 && values[3].length() > 0)
+				button_offset = stoi(values[3]);
+
+			if (values.size() > 4 && values[4].length() > 0)
+				button_distance = stoi(values[4]);
 		}
-        
+
         if (parts.size() > 8 && parts[8].length() > 0) {
 			std::vector<std::string> values = split(parts[8],',');
-			
-			if (values.size() > 0 && values[0].length() > 0) {
-				button_width = stoi(values[0]);
-			}
-					
-			if (values.size() > 1 && values[1].length() > 0) {
-				button_height = stoi(values[1]);
-			}
-					
-			if (values.size() > 2 && values[2].length() > 0) {
-				button_spacing = stoi(values[2]);
-			}
-					
-			if (values.size() > 3 && values[3].length() > 0) {
-				button_offset = stoi(values[3]);
-			}
-					
-			if (values.size() > 4 && values[4].length() > 0) {
-				button_distance = stoi(values[4]);
-			}
-		}
-		
-        if (parts.size() > 9 && parts[9].length() > 0) {
-			std::vector<std::string> values = split(parts[9],',');
 
-			if (values.size() > 0 && values[0].length() > 0) {
+			if (values.size() > 0 && values[0].length() > 0)
 				tab_prefix = values[0];
-			}
-					
-			if (values.size() > 1 && values[1].length() > 0) {
+
+			if (values.size() > 1 && values[1].length() > 0)
 				border_width = stoi(values[1]);
-			}
-					
-			if (values.size() > 2 && values[2].length() > 0) {
+
+			if (values.size() > 2 && values[2].length() > 0)
 				border_height = stoi(values[2]);
-			}
-			
-			if (values.size() > 3 && values[3].length() > 0) {
+
+			if (values.size() > 3 && values[3].length() > 0)
 				border_offset = stoi(values[3]);
-			}
 		}
-		
+
 		FieldSpec spec(
 			name,
 			L"",
@@ -1766,7 +1739,7 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 		);
 
 		spec.ftype = f_TabHeader;
-		
+
 		s32 width = DesiredRect.getWidth();
 		s32 height = DesiredRect.getHeight();
 
@@ -1776,117 +1749,104 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 		v2s32 geom;
 		geom.X = width;
 		geom.Y = height;
-		
-		core::rect<s32> view_rect 
+
+		core::rect<s32> view_rect
 			= core::rect<s32>(pos.X-padding, pos.Y-padding, pos.X+geom.X+padding, pos.Y+geom.Y+padding);
 		core::rect<s32> rect(view_rect);
+
+		rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X - tab_width;
+		rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y - tab_height;
+		rect.LowerRightCorner.X = view_rect.LowerRightCorner.X + tab_width;
+		rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y + tab_height;
 		
 		content_texture = m_tsrc->getTexture(tab_prefix + "content.png");
-				
-		if ( side == 0  )
-		{
-			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
-			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y - tab_height;
-			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
-			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;
+		top_tab_texture = m_tsrc->getTexture(tab_prefix + "top.png");
+		top_active_tab_texture = m_tsrc->getTexture(tab_prefix + "top_active.png");
+		bottom_tab_texture = m_tsrc->getTexture(tab_prefix + "bottom.png");
+		bottom_active_tab_texture = m_tsrc->getTexture(tab_prefix + "bottom_active.png");
+		left_tab_texture = m_tsrc->getTexture(tab_prefix + "left.png");
+		left_active_tab_texture = m_tsrc->getTexture(tab_prefix + "left_active.png");
+		right_tab_texture = m_tsrc->getTexture(tab_prefix + "right.png");
+		right_active_tab_texture = m_tsrc->getTexture(tab_prefix + "right_active.png");
+		up_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_up.png");
+		up_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_up_pressed.png");
+		down_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_down.png");
+		down_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_down_pressed.png");
+		left_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_left.png");
+		left_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_left_pressed.png");
+		right_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_right.png");
+		right_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_right_pressed.png");
 
-			tab_texture = m_tsrc->getTexture(tab_prefix + "top.png");
-			active_tab_texture = m_tsrc->getTexture(tab_prefix + "top_active.png");
-		}
-		else if ( side == 1  )
-		{
-			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
-			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
-			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
-			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y + tab_height;
-
-			tab_texture = m_tsrc->getTexture(tab_prefix + "bottom.png");
-			active_tab_texture = m_tsrc->getTexture(tab_prefix + "bottom_active.png");
-		}
-		else if ( side == 2 )
-		{
-			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X - tab_width;
-			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
-			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X;
-			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;		
-
-			tab_texture = m_tsrc->getTexture(tab_prefix + "left.png");
-			active_tab_texture = m_tsrc->getTexture(tab_prefix + "left_active.png");	
-		}
-		else
-		{
-			rect.UpperLeftCorner.X = view_rect.UpperLeftCorner.X;
-			rect.UpperLeftCorner.Y = view_rect.UpperLeftCorner.Y;
-			rect.LowerRightCorner.X = view_rect.LowerRightCorner.X + tab_width;
-			rect.LowerRightCorner.Y = view_rect.LowerRightCorner.Y;
-
-			tab_texture = m_tsrc->getTexture(tab_prefix + "right.png");
-			active_tab_texture = m_tsrc->getTexture(tab_prefix + "right_active.png");
-		}
-
-		if ( side < 2 )
-		{
-			prior_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_left.png");
-			prior_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_left_pressed.png");
-			next_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_right.png");
-			next_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_right_pressed.png");
-		}
-		else
-		{
-			prior_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_up.png");
-			prior_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_up_pressed.png");
-			next_arrow_texture = m_tsrc->getTexture(tab_prefix + "arrow_down.png");
-			next_arrow_pressed_texture = m_tsrc->getTexture(tab_prefix + "arrow_down_pressed.png");
-		}
-		
-		CGUIImageTabControl* e = new CGUIImageTabControl(Environment, 
-			this, rect, show_background, show_border, side, spec.fid, 
-			tab_height, tab_width, tab_padding, tab_spacing, 
+		CGUIImageTabControl* e = new CGUIImageTabControl(Environment,
+			this, rect, spec.fid,
+			tab_height, tab_width, tab_padding, tab_spacing,
 			width, height, border_width, border_height, border_offset,
 			button_width, button_height, button_spacing, button_offset, button_distance,
-			content_texture, tab_texture, active_tab_texture,
-			prior_arrow_texture, prior_arrow_pressed_texture,
-			next_arrow_texture, next_arrow_pressed_texture);
-			
+			content_texture, 
+			top_tab_texture, top_active_tab_texture,
+			bottom_tab_texture, bottom_active_tab_texture,
+			left_tab_texture, left_active_tab_texture,
+			right_tab_texture, right_active_tab_texture,
+			up_arrow_texture, up_arrow_pressed_texture,
+			down_arrow_texture, down_arrow_pressed_texture,
+			left_arrow_texture, left_arrow_pressed_texture,
+			right_arrow_texture, right_arrow_pressed_texture);
+
 		e->drop();
 		e->setAlignment(EGUIA_UPPERLEFT, EGUIA_UPPERLEFT,
 				EGUIA_UPPERLEFT, EGUIA_LOWERRIGHT);
         e->setTabHeight(tab_height);
-                
+
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
 		}
 
 		e->setNotClipped(true);
-
-		for (const std::string &button : buttons) {
-            std::string tab_name = button;
+		
+		s32 tab_number=0;
+		
+		for (std::string &button : buttons) {
+            std::string side_name;            
+			parseTextString(button, button, side_name, ':');
+			
             f32 scaling = 1.0f;
 			video::ITexture *texture = 0;
-			
-			if (tab_name.find(".bmp", 0) != std::string::npos
-                || tab_name.find(".jpg", 0) != std::string::npos
-                || tab_name.find(".png", 0) != std::string::npos
-                || tab_name.find(".tga", 0) != std::string::npos) {
-                std::vector<std::string> parts = split(tab_name,'@');
-                
-                if (parts.size() == 2) {
-                    tab_name = parts[0];
-                    scaling = stof(parts[1]);
-                    
+
+			if (button.find(".bmp", 0) != std::string::npos
+                || button.find(".jpg", 0) != std::string::npos
+                || button.find(".png", 0) != std::string::npos
+                || button.find(".tga", 0) != std::string::npos) {
+				std::string scaling_value;	
+				parseTextString(button, button, scaling_value, '@');
+
+                if (scaling_value.length() > 0) {
+                    scaling = stof(scaling_value);
+
                     if (scaling > 1.0f) {
                         scaling = 1.0f;
                     }
                 }
-                
-				texture = m_tsrc->getTexture(tab_name);
-				
+
+				texture = m_tsrc->getTexture(button);
+
 				if (texture)
-					tab_name = "";
+					button = "";
 			}
-			
-			e->addImageTab(unescape_translate(unescape_string(utf8_to_wide(tab_name))).c_str(), 
-				-1, texture, scaling);        
+
+			u32 side = 0;
+            if (side_name == "top")
+				side = 0;
+            if (side_name == "bottom")
+				side = 1;
+            if (side_name == "left")
+				side = 2;
+            if (side_name == "right")
+				side = 3;
+
+			e->addImageTab(unescape_translate(unescape_string(utf8_to_wide(button))).c_str(),
+				-1, texture, scaling, side)->setNumber(tab_number);
+				
+			++tab_number;
 		}
 
 		if ((tab_index >= 0) &&
@@ -4246,7 +4206,7 @@ bool GUIFormSpecMenu::OnEvent(const SEvent& event)
 				return true;
 			}
 		}
-		
+
 		if (event.GUIEvent.EventType == gui::EGET_EDITBOX_ENTER) {
 			if (event.GUIEvent.Caller->getID() > 257) {
 				bool close_on_enter = true;

@@ -87,7 +87,7 @@ char *mystrtok_r(char *s, const char *sep, char **lasts);
 u64 read_seed(const char *str);
 bool parseColorString(const std::string &value, video::SColor &color, bool quiet);
 void parseTextString(const std::string &value, std::string &text, std::string &params, 
-		const char sep, const char esc);
+		const char sep, const char esc='\\');
 
 /**
  * Returns a copy of \p str with spaces inserted at the right hand side to ensure

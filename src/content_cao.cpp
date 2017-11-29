@@ -506,7 +506,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		
 		std::string text;
 		std::string params;
-		parseTextString(m_prop.mesh, text, params, '@', '\\');
+		parseTextString(m_prop.mesh, text, params, '@');
 		std::wstring wtext = utf8_to_wide(text);
 		
 		video::SColor color_top(255,255,0,255);

@@ -10,7 +10,7 @@
 		on_rightclick = function(_,_, clicker)
 			local formspec = [[
 				size[8,8]
-				image_tab[0,0;tabs;logo.png,heart.png@0.8,object_marker_red.png,some text,some other text,more text,still more text,just another text;2;false;false;top,4;64,160,20,4;16,24,4,4,4;tab_,16,16,11]
+				image_tab[0,0;tabs;logo.png:top,heart.png@0.8:top,object_marker_red.png:bottom,some text:bottom,some other text:left,more text:left,still more text:right,just another text:right;2;4;64,160,20,4;16,24,4,4,4;tab_,16,16,11]
 			]]
 
 			local player_name = clicker:get_player_name()
