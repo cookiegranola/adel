@@ -10,7 +10,7 @@
 		on_rightclick = function(_,_, clicker)
 			local formspec = [[
 				size[8,8]
-				image_tab[0,0;tabs;logo.png:top,heart.png@0.8:top,object_marker_red.png:bottom,some text:bottom,some other text:left,more text:left,still more text:right,just another text:right;2;4;64,160,20,4;16,24,4,4,4;tab_,16,16,11]
+				image_tab[0,0;tabs;heart.png@0.8:top,logo.png,object_marker_red.png:bottom,some text,some other text:left,more text,still more text:right,just another text;2;64,160,20,4,4;16,24,4,4,4;tab_,16,16,11]
 			]]
 
 			local player_name = clicker:get_player_name()
@@ -24,18 +24,15 @@ The argument separator is the semicolon.
 
 The value separator in an argument is the comma.
 
-Up to 9 arguments can be provided.
+Up to 7 arguments can be provided.
 
 1. X position, Y position
 2. name
-3. first tab name, second tab name, ...
+3. first tab name:tab side, second tab name:tab side, ...
 4. active tab index
-5. show background (true/false)
-6. show border (true/false)
-7. tab side (top/bottom/left/right), content area padding (pixels)
-8. tab height (pixels), width (pixels), padding (pixels), spacing (pixels), offset (pixels)
-9. scroll button width (pixels), height (pixels), spacing (pixels), offset (pixels), distance (pixels)
-10. texture prefix, border width (pixels), border height (pixels), border offset (pixels)
+5. tab height (pixels), width (pixels), padding (pixels), spacing (pixels), offset (pixels), content area padding (pixels)
+6. scroll button width (pixels), height (pixels), spacing (pixels), offset (pixels), distance (pixels)
+7. texture prefix, border width (pixels), border height (pixels), border offset (pixels)
 
 Only the first 4 arguments are mandatory.
 
@@ -44,13 +41,13 @@ Within an optional argument, all values are optional too.
 ## Values
 
 - tab name : sets the text or image to put on the tab
+- tab side : tells on which side the tabs is put (top/bottom/left/right)
 - active tab index : gives the index of the active tab (starting at 1)
-- tab side : tells on which side the tabs are put
-- content area padding : grows the content area from a few pixels
 - tab height : sets a fixed height for the tabs
 - tab width : sets a fixed width for the tabs
 - tab padding : adds padding to the sides of the tab text/image
 - tab spacing : adds space between the tabs
+- content area padding : grows the content area from a few pixels
 - scroll button width : sets the width of the scroll buttons
 - scroll button height : sets the height of the scroll buttons 
 - scroll button spacing : adds space between the scroll buttons
@@ -63,6 +60,7 @@ Within an optional argument, all values are optional too.
 
 If the tab name is actually an image file name ending by ".bmp", ".jpg", ".png" or ".tga", then this image will used instead of the text.
 If the image file extension is immediately following by "@" and a real value between 0 and 1, the image will be scaled down using this ratio.
+If no tab side is provided, the side of the previous tab is used.
 
 ## Textures
 

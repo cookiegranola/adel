@@ -1677,11 +1677,8 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 
 		MY_CHECKPOS("image_tab",0);
 
-        if (parts.size() > 5 && parts[5].length() > 0)
-			padding = stoi(parts[5]);
-
-        if (parts.size() > 6 && parts[6].length() > 0) {
-			std::vector<std::string> values = split(parts[6],',');
+        if (parts.size() > 4 && parts[4].length() > 0) {
+			std::vector<std::string> values = split(parts[4],',');
 
 			if (values.size() > 0 && values[0].length() > 0)
 				tab_height = stoi(values[0]);
@@ -1694,10 +1691,13 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 
 			if (values.size() > 3 && values[3].length() > 0)
 				tab_spacing = stoi(values[3]);
+			
+			if (values.size() > 5 && values[5].length() > 0)
+				padding = stoi(values[5]);
 		}
 
-        if (parts.size() > 7 && parts[7].length() > 0) {
-			std::vector<std::string> values = split(parts[7],',');
+        if (parts.size() > 5 && parts[5].length() > 0) {
+			std::vector<std::string> values = split(parts[5],',');
 
 			if (values.size() > 0 && values[0].length() > 0)
 				button_width = stoi(values[0]);
@@ -1715,8 +1715,8 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 				button_distance = stoi(values[4]);
 		}
 
-        if (parts.size() > 8 && parts[8].length() > 0) {
-			std::vector<std::string> values = split(parts[8],',');
+        if (parts.size() > 6 && parts[6].length() > 0) {
+			std::vector<std::string> values = split(parts[6],',');
 
 			if (values.size() > 0 && values[0].length() > 0)
 				tab_prefix = values[0];
@@ -1804,10 +1804,16 @@ void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element
 		e->setNotClipped(true);
 		
 		s32 tab_number=0;
+		std::string previous_side_name = "top";
 		
 		for (std::string &button : buttons) {
             std::string side_name;            
 			parseTextString(button, button, side_name, ':');
+			
+			if (side_name.length())
+				previous_side_name = side_name;
+			else
+				side_name = previous_side_name;
 			
             f32 scaling = 1.0f;
 			video::ITexture *texture = 0;
