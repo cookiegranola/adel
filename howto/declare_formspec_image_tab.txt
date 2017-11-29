@@ -1,20 +1,20 @@
-# Declare image tabs
+# Declare a formspec image tab
 
 ## Sample
 
-	minetest.register_node(":default:test", {
-		description = "ImageTab Test",
+	minetest.register_node(":default:test_imagetab", {
+		description = "test imagetab",
 		tiles = {"aaa.png"},
 		groups = {snappy = 3},
 
 		on_rightclick = function(_,_, clicker)
 			local formspec = [[
 				size[8,8]
-				tabheader[0,0;tabs;logo.png,heart.png@0.8,object_marker_red.png,some text,some other text,more text,still more text,just another text;2;false;false;top,4;64,160,20,4;16,24,4,4,4;tab_,16,16,11]
+				image_tab[0,0;tabs;logo.png,heart.png@0.8,object_marker_red.png,some text,some other text,more text,still more text,just another text;2;false;false;top,4;64,160,20,4;16,24,4,4,4;tab_,16,16,11]
 			]]
 
 			local player_name = clicker:get_player_name()
-			minetest.show_formspec(player_name, "test_sb", formspec)
+			minetest.show_formspec(player_name, "test_imagetab", formspec)
 		end,
 	})
 

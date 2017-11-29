@@ -1,9 +1,9 @@
-# Declare image buttons
+# Declare a formspec image button
 
 ## Sample
 
-	minetest.register_node(":default:test2", {
-		description = "Button Test",
+	minetest.register_node(":default:test_imagebutton", {
+		description = "test imagebutton",
 		tiles = {"aaa.png"},
 		groups = {snappy = 3},
 
@@ -14,7 +14,7 @@
 			]]
 
 			local player_name = clicker:get_player_name()
-			minetest.show_formspec(player_name, "test_sb", formspec)
+			minetest.show_formspec(player_name, "test_imagebutton", formspec)
 		end,
 	})
 

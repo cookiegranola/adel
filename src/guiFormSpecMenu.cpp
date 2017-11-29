@@ -1551,7 +1551,87 @@ void GUIFormSpecMenu::parseImageButton(parserData* data, const std::string &elem
 	errorstream<< "Invalid imagebutton element(" << parts.size() << "): '" << element << "'"  << std::endl;
 }
 
-void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &element)
+void GUIFormSpecMenu::parseItemImageButton(parserData* data, const std::string &element)
+{
+
+	if (m_client == 0) {
+		warningstream << "invalid use of item_image_button with m_client==0"
+			<< std::endl;
+		return;
+	}
+
+	std::vector<std::string> parts = split(element,';');
+
+	if (parts.size() >= 5)
+	{
+		std::vector<std::string> v_pos = split(parts[0],',');
+		std::vector<std::string> v_geom = split(parts[1],',');
+		std::string item_name = parts[2];
+		std::string name = parts[3];
+		std::string label = parts[4];
+		video::SColor color;
+		bool has_color = parts.size() > 5 && parseColorString(parts[5], color, false);
+
+		label = unescape_string(label);
+		item_name = unescape_string(item_name);
+
+		MY_CHECKPOS("itemimagebutton",0);
+		MY_CHECKGEOM("itemimagebutton",1);
+
+		v2s32 pos = padding + pos_offset * spacing;
+		pos.X += stof(v_pos[0]) * (float)spacing.X;
+		pos.Y += stof(v_pos[1]) * (float)spacing.Y;
+		v2s32 geom;
+		geom.X = (stof(v_geom[0]) * (float)spacing.X)-(spacing.X-imgsize.X);
+		geom.Y = (stof(v_geom[1]) * (float)spacing.Y)-(spacing.Y-imgsize.Y);
+
+		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X, pos.Y+geom.Y);
+
+		if(!data->explicit_size)
+			warningstream<<"invalid use of item_image_button without a size[] element"<<std::endl;
+
+		IItemDefManager *idef = m_client->idef();
+		ItemStack item;
+		item.deSerialize(item_name, idef);
+
+		m_tooltips[name] =
+			TooltipSpec(utf8_to_wide(item.getDefinition(idef).description),
+						m_default_tooltip_bgcolor,
+						m_default_tooltip_color);
+
+		FieldSpec spec(
+			name,
+			utf8_to_wide(label),
+			utf8_to_wide(item_name),
+			258 + m_fields.size()
+		);
+
+		gui::IGUIButton *e = Environment->addButton(rect, this, spec.fid, L"");
+
+        if (has_color) {
+			set3DSkinColors(e, color);
+			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
+		}
+		
+		if (spec.fname == data->focused_fieldname) {
+			Environment->setFocus(e);
+		}
+
+		spec.ftype = f_Button;
+		rect+=data->basepos-padding;
+		spec.rect=rect;
+		m_fields.push_back(spec);
+		pos = padding + AbsoluteRect.UpperLeftCorner + pos_offset * spacing;
+		pos.X += stof(v_pos[0]) * (float) spacing.X;
+		pos.Y += stof(v_pos[1]) * (float) spacing.Y;
+		m_itemimages.emplace_back("", item_name, e, pos, geom);
+		m_static_texts.emplace_back(utf8_to_wide(label), rect, e);
+		return;
+	}
+	errorstream<< "Invalid ItemImagebutton element(" << parts.size() << "): '" << element << "'"  << std::endl;
+}
+
+void GUIFormSpecMenu::parseImageTab(parserData* data, const std::string &element)
 {
 	// :PATCH::
 	std::vector<std::string> parts = split(element,';');
@@ -1588,7 +1668,7 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		video::ITexture* next_arrow_pressed_texture = 0;
 		std::string tab_prefix = "tab_";
 
-		MY_CHECKPOS("tabheader",0);
+		MY_CHECKPOS("image_tab",0);
 
 		if (parts.size() > 4 && parts[4] == "false") {
             show_background = false;
@@ -1817,89 +1897,80 @@ void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &elemen
 		m_fields.push_back(spec);
 		return;
 	}
-	errorstream << "Invalid TabHeader element(" << parts.size() << "): '"
+	errorstream << "Invalid ImageTab element(" << parts.size() << "): '"
 			<< element << "'"  << std::endl;
 	// ::PATCH:
 }
 
-void GUIFormSpecMenu::parseItemImageButton(parserData* data, const std::string &element)
+void GUIFormSpecMenu::parseTabHeader(parserData* data, const std::string &element)
 {
-
-	if (m_client == 0) {
-		warningstream << "invalid use of item_image_button with m_client==0"
-			<< std::endl;
-		return;
-	}
-
 	std::vector<std::string> parts = split(element,';');
 
-	if (parts.size() >= 5)
+	if (parts.size() >= 4)
 	{
 		std::vector<std::string> v_pos = split(parts[0],',');
-		std::vector<std::string> v_geom = split(parts[1],',');
-		std::string item_name = parts[2];
-		std::string name = parts[3];
-		std::string label = parts[4];
-		video::SColor color;
-		bool has_color = parts.size() > 5 && parseColorString(parts[5], color, false);
+		std::string name = parts[1];
+		std::vector<std::string> buttons = split(parts[2],',');
+		std::string str_index = parts[3];
+		bool show_background = true;
+		bool show_border = true;
+		int tab_index = stoi(str_index) -1;
 
-		label = unescape_string(label);
-		item_name = unescape_string(item_name);
+		MY_CHECKPOS("tabheader",0);
 
-		MY_CHECKPOS("itemimagebutton",0);
-		MY_CHECKGEOM("itemimagebutton",1);
-
-		v2s32 pos = padding + pos_offset * spacing;
-		pos.X += stof(v_pos[0]) * (float)spacing.X;
-		pos.Y += stof(v_pos[1]) * (float)spacing.Y;
-		v2s32 geom;
-		geom.X = (stof(v_geom[0]) * (float)spacing.X)-(spacing.X-imgsize.X);
-		geom.Y = (stof(v_geom[1]) * (float)spacing.Y)-(spacing.Y-imgsize.Y);
-
-		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X, pos.Y+geom.Y);
-
-		if(!data->explicit_size)
-			warningstream<<"invalid use of item_image_button without a size[] element"<<std::endl;
-
-		IItemDefManager *idef = m_client->idef();
-		ItemStack item;
-		item.deSerialize(item_name, idef);
-
-		m_tooltips[name] =
-			TooltipSpec(utf8_to_wide(item.getDefinition(idef).description),
-						m_default_tooltip_bgcolor,
-						m_default_tooltip_color);
+		if (parts.size() == 6) {
+			if (parts[4] == "true")
+				show_background = false;
+			if (parts[5] == "false")
+				show_border = false;
+		}
 
 		FieldSpec spec(
 			name,
-			utf8_to_wide(label),
-			utf8_to_wide(item_name),
-			258 + m_fields.size()
+			L"",
+			L"",
+			258+m_fields.size()
 		);
 
-		gui::IGUIButton *e = Environment->addButton(rect, this, spec.fid, L"");
+		spec.ftype = f_TabHeader;
 
-        if (has_color) {
-			set3DSkinColors(e, color);
-			e->setColor(EGDC_WINDOW_SYMBOL, color, 1.75f);
-		}
-		
+		v2s32 pos = pos_offset * spacing;
+		pos.X += stof(v_pos[0]) * (float)spacing.X;
+		pos.Y += stof(v_pos[1]) * (float)spacing.Y - m_btn_height * 2;
+		v2s32 geom;
+		geom.X = DesiredRect.getWidth();
+		geom.Y = m_btn_height*2;
+
+		core::rect<s32> rect = core::rect<s32>(pos.X, pos.Y, pos.X+geom.X,
+				pos.Y+geom.Y);
+
+		gui::IGUITabControl *e = Environment->addTabControl(rect, this,
+				show_background, show_border, spec.fid);
+		e->setAlignment(irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_UPPERLEFT,
+				irr::gui::EGUIA_UPPERLEFT, irr::gui::EGUIA_LOWERRIGHT);
+		e->setTabHeight(m_btn_height*2);
+
 		if (spec.fname == data->focused_fieldname) {
 			Environment->setFocus(e);
 		}
 
-		spec.ftype = f_Button;
-		rect+=data->basepos-padding;
-		spec.rect=rect;
+		e->setNotClipped(true);
+
+		for (const std::string &button : buttons) {
+			e->addTab(unescape_translate(unescape_string(
+				utf8_to_wide(button))).c_str(), -1);
+		}
+
+		if ((tab_index >= 0) &&
+				(buttons.size() < INT_MAX) &&
+				(tab_index < (int) buttons.size()))
+			e->setActiveTab(tab_index);
+
 		m_fields.push_back(spec);
-		pos = padding + AbsoluteRect.UpperLeftCorner + pos_offset * spacing;
-		pos.X += stof(v_pos[0]) * (float) spacing.X;
-		pos.Y += stof(v_pos[1]) * (float) spacing.Y;
-		m_itemimages.emplace_back("", item_name, e, pos, geom);
-		m_static_texts.emplace_back(utf8_to_wide(label), rect, e);
 		return;
 	}
-	errorstream<< "Invalid ItemImagebutton element(" << parts.size() << "): '" << element << "'"  << std::endl;
+	errorstream << "Invalid TabHeader element(" << parts.size() << "): '"
+			<< element << "'"  << std::endl;
 }
 
 void GUIFormSpecMenu::parseBox(parserData* data, const std::string &element)
@@ -2252,6 +2323,11 @@ void GUIFormSpecMenu::parseElement(parserData* data, const std::string &element)
 
 	if ((type == "image_button") || (type == "image_button_exit")) {
 		parseImageButton(data,description,type);
+		return;
+	}
+
+	if (type == "image_tab") {
+		parseImageTab(data,description);
 		return;
 	}
 

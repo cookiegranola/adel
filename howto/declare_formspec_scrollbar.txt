@@ -1,9 +1,9 @@
-# Declare scrollbars
+# Declare a formspec scrollbar
 
 ## Sample
 
-	minetest.register_node(":default:test2", {
-		description = "Scrollbar Test",
+	minetest.register_node(":default:test_scrollbar", {
+		description = "test scrollbar",
 		tiles = {"aaa.png"},
 		groups = {snappy = 3},
 
@@ -15,7 +15,7 @@
 			]]
 
 			local player_name = clicker:get_player_name()
-			minetest.show_formspec(player_name, "test_sb", formspec)
+			minetest.show_formspec(player_name, "test_scrollbar", formspec)
 		end,
 	})
 
