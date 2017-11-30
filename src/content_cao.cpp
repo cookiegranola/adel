@@ -500,10 +500,9 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			setBillboardTextureMatrix(m_spritenode,
 					txs, tys, 0, 0);
 		}
-	} else if (m_prop.visual == "text") {
+	} else if (m_prop.visual == "text") { // :PATCH:
 		infostream<<"GenericCAO::addToScene(): text"<<std::endl;
-		gui::IGUIFont* font = RenderingEngine::get_scene_manager()->getGUIEnvironment()->getBuiltInFont();
-		
+		gui::IGUIFont* font = m_smgr->getGUIEnvironment()->getFont("fonts/mono_dejavu_sans_28.xml");
 		std::string text;
 		std::string params;
 		parseTextString(m_prop.mesh, text, params, '@');
