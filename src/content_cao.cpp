@@ -502,12 +502,18 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		}
 	} else if (m_prop.visual == "text") { // :PATCH:
 		infostream<<"GenericCAO::addToScene(): text"<<std::endl;
-		gui::IGUIFont* font = m_smgr->getGUIEnvironment()->getFont("fonts/mono_dejavu_sans_28.xml");
 		std::string text;
 		std::string params;
 		parseTextString(m_prop.mesh, text, params, '@');
 		std::wstring wtext = utf8_to_wide(text);
 		
+		core::dimension2d<f32> text_size = m_prop.visual_size*BS;
+		
+		gui::IGUIFont* font = m_smgr->getGUIEnvironment()->getFont("fonts/mono_dejavu_sans_28.xml");
+		core::dimension2d<u32> font_size = font->getDimension(wtext.c_str());
+		
+		text_size.Width *= (f32)font_size.Width / font_size.Height;
+
 		video::SColor color_top(255,255,0,255);
 		video::SColor color_bottom(255,0,255,255);
 		
@@ -518,7 +524,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			color_bottom = m_prop.colors[1];
 			
 		m_textnode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
-				font, wtext.c_str(), NULL, m_prop.visual_size*BS, v3f(0,0,0), -1,
+				font, wtext.c_str(), NULL, text_size, v3f(0,0,0), -1,
 				color_top, color_bottom);
 				
 		m_textnode->grab();
