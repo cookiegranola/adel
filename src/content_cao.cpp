@@ -504,21 +504,21 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		infostream<<"GenericCAO::addToScene(): text"<<std::endl;
 		std::string text;
 		std::string params;
-		parseTextString(m_prop.mesh, text, params, '@');
+		parseTextString(m_prop.mesh, text, params, '^');
 		std::wstring wtext = utf8_to_wide(text);
 		
-		std::vector<std::string> values = split(params,',');
+		std::vector<std::string> values = split(params,';');
 
-		float padding = 0.1f;
 		float border = 0.1f;
-		float x_offset = -0.05f;
+		float padding = 0.2f;
+		float x_offset = 0.0f;
 		float y_offset = 0.0f;
 		
 		if (values.size() > 0 && values[0].size() > 0)
-			padding = stof(values[0]);
+			border = stof(values[0]);
 			
 		if (values.size() > 1 && values[1].size() > 0)
-			border = stof(values[1]);
+			padding = stof(values[1]);
 			
 		if (values.size() > 2 && values[2].size() > 0)
 			x_offset = stof(values[2]);
@@ -528,17 +528,17 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 
 		video::SColor text_color(255,255,255,255);
 		video::SColor background_color(128,128,128,128);
-		video::SColor border_color(64,64,64,128);
+		video::SColor border_color(128,64,64,64);
 				
-		if (m_prop.colors.size() > 0) 
-			text_color = m_prop.colors[0];
+		if (m_prop.colors.size() > 1) 
+			text_color = m_prop.colors[1];
 			
-		if (m_prop.colors.size() > 1) 
-			background_color = m_prop.colors[1];
+		if (m_prop.colors.size() > 2) 
+			background_color = m_prop.colors[2];
 
-		if (m_prop.colors.size() > 1) 
-			border_color = m_prop.colors[1];
-
+		if (m_prop.colors.size() > 3) 
+			border_color = m_prop.colors[3];
+			
 		core::dimension2d<f32> text_size = m_prop.visual_size*BS;
 		
 		gui::IGUIFont* font = m_smgr->getGUIEnvironment()->getFont("fonts/mono_dejavu_sans_28.xml");
@@ -549,7 +549,10 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		m_textnode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
 				font, wtext.c_str(), NULL, text_size, v3f(0,0,0), -1,
 				text_color, text_color);
-				
+		
+		m_textnode->setTextBackground(background_color, border_color, border, padding);
+		m_textnode->setTextOffset(x_offset, y_offset);
+						
 		m_textnode->grab();
 		{
 			const float txs = 1.0 / 1;
