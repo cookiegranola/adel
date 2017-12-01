@@ -514,8 +514,8 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		
 		text_size.Width *= (f32)font_size.Width / font_size.Height;
 
-		video::SColor color_top(255,255,0,255);
-		video::SColor color_bottom(255,0,255,255);
+		video::SColor color_top(255,255,255,255);
+		video::SColor color_bottom(255,255,255,255);
 		
 		if (m_prop.colors.size() > 0) 
 			color_top = m_prop.colors[0];
