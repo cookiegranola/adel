@@ -510,7 +510,8 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		std::vector<std::string> values = split(params,';');
 
 		float border = 0.1f;
-		float padding = 0.2f;
+		float x_padding = 0.2f;
+		float y_padding = 0.1f;
 		float x_offset = 0.0f;
 		float y_offset = 0.0f;
 		
@@ -518,13 +519,16 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			border = stof(values[0]);
 			
 		if (values.size() > 1 && values[1].size() > 0)
-			padding = stof(values[1]);
+			x_padding = stof(values[1]);
 			
 		if (values.size() > 2 && values[2].size() > 0)
-			x_offset = stof(values[2]);
+			y_padding = stof(values[2]);
 			
 		if (values.size() > 3 && values[3].size() > 0)
-			y_offset = stof(values[3]);
+			x_offset = stof(values[3]);
+			
+		if (values.size() > 4 && values[4].size() > 0)
+			y_offset = stof(values[4]);
 
 		video::SColor text_color(255,255,255,255);
 		video::SColor background_color(128,128,128,128);
@@ -550,7 +554,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 				font, wtext.c_str(), NULL, text_size, v3f(0,0,0), -1,
 				text_color, text_color);
 		
-		m_textnode->setTextBackground(background_color, border_color, border, padding);
+		m_textnode->setTextBackground(background_color, border_color, border, x_padding, y_padding);
 		m_textnode->setTextOffset(x_offset, y_offset);
 						
 		m_textnode->grab();
