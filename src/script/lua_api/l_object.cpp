@@ -2004,6 +2004,7 @@ const luaL_Reg ObjectRef::methods[] = {
 	luamethod_aliased(ObjectRef, get_yaw, getyaw),
 	luamethod_aliased(ObjectRef, set_texture_mod, settexturemod),
 	luamethod_aliased(ObjectRef, set_sprite, setsprite),
+	luamethod_aliased(ObjectRef, set_sprite_text, setspritetext),
 	luamethod(ObjectRef, get_entity_name),
 	luamethod(ObjectRef, get_luaentity),
 	// Player-only
