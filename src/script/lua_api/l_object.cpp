@@ -990,6 +990,21 @@ int ObjectRef::l_set_sprite(lua_State *L)
 	return 0;
 }
 
+// set_sprite_text(self, sprite_text)
+int ObjectRef::l_set_sprite_text(lua_State *L) // :PATCH:
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *co = getobject(ref);
+	if (co == NULL) return 0;
+	// Do it
+	std::string sprite_text;
+	if (!lua_isnil(L, 2))
+		sprite_text = lua_tostring(L, 2);
+	co->setSpriteText(sprite_text);
+	return 0;
+}
+
 // DEPRECATED
 // get_entity_name(self)
 int ObjectRef::l_get_entity_name(lua_State *L)

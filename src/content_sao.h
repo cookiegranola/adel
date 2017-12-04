@@ -126,6 +126,9 @@ public:
 	std::string getTextureMod() const;
 	void setSprite(v2s16 p, int num_frames, float framelength,
 			bool select_horiz_by_yawpitch);
+	
+	void setSpriteText(const std::string &sprite_text); // :PATCH:
+
 	std::string getName();
 	bool getCollisionBox(aabb3f *toset) const;
 	bool getSelectionBox(aabb3f *toset) const;

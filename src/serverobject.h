@@ -94,6 +94,8 @@ public:
 	// saving to disk may be omitted
 	virtual float getMinimumSavedMovement();
 
+	virtual void setSpriteText(const std::string &sprite_text);
+	
 	virtual std::string getDescription(){return "SAO";}
 
 	/*
@@ -243,6 +245,11 @@ public:
 		Queue of messages to be sent to the client
 	*/
 	std::queue<ActiveObjectMessage> m_messages_out;
+	
+	/*
+		Sprite text
+	*/
+	std::string m_sprite_text;
 
 protected:
 	// Used for creating objects based on type

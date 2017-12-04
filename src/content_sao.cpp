@@ -707,6 +707,14 @@ void LuaEntitySAO::setSprite(v2s16 p, int num_frames, float framelength,
 	m_messages_out.push(aom);
 }
 
+void LuaEntitySAO::setSpriteText(const std::string &sprite_text) // :PATCH:
+{
+	std::string str = gob_cmd_set_sprite_text(sprite_text);
+	// create message and add to list
+	ActiveObjectMessage aom(getId(), true, str);
+	m_messages_out.push(aom);
+}
+
 std::string LuaEntitySAO::getName()
 {
 	return m_init_name;

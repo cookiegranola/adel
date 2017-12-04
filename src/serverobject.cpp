@@ -68,6 +68,11 @@ float ServerActiveObject::getMinimumSavedMovement()
 	return 2.0*BS;
 }
 
+void ServerActiveObject::setSpriteText(const std::string &sprite_text)
+{
+	m_sprite_text = sprite_text;
+}
+
 ItemStack ServerActiveObject::getWieldedItem() const
 {
 	const Inventory *inv = getInventory();

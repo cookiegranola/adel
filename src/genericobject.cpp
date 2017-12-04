@@ -92,6 +92,16 @@ std::string gob_cmd_set_sprite(
 	return os.str();
 }
 
+std::string gob_cmd_set_sprite_text(const std::string &sprite_text) // :PATCH:
+{
+	std::ostringstream os(std::ios::binary);
+	// command
+	writeU8(os, GENERIC_CMD_SET_SPRITE_TEXT);
+	// parameters
+	os<<serializeString(sprite_text);
+	return os.str();
+}
+
 std::string gob_cmd_punched(s16 damage, s16 result_hp)
 {
 	std::ostringstream os(std::ios::binary);

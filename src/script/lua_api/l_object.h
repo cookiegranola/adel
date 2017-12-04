@@ -186,6 +186,9 @@ private:
 	//           select_horiz_by_yawpitch=false)
 	static int l_set_sprite(lua_State *L);
 
+	// set_sprite_text(self, sprite_text)
+	static int l_set_sprite_text(lua_State *L); // :PATCH:
+	
 	// DEPRECATED
 	// get_entity_name(self)
 	static int l_get_entity_name(lua_State *L);

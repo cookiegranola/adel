@@ -71,6 +71,7 @@ private:
 	WieldMeshSceneNode *m_wield_meshnode = nullptr;
 	scene::IBillboardSceneNode *m_spritenode = nullptr;
 	scene::IBillboardTextSceneNode *m_textnode = nullptr;
+	std::string m_sprite_text = "";
 	Nametag *m_nametag = nullptr;
 	v3f m_position = v3f(0.0f, 10.0f * BS, 0);
 	v3f m_velocity;
@@ -191,6 +192,8 @@ public:
 	void step(float dtime, ClientEnvironment *env);
 
 	void updateTexturePos();
+	
+	void updateSpriteText();
 
 	// std::string copy is mandatory as mod can be a class member and there is a swap
 	// on those class members

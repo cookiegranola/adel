@@ -1061,6 +1061,14 @@ void GenericCAO::updateTexturePos()
 	}
 }
 
+void GenericCAO::updateSpriteText()
+{
+	if (m_textnode) {
+		std::wstring wtext = utf8_to_wide(m_sprite_text);
+		m_textnode->setText(wtext.c_str());
+	}
+}
+
 void GenericCAO::updateTextures(std::string mod)
 {
 	ITextureSource *tsrc = m_client->tsrc();
@@ -1398,6 +1406,10 @@ void GenericCAO::processMessage(const std::string &data)
 		m_tx_select_horiz_by_yawpitch = select_horiz_by_yawpitch;
 
 		updateTexturePos();
+	} else if (cmd == GENERIC_CMD_SET_SPRITE_TEXT) { // :PATCH:
+		m_sprite_text = deSerializeString(is);
+
+		updateSpriteText();
 	} else if (cmd == GENERIC_CMD_SET_PHYSICS_OVERRIDE) {
 		float override_speed = readF1000(is);
 		float override_jump = readF1000(is);
