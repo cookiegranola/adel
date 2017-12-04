@@ -576,7 +576,7 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
 }
 
 // MALEK shadowmapping
-#if 0
+
 void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, const Sky& sky)
 {
 	bool is_transparent_pass = pass == scene::ESNRP_TRANSPARENT;
@@ -737,7 +737,7 @@ void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, cons
 			material.TextureLayer[0].BilinearFilter = true;
 			material.TextureLayer[0].TextureWrapU = irr::video::ETC_CLAMP_TO_EDGE;
 			material.TextureLayer[0].TextureWrapV = irr::video::ETC_CLAMP_TO_EDGE;
-			material.MaterialType = (irr::video::E_MATERIAL_TYPE)PostProcess::shadowShader;
+//			material.MaterialType = (irr::video::E_MATERIAL_TYPE)PostProcess::shadowShader;
 			
 			driver->setMaterial(material);//list.m);
 
@@ -753,7 +753,6 @@ void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, cons
 	}
 	} // Shadow Map generation
 }
-#endif
 
 static bool getVisibleBrightness(Map *map, const v3f &p0, v3f dir, float step,
 		float step_multiplier, float start_distance, float end_distance,
