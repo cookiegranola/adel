@@ -1,0 +1,26 @@
+# Declare a text entity
+
+## Sample
+
+	initial_properties = {
+		visual = "text",
+		visual_size = {x = 1.0, y = 1.0},
+		mesh = "Kidscode\nÉrîthréà\nEûphôriâ^0.1;0.2;0.1;0.0;0.0",
+		colors = { "#FFFFC0FF", "#80808080", "#40404080" },
+	},
+
+## Parameters
+
+- visual_size : X scale, Y scale
+- mesh : text, border size, X padding, Y padding, X offset, Y offset
+- colors : text color, background color, border color
+
+The text separator is the circumflex.
+
+The value separator is the semicolon.
+
+## Values
+
+- border size : tells the size of the border
+- X/Y padding : tells how much padding is added between the text and the border
+- X/Y offset : tells how much offset is added to the text position inside the frame
