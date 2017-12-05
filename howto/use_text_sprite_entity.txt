@@ -1,4 +1,4 @@
-# Declare a text entity
+# Declare a text sprite entity
 
 ## Sample
 
