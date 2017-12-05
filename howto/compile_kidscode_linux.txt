@@ -11,8 +11,7 @@ git clone -b sprite https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
 sudo apt install build-essential freeglut3 freeglut3-dev freeglut3-dbg xserver-xorg-dev x11proto-xf86vidmode-dev libxxf86vm-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libxext-dev libxcursor-dev
-cd lib/irrlicht
-cd source/Irrlicht
+cd lib/irrlicht/source/Irrlicht
 make
 (make NDEBUG=1 pour la version release)
 cd ../../../..
