@@ -228,7 +228,7 @@ private:
 #include <GL/gl.h>
 #endif
 #endif
-
+#undef KeyPress
 #if !defined(_IRR_OSX_PLATFORM_)
 #ifdef _IRR_OPENGL_USE_EXTPOINTER_
 #ifdef _IRR_WINDOWS_API_
