@@ -44,9 +44,9 @@ https://www.microsoft.com/en-us/download/confirmation.aspx?id=6812
 C:
 md \KIDSCODE
 cd \KIDSCODE
-git clone -b gui https://github.com/cookiegranola/adel
+git clone -b sprite https://github.com/cookiegranola/adel
 cd adel
-git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
+git clone -b sprite https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
 ouvrir C:\KIDSCODE\adel\lib\irrlicht\source\Irrlicht\Irrlicht11.0.sln avec Visual Studio 2017

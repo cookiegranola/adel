@@ -5,9 +5,9 @@ sudo apt install build-essential cmake git libirrlicht-dev libbz2-dev libgettext
 cd Documents
 mkdir KIDSCODE
 cd KIDSCODE
-git clone -b gui https://github.com/cookiegranola/adel
+git clone -b sprite https://github.com/cookiegranola/adel
 cd adel
-git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
+git clone -b sprite https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
 sudo apt install build-essential freeglut3 freeglut3-dev freeglut3-dbg xserver-xorg-dev x11proto-xf86vidmode-dev libxxf86vm-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libxext-dev libxcursor-dev

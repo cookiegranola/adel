@@ -26,9 +26,9 @@ brew uninstall luajit
 cd Documents
 mkdir KIDSCODE
 cd KIDSCODE
-git clone -b gui https://github.com/cookiegranola/adel
+git clone -b sprite https://github.com/cookiegranola/adel
 cd adel
-git clone -b beta https://github.com/cookiegranola/irrlicht lib/irrlicht
+git clone -b sprite https://github.com/cookiegranola/irrlicht lib/irrlicht
 git clone --recursive https://github.com/cookiegranola/minetest_game games/minetest_game
 
 rm /usr/local/lib/libIrrlicht.a
