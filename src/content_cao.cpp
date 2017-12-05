@@ -552,9 +552,8 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		
 		m_textnode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
 				font, wtext.c_str(), NULL, text_size, v3f(0,0,0), -1,
-				text_color, text_color, 
-				true, background_color, border_color, border, x_padding, y_padding,
-				x_offset, y_offset);
+				text_color, text_color, true, background_color, border_color, border, 
+				x_padding, y_padding, x_offset, y_offset);
 						
 		m_textnode->grab();
 		{
