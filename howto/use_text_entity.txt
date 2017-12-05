@@ -5,7 +5,7 @@
 	initial_properties = {
 		visual = "text",
 		visual_size = {x = 1.0, y = 1.0},
-		mesh = "Kidscode\nÉrîthréà\nEûphôriâ^0.1;0.2;0.1;0.1;0.0",
+		mesh = "Kidscode\nÉrîthréà\nEûphôriâ^0.1;0.2;0.1;0.15;0.0",
 		colors = { "#FFFFC0FF", "#80808080", "#40404080" },
 	},
 
