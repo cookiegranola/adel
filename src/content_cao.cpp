@@ -512,7 +512,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		float border = 0.1f;
 		float x_padding = 0.2f;
 		float y_padding = 0.1f;
-		float x_offset = 0.0f;
+		float x_offset = 0.1f;
 		float y_offset = 0.0f;
 		
 		if (values.size() > 0 && values[0].size() > 0)
