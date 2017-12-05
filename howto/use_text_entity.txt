@@ -24,3 +24,9 @@ The value separator is the semicolon.
 - border size : tells the size of the border
 - X/Y padding : tells how much padding is added between the text and the border
 - X/Y offset : tells how much offset is added to the text position inside the frame
+
+The frame width depends on the frame height and text width.
+
+# Change its text
+
+	obj:set_sprite_text(text);
