@@ -5,7 +5,7 @@
 	initial_properties = {
 		visual = "text",
 		visual_size = {x = 1.0, y = 1.0},
-		mesh = "Kidscode\nÉrîthréà\nEûphôriâ^0.1;0.2;0.1;0.15;0.0",
+		mesh = "`F80`Kidscode\n`0FF/00F`Érîthréà\n`ABCDEF/456789`Eûphôriâ^0.1;0.2;0.1;0.0;0.0",
 		colors = { "#FFFFC0FF", "#80808080", "#40404080" },
 	},
 
@@ -25,7 +25,11 @@ The value separator is the semicolon.
 - X/Y padding : tells how much padding is added between the text and the border (in character size unit)
 - X/Y offset : tells how much offset is added to the text position inside the frame (in character size unit)
 
-The frame width depends on the frame height and text width.
+The actual text frame width is computed from the frame height and longest text line width.
+
+The text can contains hexadecimal colors of 3 or 6 digits between backtick characters.
+
+Both the top and bottom colors can be provided, by separating them with a slash character.
 
 # Change its text
 
