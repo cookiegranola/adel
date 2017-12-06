@@ -534,7 +534,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		video::SColor bottom_color(255,255,255,255);
 		video::SColor background_color(128,128,128,128);
 		video::SColor border_color(128,64,64,64);
-				
+		
 		if (m_prop.colors.size() > 1) 
 			top_color = m_prop.colors[1];
 			

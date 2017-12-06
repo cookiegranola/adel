@@ -6,7 +6,7 @@
 		visual = "text",
 		visual_size = {x = 1.0, y = 1.0},
 		mesh = "\\\\\\{\\^\\}\n\n{orange}Kidscode\n{#0FF/#00F}Érîthréà\n{#ABCDEF/#456789}Eûphôriâ^0.1;0.2;0.1;0.0;0.0",
-		colors = { "#FFFFC0FF", "#80808080", "#40404080" },
+		colors = { "#F080F0FF", "#F01020FF", "#80808080", "#40404080" },
 	},
 
 ## Parameters
@@ -28,9 +28,7 @@ The value separator is the semicolon.
 The actual text frame width is computed from the frame height and longest text line width.
 
 The text can contains named or hexadecimal colors between accolades.
-
 Hexadecimal colors start by a hash mark, and can contain 3 or 6 hexadecimal digits.
-
 Both the top and bottom colors can be provided, by separating them with a slash character.
 
 Special characters can be escaped by preceding them with a backslash character.
