@@ -530,18 +530,22 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		if (values.size() > 4 && values[4].size() > 0)
 			y_offset = stof(values[4]);
 
-		video::SColor text_color(255,255,255,255);
+		video::SColor top_color(255,255,255,255);
+		video::SColor bottom_color(255,255,255,255);
 		video::SColor background_color(128,128,128,128);
 		video::SColor border_color(128,64,64,64);
 				
 		if (m_prop.colors.size() > 1) 
-			text_color = m_prop.colors[1];
+			top_color = m_prop.colors[1];
 			
 		if (m_prop.colors.size() > 2) 
-			background_color = m_prop.colors[2];
+			bottom_color = m_prop.colors[2];
 
 		if (m_prop.colors.size() > 3) 
-			border_color = m_prop.colors[3];
+			background_color = m_prop.colors[3];
+			
+		if (m_prop.colors.size() > 4) 
+			border_color = m_prop.colors[4];
 			
 		core::dimension2d<f32> text_size = m_prop.visual_size*BS;
 		
@@ -552,7 +556,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		
 		m_textnode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
 				font, wtext.c_str(), NULL, text_size, v3f(0,0,0), -1,
-				text_color, text_color, true, background_color, border_color, border, 
+				top_color, bottom_color, true, background_color, border_color, border, 
 				x_padding, y_padding, x_offset, y_offset);
 						
 		m_textnode->grab();
