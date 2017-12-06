@@ -13,7 +13,7 @@
 
 - visual_size : X scale, Y scale
 - mesh : text, border size, X padding, Y padding, X offset, Y offset
-- colors : text color, background color, border color
+- colors : text top color, text bottom color, background color, border color
 
 The text separator is the circumflex.
 
