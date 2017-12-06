@@ -5,7 +5,7 @@
 	initial_properties = {
 		visual = "text",
 		visual_size = {x = 1.0, y = 1.0},
-		mesh = "`F80`Kidscode\n`0FF/00F`Érîthréà\n`ABCDEF/456789`Eûphôriâ^0.1;0.2;0.1;0.0;0.0",
+		mesh = "`orange`Kidscode\n`#0FF/#00F`Érîthréà\n`#ABCDEF/#456789`Eûphôriâ^0.1;0.2;0.1;0.0;0.0",
 		colors = { "#FFFFC0FF", "#80808080", "#40404080" },
 	},
 
@@ -27,7 +27,9 @@ The value separator is the semicolon.
 
 The actual text frame width is computed from the frame height and longest text line width.
 
-The text can contains hexadecimal colors of 3 or 6 digits between backtick characters.
+The text can contains named or hexadecimal colors between backtick characters.
+
+Hexadecimal colors start by a hash mark, and can be made of 3 or 6 hexadecimal digits.
 
 Both the top and bottom colors can be provided, by separating them with a slash character.
 
