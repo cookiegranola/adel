@@ -31,6 +31,9 @@ The text can contains named or hexadecimal colors between accolades.
 Hexadecimal colors start by a hash mark, and can contain 3 or 6 hexadecimal digits.
 Both the top and bottom colors can be provided, by separating them with a slash character.
 
+The text can also contain scalings between accolades.
+The default scaling is 1.0.
+
 Special characters can be escaped by preceding them with a backslash character.
 
 # Change its text
