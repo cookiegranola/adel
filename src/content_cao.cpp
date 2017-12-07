@@ -514,7 +514,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		float y_padding = 0.1f;
 		float x_offset = 0.15f;
 		float y_offset = 0.0f;
-		float base_offset = 0.2f;
+		float base_offset = 0.22f;
 		
 		if (values.size() > 0 && values[0].size() > 0)
 			border = stof(values[0]);
