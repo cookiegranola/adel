@@ -514,6 +514,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		float y_padding = 0.1f;
 		float x_offset = 0.15f;
 		float y_offset = 0.0f;
+		float base_offset = 0.2f;
 		
 		if (values.size() > 0 && values[0].size() > 0)
 			border = stof(values[0]);
@@ -529,6 +530,9 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			
 		if (values.size() > 4 && values[4].size() > 0)
 			y_offset = stof(values[4]);
+			
+		if (values.size() > 5 && values[5].size() > 0)
+			base_offset = stof(values[5]);
 
 		video::SColor top_color(255,255,255,255);
 		video::SColor bottom_color(255,255,255,255);
@@ -557,7 +561,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		m_textspritenode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
 				font, wtext.c_str(), NULL, text_size, v3f(0,0,0), -1,
 				top_color, bottom_color, true, background_color, border_color, border, 
-				x_padding, y_padding, x_offset, y_offset);
+				x_padding, y_padding, x_offset, y_offset, base_offset);
 						
 		m_textspritenode->grab();
 		{
