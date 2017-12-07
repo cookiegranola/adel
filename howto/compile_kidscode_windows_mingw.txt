@@ -1,0 +1,42 @@
+0.
+Aller sous Linux (Ubuntu).
+Téléchager/Installer le cross-compiler mingw64 i686-w64-mingw32-(g++) via "sudo apt install mingw-w64-i686-dev" ??? pas sure  
+Installer wine via "sudo apt install wine"
+
+1. Faire 2 clones
+> git clone https://github.com/cookiegranola/Adel -b gui-mingw
+> cd Adel
+> git clone https://github.com/cookiegranola/Adel -b gui-mingw
+> mv Adel minetest
+
+2. 
+Setter le path avec le compilateur et ou se trouve la lib lua
+> PATH=~/dev/kidscode/mingw-minetest/bin:$PATH
+> PATH=~/dev/kidscode/projects/Adel/minetest/_build/lib/lua:$PATH
+
+3.1. Créer 1 fichier nommé buildvm à la racine du repertoire Adel dont le contenu est comme ça 
+#!/bin/bash
+wine ~/dev/kidscode/projects/Adel/minetest/_build/lib/lua/buildvm.exe $@
+
+3.2 mettre les droits en exécution
+> chmod +x buildvm
+
+4.1. Créer 1 fichier nommé minilua à la racine du repertoire Adel dont le contenu est comme ça 
+#!/bin/bash
+wine ~/dev/kidscode/projects/Adel/minetest/_build/lib/lua/minilua.exe $@
+
+4.2 mettre les droits en exécution
+> chmod +x minilua
+
+5. Aller dans Adel et appeler ./utils/buildbot/buildwin32-nodl.txt .
+
+6. how to fix -llua not found ?
+
+Modify CMakeList.txt
+link_directories("$CMAKE_BINARY_DIR/lib/lua"); #patch
+
+
+7. Le resultat est un package zip dans le repertoire
+~/dev/kidscode/projects/Adel/minetest/_build/
+
+8. Remplacer les memes dlls qui sont dans kidscode_installer-win.exe du site kidscode
