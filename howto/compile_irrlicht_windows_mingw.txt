@@ -8,13 +8,13 @@ git clone https://github.com/cookiegranola/irrlicht
 cd irrlicht/source/Irrlicht/
 make CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ win32
 
-2. copier le repertoire irrlicht dans Adel/libs
+2. aller dans le repertoire irrlicht/lib/Win32-gcc
 copier le fichier libIrrlicht.a en libIrrlicht.dll.a (il doit faire 10-15 ko)
 
-3.
+3. copier le repertoire irrlicht dans Adel/libs
+
 Maintenant vous pouvez l'utiliser dans le projet Adel (cf. compile_kidscode_windows_mingw.txt)
 
 
-
-Remarque : Avec gcc on peut appeler un constructeur dans une dll, il faut ajouter une méthode addXXX dans GUIEnvironment pour les nouveaux composants GUI.  
+Remarque : Avec gcc/mingw on peut pas appeler un constructeur dans une dll (semble-t-il ?? on peut pas linker à cause de ça), il faut donc ajouter une méthode addXXX dans GUIEnvironment pour les nouveaux composants GUI.  
 
