@@ -17,7 +17,7 @@ make
 cd ../../../..
 
 rm CMakeCache.txt
-cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=0 -DRUN_IN_PLACE=1 -DIRRLICHT_INCLUDE_DIR=lib/irrlicht/include -DIRRLICHT_LIBRARY=lib/irrlicht/lib/Linux/libIrrlicht.a
+cmake . -DBUILD_CLIENT=1 -DBUILD_SERVER=1 -DRUN_IN_PLACE=1 -DIRRLICHT_INCLUDE_DIR=lib/irrlicht/include -DIRRLICHT_LIBRARY=lib/irrlicht/lib/Linux/libIrrlicht.a
 make
 
 ./bin/kidscode

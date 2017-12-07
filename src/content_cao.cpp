@@ -378,8 +378,8 @@ scene::ISceneNode* GenericCAO::getSceneNode()
 		return m_spritenode;
 	}
 
-	if (m_textnode) {
-		return m_textnode;
+	if (m_textspritenode) {
+		return m_textspritenode;
 	}
 	
 	return NULL;
@@ -454,10 +454,10 @@ void GenericCAO::removeFromScene(bool permanent)
 		m_spritenode->remove();
 		m_spritenode->drop();
 		m_spritenode = NULL;
-	} else if (m_textnode) {
-		m_textnode->remove();
-		m_textnode->drop();
-		m_textnode = NULL;
+	} else if (m_textspritenode) {
+		m_textspritenode->remove();
+		m_textspritenode->drop();
+		m_textspritenode = NULL;
 	}
 
 	if (m_nametag) {
@@ -500,7 +500,7 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			setBillboardTextureMatrix(m_spritenode,
 					txs, tys, 0, 0);
 		}
-	} else if (m_prop.visual == "text") { // :PATCH:
+	} else if (m_prop.visual == "text_sprite") { // :PATCH:
 		infostream<<"GenericCAO::addToScene(): text"<<std::endl;
 		std::string text;
 		std::string params;
@@ -554,16 +554,16 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		
 		text_size.Width *= (f32)font_size.Width / font_size.Height;
 		
-		m_textnode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
+		m_textspritenode = RenderingEngine::get_scene_manager()->addBillboardTextSceneNode(
 				font, wtext.c_str(), NULL, text_size, v3f(0,0,0), -1,
 				top_color, bottom_color, true, background_color, border_color, border, 
 				x_padding, y_padding, x_offset, y_offset);
 						
-		m_textnode->grab();
+		m_textspritenode->grab();
 		{
 			const float txs = 1.0 / 1;
 			const float tys = 1.0 / 1;
-			setBillboardTextureMatrix(m_textnode,
+			setBillboardTextureMatrix(m_textspritenode,
 					txs, tys, 0, 0);
 		}
 	} else if (m_prop.visual == "upright_sprite") {
@@ -746,8 +746,8 @@ void GenericCAO::updateLightNoCheck(u8 light_at_pos)
 			m_wield_meshnode->setColor(color);
 		} else if (m_spritenode) {
 			m_spritenode->setColor(color);
-		} else if (m_textnode) {
-			m_textnode->setColor(color);
+		} else if (m_textspritenode) {
+			m_textspritenode->setColor(color);
 		}
 	}
 }
@@ -770,7 +770,7 @@ void GenericCAO::updateNodePos()
 	if (node) {
 		v3s16 camera_offset = m_env->getCameraOffset();
 		node->setPosition(pos_translator.vect_show - intToFloat(camera_offset, BS));
-		if (node != m_spritenode && node != m_textnode) { // rotate if not a sprite
+		if (node != m_spritenode && node != m_textspritenode) { // rotate if not a sprite
 			v3f rot = node->getRotation();
 			rot.Y = -m_yaw;
 			node->setRotation(rot);
@@ -997,15 +997,15 @@ void GenericCAO::step(float dtime, ClientEnvironment *env)
 
 void GenericCAO::updateTexturePos()
 {
-	if(m_spritenode || m_textnode)
+	if(m_spritenode || m_textspritenode)
 	{
 		scene::ICameraSceneNode* camera;
 		
 		if (m_spritenode)
 				camera = m_spritenode->getSceneManager()->getActiveCamera();
 				
-		if (m_textnode)
-				camera = m_textnode->getSceneManager()->getActiveCamera();
+		if (m_textspritenode)
+				camera = m_textspritenode->getSceneManager()->getActiveCamera();
 				
 		if(!camera)
 			return;
@@ -1014,8 +1014,8 @@ void GenericCAO::updateTexturePos()
 		if (m_spritenode)
 			cam_to_entity = m_spritenode->getAbsolutePosition()	- camera->getAbsolutePosition();
 			
-		if (m_textnode)
-			cam_to_entity = m_textnode->getAbsolutePosition()	- camera->getAbsolutePosition();
+		if (m_textspritenode)
+			cam_to_entity = m_textspritenode->getAbsolutePosition()	- camera->getAbsolutePosition();
 			
 		cam_to_entity.normalize();
 
@@ -1057,17 +1057,17 @@ void GenericCAO::updateTexturePos()
 		if (m_spritenode)
 				setBillboardTextureMatrix(m_spritenode,	txs, tys, col, row);
 				
-		if (m_textnode)
-				setBillboardTextureMatrix(m_textnode,	txs, tys, col, row);
+		if (m_textspritenode)
+				setBillboardTextureMatrix(m_textspritenode,	txs, tys, col, row);
 		
 	}
 }
 
 void GenericCAO::updateSpriteText()
 {
-	if (m_textnode) {
+	if (m_textspritenode) {
 		std::wstring wtext = utf8_to_wide(m_sprite_text);
-		m_textnode->setText(wtext.c_str());
+		m_textspritenode->setText(wtext.c_str());
 	}
 }
 

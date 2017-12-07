@@ -3,11 +3,15 @@
 ## Sample
 
 	initial_properties = {
-		visual = "text",
+		visual = "text_sprite",
 		visual_size = {x = 1.0, y = 1.0},
 		mesh = "\\\\\\{\\^\\}\n\n{orange}Kidscode\n{#0FF/#00F}Érîthréà\n{#ABCDEF/#456789}Eûphôriâ^0.1;0.2;0.1;0.0;0.0",
 		colors = { "#F080F0FF", "#F01020FF", "#80808080", "#40404080" },
 	},
+
+	...
+	
+	obj:set_sprite_text(""\\\\\\{\\^\\}\n\n{orange}Kidscode\n{#0FF/#00F}Érîthréà\n{#ABCDEF/#456789}Eûphôriâ");
 
 ## Parameters
 
@@ -35,7 +39,3 @@ The text can also contain scalings between accolades.
 The default scaling is 1.0.
 
 Special characters can be escaped by preceding them with a backslash character.
-
-# Change its text
-
-	obj:set_sprite_text(text);
