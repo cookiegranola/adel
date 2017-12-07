@@ -5,7 +5,7 @@
 	initial_properties = {
 		visual = "text_sprite",
 		visual_size = {x = 1.0, y = 1.0},
-		mesh = "{2}\\\\\\{\\^\\}\n{1}{orange}Kidscode\n{#0FF/#00F}Érîthréà\n{#ABCDEF/#456789}Eûphôriâ^0.1;0.2;0.1;0.0;0.0",
+		mesh = "{orange}{1.5}Kidscode\n{1}{#0FF/#00F}Érîthréà\n{#ABCDEF/#456789}Eûphôriâ\n\n=> {1.2}{orange/red}\\\\\\{\\^\\}^0.1;0.2;0.1;0.0;0.0",
 		colors = { "#F080F0FF", "#F01020FF", "#80808080", "#40404080" },
 	},
 
