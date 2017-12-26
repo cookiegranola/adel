@@ -625,7 +625,6 @@ class GameGlobalShaderConstantSetter : public IShaderConstantSetter
 	CachedPixelShaderSetting<SamplerLayer_t> m_normal_texture;
 	CachedPixelShaderSetting<SamplerLayer_t> m_texture_flags;
 	CachedPixelShaderSetting<SamplerLayer_t> m_shadow_texture;
-	CachedVertexShaderSetting<float, 16> m_shadow_matrix;
 	Client *m_client;
 
 public:
@@ -659,7 +658,6 @@ public:
 		m_normal_texture("normalTexture"),
 		m_texture_flags("textureFlags"),
 		m_shadow_texture("shadowTexture"),
-		m_shadow_matrix("mShadowMatrix"),
 		m_client(client)
 	{
 		g_settings->registerChangedCallback("enable_fog", settingsCallback, this);

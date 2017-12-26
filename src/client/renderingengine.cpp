@@ -137,6 +137,11 @@ v2u32 RenderingEngine::getWindowSize() const
 	return m_device->getVideoDriver()->getScreenSize();
 }
 
+core::matrix4 RenderingEngine::getShadowMatrix() const
+{
+	return m_shadow_matrix;
+}
+
 void RenderingEngine::setResizable(bool resize)
 {
 	m_device->setResizable(resize);
@@ -1049,8 +1054,8 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 		shadowMatrix *= projectionMatrix;
 		shadowMatrix *= viewMatrix;
 		shadowMatrix *= client->getEnv().getClientMap().getAbsoluteTransformation();
-		
-		// TODO: pass to shader
+
+		m_shadow_matrix = shadowMatrix;
 
 		client->getEnv().getClientMap().renderMapToShadowMap(driver, scene::ESNRP_SOLID, sky);
 		// TODO: find a better way to do this

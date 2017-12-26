@@ -43,6 +43,8 @@ public:
 	v2u32 getWindowSize() const;
 	void setResizable(bool resize);
 
+	core::matrix4 getShadowMatrix() const;
+
 	video::IVideoDriver *getVideoDriver();
 
 	static const char *getVideoDriverName(irr::video::E_DRIVER_TYPE type);
@@ -183,6 +185,7 @@ private:
 			const video::SColor &skycolor, gui::IGUIEnvironment *guienv,
 			Camera *camera);
 
+	core::matrix4 m_shadow_matrix;
 	irr::IrrlichtDevice *m_device = nullptr;
 	static RenderingEngine *s_singleton;
 };
