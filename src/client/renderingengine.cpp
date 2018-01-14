@@ -993,7 +993,7 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 	static u32 shadow_shader;
 	if (shadow_shader == 0) {
 		IShaderSource *shdsrc = client->getShaderSource();
-		shadow_shader = shdsrc->getShader("shadow_shader", 0, 0);
+		shadow_shader = shdsrc->getShader("shadow_shader", TILE_MATERIAL_OPAQUE, 0);
 	}
 
 	// Undersampling-specific stuff
@@ -1007,7 +1007,8 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 	client->getEnv().getClientMap().depthTexture = NULL;
 	auto driver = getVideoDriver();
 
-	// TEMP TEST
+	// TEMP OPENGL RENDERTARGET SETUP
+	{
 	static COpenGLRenderTarget* lightScene;
 	if (lightScene == NULL)
 	{
@@ -1020,32 +1021,42 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 		glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)IRR_OGL_LOAD_EXTENSION("glGenFramebuffers");
 		glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)IRR_OGL_LOAD_EXTENSION("glCheckFramebufferStatus");
 		glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)IRR_OGL_LOAD_EXTENSION("glFramebufferTexture2D");
-
-		lightScene = new COpenGLRenderTarget(v2u32(1024, 1024), "lightscene", true, getVideoDriver());
+		u32 SHADOWMAP_RES = 2048;
+		lightScene = new COpenGLRenderTarget(v2u32(SHADOWMAP_RES, SHADOWMAP_RES), "lightscene", true, getVideoDriver());
 	}
-	//getVideoDriver()->setRenderTarget(0, true, true, video::SColor(0xFFFFFFFF));
-
-	lightScene->bindRTT(true, true);
-	{
-		// Render
+	
+		// Technically we don't need a color buffer for standard shadow mapping
+		lightScene->bindRTT(false, true);
+		
+		// ? Do we have to call OnAnimate() to render things correctly ? 
+		// Isn't this already done in the normal draw ?
+		// Can this be source of glitches (faster animation, bad timing...) ?
 		sky.OnAnimate(porting::getTimeMs());
+		// ? clouds are not rendered, why ?
+		clouds.OnAnimate(porting::getTimeMs());
 		client->getCamera()->getCameraNode()->OnAnimate(porting::getTimeMs());
 		client->getEnv().getClientMap().OnAnimate(porting::getTimeMs());
-		client->getEnv().getClientMap().depthTexture = NULL;
 
+		//client->getEnv().getClientMap().depthTexture = NULL;
+
+		// BIGGEST problem is here
+		// We should render from Sun Position but this doesn't seem to work correctly.
+		// I suppose this is due to the occlusion code in UpdateDrawList & RenderMapToShadowMap.
+		// TODO: Make sure to use sun position instead of local player position
 		v3f sunPosition = sky.getSunPosition();
-		//sunPosition = client.getEnv().getLocalPlayer()->getEyePosition();
-		//sunPosition.Y = sunPosition.Y;//*10.0f;// +900.0f;
-		v3f sunDirection = v3f(0.0f, 0.0f, 0.0f) - sunPosition;//v3f(0.0f, -1.0f, 0.0f).normalize();
-															   //sunPosition += sunDirection * -300.f;
+		sunPosition = client->getEnv().getLocalPlayer()->getEyePosition();
+		sunPosition.Y = sunPosition.Y + 90.0f;
+		v3f sunDirection = v3f(0.0f, 0.0f, 0.0f) - sunPosition;
+		//sunDirection = sky.getSunPosition() - sunPosition;
+
 		irr::core::matrix4 projectionMatrix, viewMatrix;
-		//viewMatrix.buildCameraLookAtMatrixLH(irr::core::vector3df(-1000, 300, 1394), irr::core::vector3df(-581, 32, 1394), irr::core::vector3df(0.0f, 1.f, 0.0f));
 		viewMatrix.buildCameraLookAtMatrixLH(sunPosition, sunPosition + sunDirection, irr::core::vector3df(0.0f, 1.f, 0.0f));
 		//projectionMatrix.buildProjectionMatrixPerspectiveFovLH(0.71f, 1.0f, 1.f, 10000.0f);
-		projectionMatrix.buildProjectionMatrixOrthoLH(1024.0f, 1024.0f, 1.0f, 10000.0f);
+		core::dimension2d<u32>& targetSize = lightScene->ColorTexture->TextureSize;
+		projectionMatrix.buildProjectionMatrixOrthoLH(targetSize.Width, targetSize.Height, 1.0f, 1000.0f);
 		driver->setTransform(video::ETS_PROJECTION, projectionMatrix);
 		driver->setTransform(video::ETS_VIEW, viewMatrix);
-
+		// Is this correct to use client map transform as world matrix ?
 		driver->setTransform(video::ETS_WORLD, client->getEnv().getClientMap().getAbsoluteTransformation());
 		
 		core::matrix4 shadowMatrix(core::matrix4::EM4CONST_IDENTITY);
@@ -1057,12 +1068,22 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 
 		m_shadow_matrix = shadowMatrix;
 
+		// Render
+		video::SMaterial material;
+		material.MaterialType = (irr::video::E_MATERIAL_TYPE)shadow_shader;
+		material.BackfaceCulling = true;
+		material.FrontfaceCulling = false;
+		material.ColorMask = 0;
+		driver->setMaterial(material);
 		client->getEnv().getClientMap().renderMapToShadowMap(driver, scene::ESNRP_SOLID, sky);
+		//client->getEnv().getClientMap().renderMapToShadowMap(driver, scene::ESNRP_TRANSPARENT, sky);
+
 		// TODO: find a better way to do this
 		client->getEnv().getClientMap().depthTexture = lightScene->DepthTexture;
+		
+		lightScene->unbindRTT(screensize);
+		driver->setRenderTarget(0, true, true, sky.getSkyColor());
 	}
-	lightScene->unbindRTT(screensize);
-	driver->setRenderTarget(0, true, true, sky.getSkyColor());
 	// End SHADOW PASS - MALEK
 
 	if (undersampling > 0) {
@@ -1078,7 +1099,7 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 	}
 
 	// Render
-
+	
 	get_scene_manager()->drawAll();
 
 	getVideoDriver()->setTransform(video::ETS_WORLD, core::IdentityMatrix);
@@ -1088,7 +1109,7 @@ void RenderingEngine::draw_plain(Camera *camera, bool show_hud, Hud *hud,
 			camera->drawWieldedTool();
 		}
 	}
-
+	
 	// Upscale lowres render
 	if (undersampling > 0) {
 		getVideoDriver()->setRenderTarget(0, true, true);

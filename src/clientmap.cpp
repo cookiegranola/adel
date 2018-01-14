@@ -247,14 +247,26 @@ void ClientMap::updateDrawList(video::IVideoDriver* driver, const class Sky& sky
 			m_last_drawn_sectors.insert(sp);
 	}
 
+
+	//
 	// MALEK shadowmap generation
+	// The occlusion code seems to be tied to camera position
+	// Hacked it to use sun position instead but it doesn't feel like it's correct
 	for (auto &i : m_shadowDrawlist) {
 		MapBlock *block = i.second;
 		block->refDrop();
 	}
 	m_shadowDrawlist.clear();
-
+#if 1
+	// this is not actually how it's done in the node shaders
 	v3f camera_position_shadow = sky.getSunPosition();
+#else
+	// this is the code in the shader
+	//vec3 sunPosition = vec3(0.0, eyePosition.y * BS + 900.0, 0.0);
+	float eye_position_array[3];
+	v3f eyePosition = m_client->getEnv().getLocalPlayer()->getEyePosition();
+	v3f camera_position_shadow = v3f(0.0f, (eyePosition.Y + 9.0f)/**BS*/, 0.0);
+#endif
 	v3f camera_direction_shadow = v3f(0.0f, 0.0f, 0.0f) - camera_position_shadow;
 	f32 camera_fov_shadow = 90.0f;
 
@@ -549,6 +561,10 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
 				}
 			}
 
+			// MALEK BEGIN shadow map
+			list.m.setTexture(3, depthTexture);
+			// MALEK END
+
 			driver->setMaterial(list.m);
 
 			for (scene::IMeshBuffer *buf : list.bufs) {
@@ -575,8 +591,9 @@ void ClientMap::renderMap(video::IVideoDriver* driver, s32 pass)
 			(float)blocks_without_stuff / blocks_drawn);
 }
 
+//
 // MALEK shadowmapping
-
+//
 void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, const Sky& sky)
 {
 	bool is_transparent_pass = pass == scene::ESNRP_TRANSPARENT;
@@ -591,7 +608,7 @@ void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, cons
 	This is called two times per frame, reset on the non-transparent one
 	*/
 	//if (pass == scene::ESNRP_SOLID)
-	//	m_last_drawn_sectors.clear();
+		m_last_drawn_sectors.clear();
 
 	/*
 	Get time for measuring timeout.
@@ -622,7 +639,7 @@ void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, cons
 	/*
 	Draw the selected MapBlocks
 	*/
-
+	
 	{
 		//ScopeProfiler sp(g_profiler, prefix + "drawing blocks", SPT_AVG);
 
@@ -699,58 +716,57 @@ void ClientMap::renderMapToShadowMap(video::IVideoDriver* driver, s32 pass, cons
 			}
 		}
 
-
 		// Render all layers in order
 		for (auto &lists : drawbufs.lists) {
 			int timecheck_counter = 0;
 			for (MeshBufList &list : lists) {
 				/*timecheck_counter++;
-			if (timecheck_counter > 50) {
-				timecheck_counter = 0;
-				std::time_t time2 = time(0);
-				if (time2 > time1 + 4) {
-					infostream << "ClientMap::renderMap(): "
-						"Rendering takes ages, returning."
-						<< std::endl;
-					return;
+				if (timecheck_counter > 50) {
+					timecheck_counter = 0;
+					std::time_t time2 = time(0);
+					if (time2 > time1 + 4) {
+						infostream << "ClientMap::renderMap(): "
+							"Rendering takes ages, returning."
+							<< std::endl;
+						return;
+					}
+				}*/
+
+	//			driver->setMaterial(list.m);
+
+				for (scene::IMeshBuffer *buf : list.bufs) {
+					driver->drawMeshBuffer(buf);
+					vertex_count += buf->getVertexCount();
+					meshbuffer_count++;
 				}
-			}*/
+				
+				// reset shadow map binding because we are rendering into it
+//				list.m.setTexture(3, NULL);
 
-			driver->setMaterial(list.m);
+				/*
+				video::SMaterial material;// = PostProcess::materialPP;//buf->getMaterial();
+				material.ZBuffer = irr::video::ECFN_LESSEQUAL;
+				material.ZWriteEnable = true;
+				material.TextureLayer[0].BilinearFilter = true;
+				material.TextureLayer[0].TextureWrapU = irr::video::ETC_CLAMP_TO_EDGE;
+				material.TextureLayer[0].TextureWrapV = irr::video::ETC_CLAMP_TO_EDGE;
+				//material.MaterialType = (irr::video::E_MATERIAL_TYPE)PostProcess::shadowShader;
+				*/
+//				driver->setMaterial(list.m);
 
-			for (scene::IMeshBuffer *buf : list.bufs) {
-				driver->drawMeshBuffer(buf);
-				vertex_count += buf->getVertexCount();
-				meshbuffer_count++;
+				for (std::vector<scene::IMeshBuffer*>::iterator j = list.bufs.begin();
+					j != list.bufs.end(); ++j) {
+					scene::IMeshBuffer *buf = *j;
+					driver->drawMeshBuffer(buf);
+					vertex_count += buf->getVertexCount();
+					meshbuffer_count++;
+				}
+
 			}
-		
-	
-			
-			// shadow map
-			//list.m.setTexture(3, NULL);
-
-
-
-			video::SMaterial material;// = PostProcess::materialPP;//buf->getMaterial();
-			material.ZBuffer = irr::video::ECFN_LESSEQUAL;
-			material.ZWriteEnable = true;
-			material.TextureLayer[0].BilinearFilter = true;
-			material.TextureLayer[0].TextureWrapU = irr::video::ETC_CLAMP_TO_EDGE;
-			material.TextureLayer[0].TextureWrapV = irr::video::ETC_CLAMP_TO_EDGE;
-//			material.MaterialType = (irr::video::E_MATERIAL_TYPE)PostProcess::shadowShader;
-			
-			driver->setMaterial(material);//list.m);
-
-			for (std::vector<scene::IMeshBuffer*>::iterator j = list.bufs.begin();
-				j != list.bufs.end(); ++j) {
-				scene::IMeshBuffer *buf = *j;
-				driver->drawMeshBuffer(buf);
-				vertex_count += buf->getVertexCount();
-				meshbuffer_count++;
-			}
-
 		}
-	}
+
+		m_last_drawn_sectors.clear();
+
 	} // Shadow Map generation
 }
 

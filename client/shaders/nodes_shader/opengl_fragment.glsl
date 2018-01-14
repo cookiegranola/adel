@@ -124,11 +124,13 @@ float find_intersectionRGB(vec2 dp, vec2 ds)
 
 float StandardShadowMap(vec3 ProjCoords, float cosTheta)
 {
+	// note: in minetest we only have hard edges
+	// a simple bias should be enough
 	// TODO: add bias once everything works correctly
-    float bias = 0.001*tan(acos(cosTheta));
-    bias = clamp(bias, 0, 0.01);
-    float z = ProjCoords.z;// + bias;
-    float d = texture2D(shadowTexture, ProjCoords.xy).g < z ? 1.0 : 0.5;
+    float bias = 0.001;//*tan(acos(cosTheta));
+    //bias = clamp(bias, 0, 0.01);
+    float z = ProjCoords.z - bias;
+    float d = texture2D(shadowTexture, ProjCoords.xy).r < z ? 0.5 : 1.0;
     return d;
 }
 float CalcShadowFactor(vec4 LightSpacePos, float cosTheta)
@@ -221,7 +223,12 @@ void main(void)
 
 	vec4 col = vec4(color.rgb * gl_Color.rgb, 1.0); 
 	
-    float visibility = CalcShadowFactor(vLightSpacePosition, 0.0/*clampedNdotL*/);
+	//vec3 L = normalize(lightVec);
+	//vec3 N = bump.xyz;
+	float clampedNdotL = 0.0; //max(dot(N,L), 0.0)
+    float visibility = CalcShadowFactor(vLightSpacePosition, clampedNdotL);
+    //gl_FragColor = vec4(vec3(visibility), 1.0);
+    //return;
     col.rgb *= visibility;
 
 #ifdef ENABLE_TONE_MAPPING
