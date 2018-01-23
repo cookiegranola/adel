@@ -981,7 +981,16 @@ std::string dumpString(const std::wstring &s) {
 
 void fix_accented_characters(std::wstring &s,
 	std::vector<irr::video::SColor> *colors) { // :PATCH:
-	#if !(defined(__MACH__) && defined(__APPLE__))
+	//if (s.size()) warningstream << "fix_accented_characters : from " << dumpString(s) << std::endl;
+	#if defined(__MACH__) && defined(__APPLE__)
+	int l = s.size();
+	for (int i = 0; i < l; ++i) {
+		unsigned c = s[i];
+		if (c >= 0xC0 && c <= 0xFF) {
+			//s[i] = c - 0x40;
+		}
+	}
+	#else
 	int l = s.size();
 	int nl = 0;
 	for (int i = 0; i < l; ++i, ++nl) {
@@ -1037,6 +1046,7 @@ void fix_accented_characters(std::wstring &s,
 	if (colors)
 		colors->resize(nl);
 	#endif
+	//if (s.size()) warningstream << "fix_accented_characters : to   " << dumpString(s) << std::endl;
 }
 
 std::wstring fix_string(const std::wstring &s) { // :PATCH:
