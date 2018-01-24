@@ -32,7 +32,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <map>
 
 #ifndef _WIN32
-	#include <iconv.h>
+	//#include <iconv.h>
 #else
 	#define _WIN32_WINNT 0x0501
 	#include <windows.h>
@@ -46,61 +46,161 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 static bool parseHexColorString(const std::string &value, video::SColor &color);
 static bool parseNamedColorString(const std::string &value, video::SColor &color);
 
-#ifndef _WIN32
 
-bool convert(const char *to, const char *from, char *outbuf,
-		size_t outbuf_size, char *inbuf, size_t inbuf_size)
-{
-	iconv_t cd = iconv_open(to, from);
+#define isAccented(c) (((s32)c)<32 || ((s32)c)>=128)
+#define dumpChar(c) (isAccented(c)?'?':((char)s[i]))
 
-#ifdef BSD_ICONV_USED
-	const char *inbuf_ptr = inbuf;
-#else
-	char *inbuf_ptr = inbuf;
-#endif
-
-	char *outbuf_ptr = outbuf;
-
-	size_t *inbuf_left_ptr = &inbuf_size;
-	size_t *outbuf_left_ptr = &outbuf_size;
-
-	size_t old_size = inbuf_size;
-	while (inbuf_size > 0) {
-		iconv(cd, &inbuf_ptr, inbuf_left_ptr, &outbuf_ptr, outbuf_left_ptr);
-		if (inbuf_size == old_size) {
-			iconv_close(cd);
-			return false;
-		}
-		old_size = inbuf_size;
+std::string dumpString(const std::string &s) {
+	std::string dump;
+	char buf[128];
+	snprintf(buf, sizeof(buf), "%lu ", s.size());
+	dump += buf;
+	bool accented = false;
+	for (u32 i = 0; i < s.size(); ++i) {
+		dump += dumpChar(s[i]);
+		accented = accented || isAccented(s[i]);
 	}
-
-	iconv_close(cd);
-	return true;
+	if (accented) {
+		for (u32 i = 0; i < s.size(); ++i) {
+			snprintf(buf, sizeof(buf), " %x:%c", (u32)(u8)s[i], dumpChar(s[i]));
+			dump += buf;
+		}
+	}
+	return dump;
 }
+
+std::string dumpString(const std::wstring &s) {
+	std::string dump;
+	char buf[128];
+	snprintf(buf, sizeof(buf), "%lu ", s.size());
+	dump += buf;
+	bool accented = false;
+	for (u32 i = 0; i < s.size(); ++i) {
+		dump += dumpChar(s[i]);
+		accented = accented || isAccented(s[i]);
+	}
+	if (accented) {
+		for (u32 i = 0; i < s.size(); ++i) {
+			snprintf(buf, sizeof(buf), " %x:%c", (u32)s[i], dumpChar(s[i]));
+			dump += buf;
+		}
+	}
+	return dump;
+}
+
+/*
+	ISO8859-15
+
+	0x
+	1x
+	2x 		! 	" 	# 	$ 	% 	& 	' 	( 	) 	* 	+ 	, 	- 	. 	/
+	3x 	0 	1 	2 	3 	4 	5 	6 	7 	8 	9 	: 	; 	< 	= 	> 	?
+	4x 	@ 	A 	B 	C 	D 	E 	F 	G 	H 	I 	J 	K 	L 	M 	N 	O
+	5x 	P 	Q 	R 	S 	T 	U 	V 	W 	X 	Y 	Z 	[ 	\ 	] 	^ 	_
+	6x 	` 	a 	b 	c 	d 	e 	f 	g 	h 	i 	j 	k 	l 	m 	n 	o
+	7x 	p 	q 	r 	s 	t 	u 	v 	w 	x 	y 	z 	{ 	| 	} 	~
+	8x
+	9x
+	Ax 	  	¡ 	¢ 	£ 	€ 	¥ 	Š 	§ 	š 	© 	ª 	« 	¬ 		® 	¯
+	Bx 	° 	± 	² 	³ 	Ž 	µ 	¶ 	· 	ž 	¹ 	º 	» 	Œ 	œ 	Ÿ 	¿
+	Cx 	À 	Á 	Â 	Ã 	Ä 	Å 	Æ 	Ç 	È 	É 	Ê 	Ë 	Ì 	Í 	Î 	Ï
+	Dx 	Ð 	Ñ 	Ò 	Ó 	Ô 	Õ 	Ö 	× 	Ø 	Ù 	Ú 	Û 	Ü 	Ý 	Þ 	ß
+	Ex 	à 	á 	â 	ã 	ä 	å 	æ 	ç 	è 	é 	ê 	ë 	ì 	í 	î 	ï
+	Fx 	ð 	ñ 	ò 	ó 	ô 	õ 	ö 	÷ 	ø 	ù 	ú 	û 	ü 	ý 	þ 	ÿ
+
+	WIDE / UTF8
+
+	U+00C0	À	c3 80
+	U+00C1	Á	c3 81
+	U+00C2	Â	c3 82
+	U+00C3	Ã	c3 83
+	U+00C4	Ä	c3 84
+	U+00C5	Å	c3 85
+	U+00C6	Æ	c3 86
+	U+00C7	Ç	c3 87
+	U+00C8	È	c3 88
+	U+00C9	É	c3 89
+	U+00CA	Ê	c3 8a
+	U+00CB	Ë	c3 8b
+	U+00CC	Ì	c3 8c
+	U+00CD	Í	c3 8d
+	U+00CE	Î	c3 8e
+	U+00CF	Ï	c3 8f
+	U+00D0	Ð	c3 90
+	U+00D1	Ñ	c3 91
+	U+00D2	Ò	c3 92
+	U+00D3	Ó	c3 93
+	U+00D4	Ô	c3 94
+	U+00D5	Õ	c3 95
+	U+00D6	Ö	c3 96
+	U+00D7	×	c3 97
+	U+00D8	Ø	c3 98
+	U+00D9	Ù	c3 99
+	U+00DA	Ú	c3 9a
+	U+00DB	Û	c3 9b
+	U+00DC	Ü	c3 9c
+	U+00DD	Ý	c3 9d
+	U+00DE	Þ	c3 9e
+	U+00DF	ß	c3 9f
+	U+00E0	à	c3 a0
+	U+00E1	á	c3 a1
+	U+00E2	â	c3 a2
+	U+00E3	ã	c3 a3
+	U+00E4	ä	c3 a4
+	U+00E5	å	c3 a5
+	U+00E6	æ	c3 a6
+	U+00E7	ç	c3 a7
+	U+00E8	è	c3 a8
+	U+00E9	é	c3 a9
+	U+00EA	ê	c3 aa
+	U+00EB	ë	c3 ab
+	U+00EC	ì	c3 ac
+	U+00ED	í	c3 ad
+	U+00EE	î	c3 ae
+	U+00EF	ï	c3 af
+	U+00F0	ð	c3 b0
+	U+00F1	ñ	c3 b1
+	U+00F2	ò	c3 b2
+	U+00F3	ó	c3 b3
+	U+00F4	ô	c3 b4
+	U+00F5	õ	c3 b5
+	U+00F6	ö	c3 b6
+	U+00F7	÷	c3 b7
+	U+00F8	ø	c3 b8
+	U+00F9	ù	c3 b9
+	U+00FA	ú	c3 ba
+	U+00FB	û	c3 bb
+	U+00FC	ü	c3 bc
+	U+00FD	ý	c3 bd
+	U+00FE	þ	c3 be
+	U+00FF	ÿ	c3 bf
+*/
+
+#ifndef _WIN32
 
 std::wstring utf8_to_wide(const std::string &input)
 {
-	size_t inbuf_size = input.length() + 1;
-	// maximum possible size, every character is sizeof(wchar_t) bytes
-	size_t outbuf_size = (input.length() + 1) * sizeof(wchar_t);
-
-	char *inbuf = new char[inbuf_size];
-	memcpy(inbuf, input.c_str(), inbuf_size);
-	char *outbuf = new char[outbuf_size];
-	memset(outbuf, 0, outbuf_size);
-
-	if (!convert("WCHAR_T", "UTF-8", outbuf, outbuf_size, inbuf, inbuf_size)) {
-		infostream << "Couldn't convert UTF-8 string 0x" << hex_encode(input)
-			<< " into wstring" << std::endl;
-		delete[] inbuf;
-		delete[] outbuf;
-		return L"<invalid UTF-8 string>";
+	//if (input.size()) warningstream << "utf8_to_wide <<< " << dumpString(input) << std::endl;
+	size_t l = input.length();
+	u8 *inbuf = new u8[l+1];
+	memcpy(inbuf, input.c_str(), l+1);
+	wchar_t *outbuf = new wchar_t[l+1];
+	size_t j = 0;
+	for (size_t i = 0; i < l; ++i) {
+		u8 c = inbuf[i];
+		if (c == 0xC3) {
+			outbuf[j++] = 0x40 + inbuf[++i];
+		}
+		else
+			outbuf[j++] = c;
 	}
-	std::wstring out((wchar_t *)outbuf);
+	outbuf[j] = 0;
+	std::wstring out(outbuf);
 
 	delete[] inbuf;
 	delete[] outbuf;
 	
+	//if (out.size()) warningstream << "utf8_to_wide >>> " << dumpString(out) << std::endl;
 	return out;
 }
 
@@ -113,27 +213,28 @@ std::string wide_to_utf8(const std::wstring &input)
 #else
 std::string wide_to_utf8(const std::wstring &input)
 {
-	size_t inbuf_size = (input.length() + 1) * sizeof(wchar_t);
-	// maximum possible size: utf-8 encodes codepoints using 1 up to 6 bytes
-	size_t outbuf_size = (input.length() + 1) * 6;
-
-	char *inbuf = new char[inbuf_size];
-	memcpy(inbuf, input.c_str(), inbuf_size);
-	char *outbuf = new char[outbuf_size];
-	memset(outbuf, 0, outbuf_size);
-
-	if (!convert("UTF-8", "WCHAR_T", outbuf, outbuf_size, inbuf, inbuf_size)) {
-		infostream << "Couldn't convert wstring 0x" << hex_encode(inbuf, inbuf_size)
-			<< " into UTF-8 string" << std::endl;
-		delete[] inbuf;
-		delete[] outbuf;
-		return "<invalid wstring>";
+	//if (input.size()) warningstream << "wide_to_utf8 <<< " << dumpString(input) << std::endl;
+	size_t l = input.length();
+	wchar_t *inbuf = new wchar_t[l+1];
+	memcpy(inbuf, input.c_str(), (l+1)*sizeof(wchar_t));
+	char *outbuf = new char[(l+1)*6];
+	size_t j = 0;
+	for (size_t i = 0; i < l; ++i) {
+		wchar_t c = inbuf[i];
+		if (c >= 0xC0) {
+			outbuf[j++] = 0xC3;
+			outbuf[j++] = inbuf[i] - 0x40;
+		}
+		else
+			outbuf[j++] = c;
 	}
+	outbuf[j] = 0;
 	std::string out(outbuf);
 
 	delete[] inbuf;
 	delete[] outbuf;
 
+	//if (out.size()) warningstream << "wide_to_utf8 >>> " << dumpString(out) << std::endl;
 	return out;
 }
 
@@ -261,13 +362,16 @@ std::wstring narrow_to_wide(const std::string &mbs) {
 
 std::wstring narrow_to_wide(const std::string &mbs)
 {
+	//if (mbs.size()) warningstream << "narrow_to_wide <<< " << dumpString(mbs) << std::endl;
 	size_t wcl = mbs.size();
 	Buffer<wchar_t> wcs(wcl + 1);
 	size_t len = mbstowcs(*wcs, mbs.c_str(), wcl);
 	if (len == (size_t)(-1))
 		return L"<invalid multibyte string>";
 	wcs[len] = 0;
-	return *wcs;
+	std::wstring out(*wcs);
+	//if (out.size()) warningstream << "narrow_to_wide >>> " << dumpString(out) << std::endl;
+	return out;
 }
 
 #endif
@@ -304,6 +408,7 @@ std::string wide_to_narrow(const std::wstring &wcs) {
 
 std::string wide_to_narrow(const std::wstring &wcs)
 {
+	//if (wcs.size()) warningstream << "wide_to_narrow <<< " << dumpString(wcs) << std::endl;
 	size_t mbl = wcs.size() * 4;
 	SharedBuffer<char> mbs(mbl+1);
 	size_t len = wcstombs(*mbs, wcs.c_str(), mbl);
@@ -311,7 +416,9 @@ std::string wide_to_narrow(const std::wstring &wcs)
 		return "Character conversion failed!";
 
 	mbs[len] = 0;
-	return *mbs;
+	std::string out(*mbs);
+	//if (out.size()) warningstream << "wide_to_narrow >>> " << dumpString(out) << std::endl;
+	return out;
 }
 
 #endif
@@ -464,24 +571,24 @@ u64 read_seed(const char *str)
 	return num;
 }
 
-void parseTextString(const std::string &value, std::string &text, std::string &params, 
+void parseTextString(const std::string &value, std::string &text, std::string &params,
 		const char sep, const char esc)
 {
 	u32 i;
 	for (i = 0; i < value.length(); ++i) {
 		char c = value[i];
-		
+
 		if (c == esc)
 			++i;
 		else if (c == sep)
 			break;
 	}
-	
+
 	if (i + 1 < value.length())
 		params = value.substr(i + 1);
 	else
 		params = "";
-		
+
 	text = value.substr(0,i);
 }
 
@@ -964,32 +1071,11 @@ std::wstring translate_string(const std::wstring &s) {
 	return res;
 }
 
-std::string dumpString(const std::wstring &s) {
-	std::string dump;
-	char buf[128];
-	snprintf(buf, sizeof(buf), "%lu ", s.size());
-	dump += buf;
-	for (u32 i = 0; i < s.size(); ++i)
-		dump += ((s[i]<128)?((char)s[i]):'?');
-	dump += ' ';
-	for (u32 i = 0; i < s.size(); ++i) {
-		snprintf(buf, sizeof(buf), " %x(%c)", s[i], ((s[i]<128)?((char)s[i]):'?'));
-		dump += buf;
-	}
-	return dump;
-}
-
 void fix_accented_characters(std::wstring &s,
 	std::vector<irr::video::SColor> *colors) { // :PATCH:
-	//if (s.size()) warningstream << "fix_accented_characters : from " << dumpString(s) << std::endl;
+	//if (s.size()) warningstream << "fix_accented <<< " << dumpString(s) << std::endl;
 	#if defined(__MACH__) && defined(__APPLE__)
-	int l = s.size();
-	for (int i = 0; i < l; ++i) {
-		unsigned c = s[i];
-		if (c >= 0xC0 && c <= 0xFF) {
-			//s[i] = c - 0x40;
-		}
-	}
+	// already ok
 	#else
 	int l = s.size();
 	int nl = 0;
@@ -1046,7 +1132,7 @@ void fix_accented_characters(std::wstring &s,
 	if (colors)
 		colors->resize(nl);
 	#endif
-	//if (s.size()) warningstream << "fix_accented_characters : to   " << dumpString(s) << std::endl;
+	//if (s.size()) warningstream << "fix_accented >>> " << dumpString(s) << std::endl;
 }
 
 std::wstring fix_string(const std::wstring &s) { // :PATCH:
