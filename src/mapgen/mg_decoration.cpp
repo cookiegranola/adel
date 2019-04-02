@@ -207,8 +207,8 @@ size_t Decoration::placeDeco(Mapgen *mg, u32 blockseed, v3s16 nmin, v3s16 nmax)
 
 				// Get all floors and ceilings in node column
 				u16 size = (nmax.Y - nmin.Y + 1) / 2;
-				s16 *floors = new s16[size]; // :PATCH:
-				s16 *ceilings = new s16[size]; // :PATCH:
+				std::vector<s16> floors;
+				std::vector<s16> ceilings;
 				floors.reserve(size);
 				ceilings.reserve(size);
 
@@ -227,7 +227,7 @@ size_t Decoration::placeDeco(Mapgen *mg, u32 blockseed, v3s16 nmin, v3s16 nmax)
 					}
 				}
 
-				if ((flags & DECO_ALL_CEILINGS) && num_ceilings > 0) {
+				if (flags & DECO_ALL_CEILINGS) {
 					// Ceiling decorations
 					for (const s16 y : ceilings) {
 						if (y < y_min || y > y_max)

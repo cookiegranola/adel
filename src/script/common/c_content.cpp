@@ -1964,6 +1964,10 @@ HudElementStat read_hud_change(lua_State *L, HudElement *elem, void **value)
 			elem->size = read_v2s32(L, 4);
 			*value = &elem->size;
 			break;
+		case HUD_STAT_FONT_SIZE:
+			elem->font_size = luaL_checknumber(L, 4);
+			*value = &elem->font_size;
+			break;
 	}
 	return stat;
 }

@@ -20,6 +20,8 @@ mt_color_blue  = "#6389FF"
 mt_color_green = "#72FF63"
 mt_color_dark_green = "#25C191"
 
+local menustyle = nil
+
 local tabs = {}
 --------------------------------------------------------------------------------
 local function main_event_handler(tabview, event)
@@ -125,8 +127,6 @@ dofile(basepath .. DIR_DELIM .. "fstk" .. DIR_DELIM .. "dialog.lua")
 dofile(basepath .. DIR_DELIM .. "fstk" .. DIR_DELIM .. "tabview.lua")
 dofile(basepath .. DIR_DELIM .. "fstk" .. DIR_DELIM .. "ui.lua")
 dofile(menupath .. DIR_DELIM .. "common.lua")
-dofile(menupath .. DIR_DELIM .. "gamemgr.lua")
-dofile(menupath .. DIR_DELIM .. "modmgr.lua")
 dofile(menupath .. DIR_DELIM .. "textures.lua")
 
 dofile(menupath .. DIR_DELIM .. "dlg_singleplayer.lua")
@@ -138,7 +138,6 @@ dofile(menupath .. DIR_DELIM .. "dlg_settings_advanced.lua")
 
 if PLATFORM ~= "Android" then
 	dofile(menupath .. DIR_DELIM .. "dlg_create_world.lua")
-	dofile(menupath .. DIR_DELIM .. "dlg_delete_mod.lua")
 	dofile(menupath .. DIR_DELIM .. "dlg_delete_world.lua")
 	dofile(menupath .. DIR_DELIM .. "dlg_rename_modpack.lua")
 end

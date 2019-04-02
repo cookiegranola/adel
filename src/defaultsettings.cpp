@@ -313,8 +313,6 @@ void set_default_settings(Settings *settings)
 #else
 	settings->setDefault("contentdb_flag_blacklist", "nonfree, desktop_default");
 #endif
->>>>>>> upstream/master
-
 
 	// Server
 	settings->setDefault("disable_escape_sequences", "false");

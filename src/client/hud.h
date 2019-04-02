@@ -56,6 +56,7 @@ public:
 			Inventory *inventory);
 	~Hud();
 
+	void updateScaling();
 	void drawHotbar(u16 playeritem);
 	void resizeHotbar();
 	void drawCrosshair();
@@ -88,8 +89,9 @@ private:
 			s32 inv_offset, InventoryList *mainlist, u16 selectitem,
 			u16 direction);
 
-	void drawItem(const ItemStack &item, const core::rect<s32> &rect, bool selected);
+	void drawItem(ItemStack &item, const core::rect<s32> &rect, bool selected);
 
+	float m_hud_grid_resolution;
 	float m_hud_scaling; // cached minetest setting
 	v3s16 m_camera_offset;
 	v2u32 m_screensize;
@@ -115,6 +117,9 @@ private:
 		HIGHLIGHT_HALO,
 		HIGHLIGHT_NONE
 	} m_mode;
+
+	TexturePool m_texture_pool;
+	u32 m_font_size;
 };
 
 enum ItemRotationKind

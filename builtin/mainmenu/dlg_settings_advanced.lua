@@ -342,7 +342,7 @@ local function parse_config_file(read_all, parse_mods)
 
 	file:close()
 
-	if parse_mods then
+	if false then
 		-- Parse games
 		local games_category_initialized = false
 		local index = 1

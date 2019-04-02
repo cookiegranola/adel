@@ -140,6 +140,7 @@ public:
 	v3f getPosition() const { return m_position; }
 	v3f getEyePosition() const { return m_position + getEyeOffset(); }
 	v3f getEyeOffset() const;
+	void setEyeHeight(float eye_height) { m_eye_height = eye_height; }
 
 	void setCollisionbox(const aabb3f &box) { m_collisionbox = box; }
 

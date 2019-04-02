@@ -68,7 +68,7 @@ private:
 
 	bool resetMenu();
 
-	void add_key(int id, const wchar_t *button_name, const std::string &setting_name, bool advanced);
+	void add_key(int id, const wchar_t *button_name, const std::string &setting_name);
 
 	bool shift_down = false;
 	bool show_advanced_buttons = false;

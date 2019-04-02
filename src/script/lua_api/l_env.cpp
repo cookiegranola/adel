@@ -938,7 +938,7 @@ int ModApiEnvMod::l_get_nodes_in_area(lua_State *L)
 		return 0;
 	}
 
-	INodeDefManager *ndef = getServer(L)->ndef();
+	const NodeDefManager *ndef = getServer(L)->ndef();
 
 	luaL_checkstack(L, 3, nullptr);
 	lua_newtable(L);

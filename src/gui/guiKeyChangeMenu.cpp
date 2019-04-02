@@ -396,13 +396,12 @@ bool GUIKeyChangeMenu::OnEvent(const SEvent& event)
 }
 
 void GUIKeyChangeMenu::add_key(int id, const wchar_t *button_name,
-		const std::string &setting_name, bool advanced)
+		const std::string &setting_name)
 {
 	key_setting *k = new key_setting;
 	k->id = id;
 	k->button_name = button_name;
 	k->setting_name = setting_name;
-	k->advanced = advanced;
 	k->key = getKeySetting(k->setting_name.c_str());
 	key_settings.push_back(k);
 }

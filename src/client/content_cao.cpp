@@ -624,8 +624,9 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			
 		if (m_prop.colors.size() > 4) 
 			border_color = m_prop.colors[4];
-			
-		core::dimension2d<f32> text_size = m_prop.visual_size*BS;
+		
+		v2f size = v2f(m_prop.visual_size.X, m_prop.visual_size.Y);
+		core::dimension2d<f32> text_size = size*BS;
 		
 		gui::IGUIFont* font = m_smgr->getGUIEnvironment()->getFont(porting::getDataPath("fonts/mono_dejavu_sans_28.xml").c_str());
 		core::dimension2d<u32> font_size = font->getDimension(wtext.c_str());

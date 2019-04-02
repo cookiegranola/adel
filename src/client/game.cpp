@@ -2421,6 +2421,7 @@ void Game::updateCameraDirection(CameraOrientation *cam, float dtime)
 	}
 }
 
+
 void Game::updateCameraOrientation(CameraOrientation *cam, float dtime)
 {
 #ifdef HAVE_TOUCHSCREENGUI
@@ -2429,35 +2430,31 @@ void Game::updateCameraOrientation(CameraOrientation *cam, float dtime)
 		cam->camera_pitch  = g_touchscreengui->getPitch();
 	} else {
 #endif
-		v2s32 center(driver->getScreenSize().Width / 2, driver->getScreenSize().Height / 2);
-		v2s32 dist = input->getMousePos() - center;
 
-		static f32 dampening_factor = 1.0f;
+	s32 dx = input->getMousePos().X - (driver->getScreenSize().Width / 2);
+	s32 dy = input->getMousePos().Y - (driver->getScreenSize().Height / 2);
 
-		if (m_cache_mouse_dampening_influence > 0.0f) {
-			f32 mouse_speed = 0.0f;
-			f32 offset_factor = 1000.0f / driver->getScreenSize().Width;
-			f32 x_offset = dx * offset_factor;
-			f32 y_offset = dy * offset_factor;
+	static f32 dampening_factor = 1.0f;
+	
+	if (m_cache_mouse_dampening_influence > 0.0f) {
+		f32 mouse_speed = 0.0f;
+		f32 offset_factor = 1000.0f / driver->getScreenSize().Width;
+		f32 x_offset = dx * offset_factor;
+		f32 y_offset = dy * offset_factor;
+		
+		if (dtime > 0.0f)
+			mouse_speed = sqrtf(x_offset * x_offset + y_offset * y_offset) / dtime;
+		
+		if (mouse_speed >= m_cache_mouse_dampening_speed) {
+			dampening_factor = 1.0f;
+		} else {
+			dampening_factor -= dtime * m_cache_mouse_dampening_influence;
 			
-			if (dtime > 0.0f)
-				mouse_speed = sqrtf(x_offset * x_offset + y_offset * y_offset) / dtime;
-			
-			if (mouse_speed >= m_cache_mouse_dampening_speed) {
-				dampening_factor = 1.0f;
-			} else {
-				dampening_factor -= dtime * m_cache_mouse_dampening_influence;
-				
-				if (dampening_factor < 0.0f)
-					dampening_factor = 0.0f;
-			
-				dx = dx * dampening_factor;
-				dy = dy * dampening_factor;
-			}
-		}
-
-		if (m_invert_mouse || camera->getCameraMode() == CAMERA_MODE_THIRD_FRONT) {
-			dist.Y = -dist.Y;
+			if (dampening_factor < 0.0f)
+				dampening_factor = 0.0f;
+		
+			dx = dx * dampening_factor;
+			dy = dy * dampening_factor;
 		}
 	}
 	
@@ -2465,11 +2462,9 @@ void Game::updateCameraOrientation(CameraOrientation *cam, float dtime)
 		dy = -dy;
 	}
 
-		cam->camera_yaw   -= dist.X * m_cache_mouse_sensitivity;
-		cam->camera_pitch += dist.Y * m_cache_mouse_sensitivity;
+	cam->camera_yaw   -= dx * m_cache_mouse_sensitivity;
+	cam->camera_pitch += dy * m_cache_mouse_sensitivity;
 
-		if (dist.X != 0 || dist.Y != 0)
-			input->setMousePos(center.X, center.Y);
 #ifdef HAVE_TOUCHSCREENGUI
 	}
 #endif
@@ -4143,6 +4138,22 @@ void Game::showPauseMenu()
 	float ypos = 0.8f;
 	std::ostringstream os;
 
+	static const std::string control_text_template = strgettext("Controls:\n"
+		"- %s: move forwards\n"
+		"- %s: move backwards\n"
+		"- %s: move left\n"
+		"- %s: move right\n"
+		"- %s: jump/climb\n"
+		"- %s: sneak/go down\n"
+		"- %s: drop item\n"
+		"- %s: inventory\n"
+		"- Mouse: turn/look\n"
+		"- Mouse left: dig/punch\n"
+		"- Mouse right: place/use\n"
+		"- Mouse wheel: select item\n"
+		"- %s: chat\n"
+	);
+
 	char control_text_buf[600];
 
 	porting::mt_snprintf(control_text_buf, sizeof(control_text_buf), control_text_template.c_str(),
@@ -4159,7 +4170,6 @@ void Game::showPauseMenu()
 
 	std::string control_text = std::string(control_text_buf);
 	str_formspec_escape(control_text);
-#endif
 
 	ypos += 0.2f;
 

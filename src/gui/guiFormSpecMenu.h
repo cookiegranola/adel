@@ -79,18 +79,11 @@ class GUIFormSpecMenu : public GUIModalMenu
 
 		ItemSpec(const InventoryLocation &a_inventoryloc,
 				const std::string &a_listname,
-				s32 a_i,
-				const v2s32 &a_imgsize,
-				const v2s32 &a_spacing,
-				s32 a_border
-		)
+				s32 a_i) :
+			inventoryloc(a_inventoryloc),
+			listname(a_listname),
+			i(a_i)
 		{
-			inventoryloc = a_inventoryloc;
-			listname = a_listname;
-			i = a_i;
-			imgsize = a_imgsize;
-			spacing = a_spacing;
-			border = a_border;
 		}
 
 		bool isValid() const { return i != -1; }
@@ -98,9 +91,6 @@ class GUIFormSpecMenu : public GUIModalMenu
 		InventoryLocation inventoryloc;
 		std::string listname;
 		s32 i = -1;
-		v2s32 imgsize;
-		v2s32 spacing;
-		s32 border;
 	};
 
 	struct ListDrawSpec
@@ -109,16 +99,12 @@ class GUIFormSpecMenu : public GUIModalMenu
 
 		ListDrawSpec(const InventoryLocation &a_inventoryloc,
 				const std::string &a_listname,
-				v2s32 a_pos, v2s32 a_geom, s32 a_start_item_i,
-				v2s32 a_imgsize, v2s32 a_spacing, s32 a_border):
+				v2s32 a_pos, v2s32 a_geom, s32 a_start_item_i):
 			inventoryloc(a_inventoryloc),
 			listname(a_listname),
 			pos(a_pos),
 			geom(a_geom),
-			start_item_i(a_start_item_i),
-			imgsize(a_imgsize),
-			spacing(a_spacing),
-			border(a_border)
+			start_item_i(a_start_item_i)
 		{
 		}
 
@@ -127,9 +113,6 @@ class GUIFormSpecMenu : public GUIModalMenu
 		v2s32 pos;
 		v2s32 geom;
 		s32 start_item_i;
-		v2s32 imgsize;
-		v2s32 spacing;
-		s32 border;
 	};
 
 	struct ListRingSpec
@@ -224,8 +207,7 @@ class GUIFormSpecMenu : public GUIModalMenu
 			fid(id),
 			send(false),
 			ftype(f_Unknown),
-			is_exit(false),
-			is_dynamic(false)
+			is_exit(false)
 		{
 		}
 
@@ -236,7 +218,6 @@ class GUIFormSpecMenu : public GUIModalMenu
 		bool send;
 		FormspecFieldType ftype;
 		bool is_exit;
-		bool is_dynamic;
 		core::rect<s32> rect;
 	};
 
@@ -519,7 +500,6 @@ private:
 	void parseImageButton(parserData* data, const std::string &element,
 			const std::string &type);
 	void parseItemImageButton(parserData* data, const std::string &element);
-	void parseImageTab(parserData* data, const std::string &element);
 	void parseTabHeader(parserData* data, const std::string &element);
 	void parseBox(parserData* data, const std::string &element);
 	void parseBackgroundColor(parserData* data, const std::string &element);
