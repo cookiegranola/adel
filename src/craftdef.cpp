@@ -112,6 +112,7 @@ static std::vector<std::string> craftGetItemNames(
 		const std::vector<std::string> &itemstrings, IGameDef *gamedef)
 {
 	std::vector<std::string> result;
+	result.reserve(itemstrings.size());
 	for (const auto &itemstring : itemstrings) {
 		result.push_back(craftGetItemName(itemstring, gamedef));
 	}
@@ -123,6 +124,7 @@ static std::vector<std::string> craftGetItemNames(
 		const std::vector<ItemStack> &items, IGameDef *gamedef)
 {
 	std::vector<std::string> result;
+	result.reserve(items.size());
 	for (const auto &item : items) {
 		result.push_back(item.name);
 	}
@@ -134,6 +136,7 @@ static std::vector<ItemStack> craftGetItems(
 		const std::vector<std::string> &items, IGameDef *gamedef)
 {
 	std::vector<ItemStack> result;
+	result.reserve(items.size());
 	for (const auto &item : items) {
 		result.emplace_back(std::string(item), (u16)1,
 			(u16)0, gamedef->getItemDefManager());
@@ -579,7 +582,7 @@ static ItemStack craftToolRepair(
 	IItemDefManager *idef = gamedef->idef();
 	if (item1.count != 1 || item2.count != 1 || item1.name != item2.name
 			|| idef->get(item1.name).type != ITEM_TOOL
-			|| idef->get(item2.name).type != ITEM_TOOL) {
+			|| itemgroup_get(idef->get(item1.name).groups, "disable_repair") == 1) {
 		// Failure
 		return ItemStack();
 	}
@@ -919,7 +922,7 @@ public:
 
 					// Get output, then decrement input (if requested)
 					output = out;
-                    
+
 					if (decrementInput)
 						def->decrementInput(input, output_replacement, gamedef);
 					/*errorstream << "Check RETURNS TRUE" << std::endl;*/
@@ -1096,9 +1099,10 @@ public:
 		unhashed.clear();
 	}
 private:
-	//TODO: change both maps to unordered_map when c++11 can be used
-	std::vector<std::map<u64, std::vector<CraftDefinition*> > > m_craft_defs;
-	std::map<std::string, std::vector<CraftDefinition*> > m_output_craft_definitions;
+	std::vector<std::unordered_map<u64, std::vector<CraftDefinition*> > >
+		m_craft_defs;
+	std::unordered_map<std::string, std::vector<CraftDefinition*> >
+		m_output_craft_definitions;
 };
 
 IWritableCraftDefManager* createCraftDefManager()

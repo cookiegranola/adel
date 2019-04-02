@@ -39,11 +39,12 @@ extern "C" {
 #include "itemgroup.h"
 #include "itemdef.h"
 #include "c_types.h"
+#include "hud.h"
 
 namespace Json { class Value; }
 
 struct MapNode;
-class INodeDefManager;
+class NodeDefManager;
 struct PointedThing;
 struct ItemStack;
 struct ItemDefinition;
@@ -119,9 +120,9 @@ void               read_inventory_list       (lua_State *L, int tableindex,
                                               Server *srv, int forcesize=-1);
 
 MapNode            readnode                  (lua_State *L, int index,
-                                              INodeDefManager *ndef);
+                                              const NodeDefManager *ndef);
 void               pushnode                  (lua_State *L, const MapNode &n,
-                                              INodeDefManager *ndef);
+                                              const NodeDefManager *ndef);
 
 
 void               read_groups               (lua_State *L, int index,
@@ -177,8 +178,20 @@ bool               push_json_value           (lua_State *L,
 void               read_json_value           (lua_State *L, Json::Value &root,
                                               int index, u8 recursion = 0);
 
-void               push_pointed_thing        (lua_State *L, const PointedThing &pointed, bool csm = false);
+/*!
+ * Pushes a Lua `pointed_thing` to the given Lua stack.
+ * \param csm If true, a client side pointed thing is pushed
+ * \param hitpoint If true, the exact pointing location is also pushed
+ */
+void push_pointed_thing(lua_State *L, const PointedThing &pointed, bool csm =
+	false, bool hitpoint = false);
 
 void               push_objectRef            (lua_State *L, const u16 id);
+
+void               read_hud_element          (lua_State *L, HudElement *elem);
+
+void               push_hud_element          (lua_State *L, HudElement *elem);
+
+HudElementStat     read_hud_change           (lua_State *L, HudElement *elem, void **value);
 
 extern struct EnumString es_TileAnimationType[];

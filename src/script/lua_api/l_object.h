@@ -50,9 +50,8 @@ public:
 	static ServerActiveObject* getobject(ObjectRef *ref);
 private:
 	ServerActiveObject *m_object = nullptr;
-
 	static const char className[];
-	static const luaL_Reg methods[];
+	static luaL_Reg methods[];
 
 
 	static LuaEntitySAO* getluaobject(ObjectRef *ref);
@@ -161,6 +160,9 @@ private:
 	// set_velocity(self, {x=num, y=num, z=num})
 	static int l_set_velocity(lua_State *L);
 
+	// add_velocity(self, {x=num, y=num, z=num})
+	static int l_add_velocity(lua_State *L);
+
 	// get_velocity(self)
 	static int l_get_velocity(lua_State *L);
 
@@ -169,6 +171,12 @@ private:
 
 	// get_acceleration(self)
 	static int l_get_acceleration(lua_State *L);
+
+	// set_rotation(self, {x=num, y=num, z=num})
+	static int l_set_rotation(lua_State *L);
+
+	// get_rotation(self)
+	static int l_get_rotation(lua_State *L);
 
 	// set_yaw(self, radians)
 	static int l_set_yaw(lua_State *L);
@@ -247,11 +255,20 @@ private:
 	// get_attribute(self, attribute)
 	static int l_get_attribute(lua_State *L);
 
+	// get_meta(self)
+	static int l_get_meta(lua_State *L);
+
 	// set_inventory_formspec(self, formspec)
 	static int l_set_inventory_formspec(lua_State *L);
 
 	// get_inventory_formspec(self) -> formspec
 	static int l_get_inventory_formspec(lua_State *L);
+
+	// set_formspec_prepend(self, formspec)
+	static int l_set_formspec_prepend(lua_State *L);
+
+	// get_formspec_prepend(self) -> formspec
+	static int l_get_formspec_prepend(lua_State *L);
 
 	// get_player_control(self)
 	static int l_get_player_control(lua_State *L);

@@ -1,7 +1,7 @@
 /*
 Minetest
-Copyright (C) 2014-2016 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
-Copyright (C) 2015-2017 paramat
+Copyright (C) 2014-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2015-2018 paramat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "log.h"
 #include "util/numeric.h"
 #include <algorithm>
+#include <vector>
 
 
 FlagDesc flagdesc_deco[] = {
@@ -154,23 +155,43 @@ size_t Decoration::placeDeco(Mapgen *mg, u32 blockseed, v3s16 nmin, v3s16 nmax)
 			nmin.Z + sidelen + sidelen * z0 - 1
 		);
 
+		bool cover = false;
 		// Amount of decorations
 		float nval = (flags & DECO_USE_NOISE) ?
 			NoisePerlin2D(&np, p2d_center.X, p2d_center.Y, mapseed) :
 			fill_ratio;
 		u32 deco_count = 0;
-		float deco_count_f = (float)area * nval;
-		if (deco_count_f >= 1.f) {
-			deco_count = deco_count_f;
-		} else if (deco_count_f > 0.f) {
-			// For low density decorations calculate a chance for 1 decoration
-			if (ps.range(1000) <= deco_count_f * 1000.f)
-				deco_count = 1;
+
+		if (nval >= 10.0f) {
+			// Complete coverage. Disable random placement to avoid
+			// redundant multiple placements at one position.
+			cover = true;
+			deco_count = area;
+		} else {
+			float deco_count_f = (float)area * nval;
+			if (deco_count_f >= 1.0f) {
+				deco_count = deco_count_f;
+			} else if (deco_count_f > 0.0f) {
+				// For very low density calculate a chance for 1 decoration
+				if (ps.range(1000) <= deco_count_f * 1000.0f)
+					deco_count = 1;
+			}
 		}
 
+		s16 x = p2d_min.X - 1;
+		s16 z = p2d_min.Y;
+
 		for (u32 i = 0; i < deco_count; i++) {
-			s16 x = ps.range(p2d_min.X, p2d_max.X);
-			s16 z = ps.range(p2d_min.Y, p2d_max.Y);
+			if (!cover) {
+				x = ps.range(p2d_min.X, p2d_max.X);
+				z = ps.range(p2d_min.Y, p2d_max.Y);
+			} else {
+				x++;
+				if (x == p2d_max.X + 1) {
+					z++;
+					x = p2d_min.X;
+				}
+			}
 			int mapindex = carea_size * (z - nmin.Z) + (x - nmin.X);
 
 			if ((flags & DECO_ALL_FLOORS) ||
@@ -188,16 +209,14 @@ size_t Decoration::placeDeco(Mapgen *mg, u32 blockseed, v3s16 nmin, v3s16 nmax)
 				u16 size = (nmax.Y - nmin.Y + 1) / 2;
 				s16 *floors = new s16[size]; // :PATCH:
 				s16 *ceilings = new s16[size]; // :PATCH:
-				u16 num_floors = 0;
-				u16 num_ceilings = 0;
+				floors.reserve(size);
+				ceilings.reserve(size);
 
-				mg->getSurfaces(v2s16(x, z), nmin.Y, nmax.Y,
-					floors, ceilings, &num_floors, &num_ceilings);
+				mg->getSurfaces(v2s16(x, z), nmin.Y, nmax.Y, floors, ceilings);
 
-				if ((flags & DECO_ALL_FLOORS) && num_floors > 0) {
+				if (flags & DECO_ALL_FLOORS) {
 					// Floor decorations
-					for (u16 fi = 0; fi < num_floors; fi++) {
-						s16 y = floors[fi];
+					for (const s16 y : floors) {
 						if (y < y_min || y > y_max)
 							continue;
 
@@ -208,13 +227,9 @@ size_t Decoration::placeDeco(Mapgen *mg, u32 blockseed, v3s16 nmin, v3s16 nmax)
 					}
 				}
 
-				delete[] floors; // :PATCH:
-				delete[] ceilings; // :PATCH:
-
 				if ((flags & DECO_ALL_CEILINGS) && num_ceilings > 0) {
 					// Ceiling decorations
-					for (u16 ci = 0; ci < num_ceilings; ci++) {
-						s16 y = ceilings[ci];
+					for (const s16 y : ceilings) {
 						if (y < y_min || y > y_max)
 							continue;
 
@@ -306,10 +321,10 @@ size_t DecoSimple::generate(MMVManip *vm, PcgRandom *pr, v3s16 p, bool ceiling)
 	if (ceiling) {
 		// Ceiling decorations
 		// 'place offset y' is inverted
-		vm->m_area.add_y(em, vi, -place_offset_y);
+		VoxelArea::add_y(em, vi, -place_offset_y);
 
 		for (int i = 0; i < height; i++) {
-			vm->m_area.add_y(em, vi, -1);
+			VoxelArea::add_y(em, vi, -1);
 			content_t c = vm->m_data[vi].getContent();
 			if (c != CONTENT_AIR && c != CONTENT_IGNORE && !force_placement)
 				break;
@@ -317,10 +332,10 @@ size_t DecoSimple::generate(MMVManip *vm, PcgRandom *pr, v3s16 p, bool ceiling)
 			vm->m_data[vi] = MapNode(c_place, 0, param2);
 		}
 	} else { // Heightmap and floor decorations
-		vm->m_area.add_y(em, vi, place_offset_y);
+		VoxelArea::add_y(em, vi, place_offset_y);
 
 		for (int i = 0; i < height; i++) {
-			vm->m_area.add_y(em, vi, 1);
+			VoxelArea::add_y(em, vi, 1);
 			content_t c = vm->m_data[vi].getContent();
 			if (c != CONTENT_AIR && c != CONTENT_IGNORE && !force_placement)
 				break;
@@ -365,13 +380,22 @@ size_t DecoSchematic::generate(MMVManip *vm, PcgRandom *pr, v3s16 p, bool ceilin
 	if (p.Y < vm->m_area.MinEdge.Y)
 		return 0;
 
-	if (flags & DECO_PLACE_CENTER_X)
-		p.X -= (schematic->size.X - 1) / 2;
-	if (flags & DECO_PLACE_CENTER_Z)
-		p.Z -= (schematic->size.Z - 1) / 2;
-
 	Rotation rot = (rotation == ROTATE_RAND) ?
 		(Rotation)pr->range(ROTATE_0, ROTATE_270) : rotation;
+
+	if (flags & DECO_PLACE_CENTER_X) {
+		if (rot == ROTATE_0 || rot == ROTATE_180)
+			p.X -= (schematic->size.X - 1) / 2;
+		else
+			p.Z -= (schematic->size.X - 1) / 2;
+	}
+	if (flags & DECO_PLACE_CENTER_Z) {
+		if (rot == ROTATE_0 || rot == ROTATE_180)
+			p.Z -= (schematic->size.Z - 1) / 2;
+		else
+			p.X -= (schematic->size.Z - 1) / 2;
+	}
+
 	bool force_placement = (flags & DECO_FORCE_PLACEMENT);
 
 	schematic->blitToVManip(vm, p, rot, force_placement);

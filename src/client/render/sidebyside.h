@@ -1,7 +1,7 @@
 /*
 Minetest
 Copyright (C) 2010-2013 celeron55, Perttu Ahola <celeron55@gmail.com>
-Copyright (C) 2017 numzero, Lobachesky Vitaly <numzer0@yandex.ru>
+Copyright (C) 2017 numzero, Lobachevskiy Vitaliy <numzer0@yandex.ru>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -27,6 +27,7 @@ protected:
 	video::ITexture *left = nullptr;
 	video::ITexture *right = nullptr;
 	bool horizontal = false;
+	bool flipped = false;
 	core::dimension2du image_size;
 	v2s32 rpos;
 
@@ -37,6 +38,6 @@ protected:
 
 public:
 	RenderingCoreSideBySide(IrrlichtDevice *_device, Client *_client, Hud *_hud,
-			bool _horizontal = false);
+			bool _horizontal = false, bool _flipped = false);
 	void drawAll() override;
 };

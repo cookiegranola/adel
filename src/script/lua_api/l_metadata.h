@@ -1,6 +1,7 @@
 /*
 Minetest
-Copyright (C) 2013 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2013-8 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2017-8 rubenwardy <rw@rubenwardy.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -36,7 +37,7 @@ public:
 protected:
 	static MetaDataRef *checkobject(lua_State *L, int narg);
 
-	virtual void reportMetadataChange() {}
+	virtual void reportMetadataChange(const std::string *name = nullptr) {}
 	virtual Metadata *getmeta(bool auto_create) = 0;
 	virtual void clearMeta() = 0;
 
@@ -44,6 +45,12 @@ protected:
 	virtual bool handleFromTable(lua_State *L, int table, Metadata *meta);
 
 	// Exported functions
+
+	// contains(self, name)
+	static int l_contains(lua_State *L);
+
+	// get(self, name)
+	static int l_get(lua_State *L);
 
 	// get_string(self, name)
 	static int l_get_string(lua_State *L);

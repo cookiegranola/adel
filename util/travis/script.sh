@@ -4,8 +4,8 @@
 
 needs_compile || exit 0
 
-if [[ "$LINT" == "1" ]]; then
-	# Lint with exit CI
+if [[ ! -z "${CLANG_FORMAT}" ]]; then
+	# Lint and exit CI
 	perform_lint
 	exit 0
 fi
@@ -20,6 +20,10 @@ if [[ ${PLATFORM} == "Unix" ]]; then
 
 	if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
 		CMAKE_FLAGS+=' -DCUSTOM_GETTEXT_PATH=/usr/local/opt/gettext'
+	fi
+
+	if [[ -n "${FREETYPE}" ]] && [[ "${FREETYPE}" == "0" ]]; then
+		CMAKE_FLAGS+=' -DENABLE_FREETYPE=0'
 	fi
 
 	cmake -DCMAKE_BUILD_TYPE=Debug \

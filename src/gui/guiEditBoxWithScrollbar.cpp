@@ -148,7 +148,6 @@ void GUIEditBoxWithScrollBar::enableOverrideColor(bool enable)
 
 bool GUIEditBoxWithScrollBar::isOverrideColorEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return m_override_color_enabled;
 }
 
@@ -174,7 +173,6 @@ void GUIEditBoxWithScrollBar::updateAbsolutePosition()
 //! Checks if word wrap is enabled
 bool GUIEditBoxWithScrollBar::isWordWrapEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return m_word_wrap;
 }
 
@@ -189,7 +187,6 @@ void GUIEditBoxWithScrollBar::setMultiLine(bool enable)
 //! Checks if multi line editing is enabled
 bool GUIEditBoxWithScrollBar::isMultiLineEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return m_multiline;
 }
 
@@ -208,7 +205,6 @@ void GUIEditBoxWithScrollBar::setPasswordBox(bool password_box, wchar_t password
 
 bool GUIEditBoxWithScrollBar::isPasswordBox() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return m_passwordbox;
 }
 
@@ -745,7 +741,7 @@ void GUIEditBoxWithScrollBar::draw()
 				if (m_passwordbox) {
 					if (m_broken_text.size() != 1) {
 						m_broken_text.clear();
-						m_broken_text.push_back(core::stringw());
+						m_broken_text.emplace_back();
 					}
 
 					if (m_broken_text[0].size() != Text.size()){
@@ -868,7 +864,6 @@ void GUIEditBoxWithScrollBar::setAutoScroll(bool enable)
 //! \return true if automatic scrolling is enabled, false if not
 bool GUIEditBoxWithScrollBar::isAutoScrollEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return m_autoscroll;
 }
 
@@ -1402,6 +1397,8 @@ void GUIEditBoxWithScrollBar::createVScrollBar()
 
 	m_scrollbar_width = skin ? skin->getSize(gui::EGDS_SCROLLBAR_SIZE) : 16;
 
+	RelativeRect.LowerRightCorner.X -= m_scrollbar_width + 4;
+
 	irr::core::rect<s32> scrollbarrect = m_frame_rect;
 	scrollbarrect.UpperLeftCorner.X += m_frame_rect.getWidth() - m_scrollbar_width;
 	m_vscrollbar = Environment->addScrollBar(false, scrollbarrect, getParent(), getID());
@@ -1521,3 +1518,10 @@ void GUIEditBoxWithScrollBar::deserializeAttributes(io::IAttributes* in, io::SAt
 	// setOverrideFont(in->getAttributeAsFont("OverrideFont"));
 	setWritable(in->getAttributeAsBool("Writable"));
 }
+
+bool GUIEditBoxWithScrollBar::isDrawBackgroundEnabled() const { return false; }
+bool GUIEditBoxWithScrollBar::isDrawBorderEnabled() const { return false; }
+void GUIEditBoxWithScrollBar::setCursorChar(const wchar_t cursorChar) { }
+wchar_t GUIEditBoxWithScrollBar::getCursorChar() const { return '|'; }
+void GUIEditBoxWithScrollBar::setCursorBlinkTime(irr::u32 timeMs) { }
+irr::u32 GUIEditBoxWithScrollBar::getCursorBlinkTime() const { return 500; }

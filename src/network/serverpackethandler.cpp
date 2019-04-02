@@ -320,7 +320,7 @@ void Server::handleCommand_Init2(NetworkPacket* pkt)
 	float time_speed = g_settings->getFloat("time_speed");
 	SendTimeOfDay(pkt->getPeerId(), time, time_speed);
 
-	SendCSMFlavourLimits(pkt->getPeerId());
+	SendCSMRestrictionFlags(pkt->getPeerId());
 
 	// Warnings about protocol version can be issued here
 	if (getClient(pkt->getPeerId())->net_proto_version < LATEST_PROTOCOL_VERSION) {
@@ -402,11 +402,8 @@ void Server::handleCommand_ClientReady(NetworkPacket* pkt)
 	m_clients.event(peer_id, CSE_SetClientReady);
 	m_script->on_joinplayer(playersao);
 	// Send shutdown timer if shutdown has been scheduled
-	if (m_shutdown_timer > 0.0f) {
-		std::wstringstream ws;
-		ws << L"*** Server shutting down in "
-				<< duration_to_string(myround(m_shutdown_timer)).c_str() << ".";
-		SendChatMessage(pkt->getPeerId(), ws.str());
+	if (m_shutdown_state.isTimerRunning()) {
+		SendChatMessage(pkt->getPeerId(), m_shutdown_state.getShutdownTimerMessage());
 	}
 }
 
@@ -476,8 +473,8 @@ void Server::process_PlayerPos(RemotePlayer *player, PlayerSAO *playersao,
 
 	playersao->setBasePosition(position);
 	player->setSpeed(speed);
-	playersao->setPitch(pitch);
-	playersao->setYaw(yaw);
+	playersao->setLookPitch(pitch);
+	playersao->setPlayerYaw(yaw);
 	playersao->setFov(fov);
 	playersao->setWantedRange(wanted_range);
 	player->keyPressed = keyPressed;
@@ -613,7 +610,9 @@ void Server::handleCommand_InventoryAction(NetworkPacket* pkt)
 		ma->to_inv.applyCurrentPlayer(player->getName());
 
 		setInventoryModified(ma->from_inv, false);
-		setInventoryModified(ma->to_inv, false);
+		if (ma->from_inv != ma->to_inv) {
+			setInventoryModified(ma->to_inv, false);
+		}
 
 		bool from_inv_is_current_player =
 			(ma->from_inv.type == InventoryLocation::PLAYER) &&
@@ -622,6 +621,18 @@ void Server::handleCommand_InventoryAction(NetworkPacket* pkt)
 		bool to_inv_is_current_player =
 			(ma->to_inv.type == InventoryLocation::PLAYER) &&
 			(ma->to_inv.name == player->getName());
+
+		InventoryLocation *remote = from_inv_is_current_player ?
+			&ma->to_inv : &ma->from_inv;
+
+		// Check for out-of-range interaction
+		if (remote->type == InventoryLocation::NODEMETA) {
+			v3f node_pos   = intToFloat(remote->p, BS);
+			v3f player_pos = player->getPlayerSAO()->getEyePosition();
+			f32 d = player_pos.getDistanceFrom(node_pos);
+			if (!checkInteractDistance(player, d, "inventory"))
+				return;
+		}
 
 		/*
 			Disable moving items out of craftpreview
@@ -766,7 +777,7 @@ void Server::handleCommand_ChatMessage(NetworkPacket* pkt)
 
 void Server::handleCommand_Damage(NetworkPacket* pkt)
 {
-	u8 damage;
+	u16 damage;
 
 	*pkt >> damage;
 
@@ -801,8 +812,9 @@ void Server::handleCommand_Damage(NetworkPacket* pkt)
 				<< (int)damage << " hp at " << PP(playersao->getBasePosition() / BS)
 				<< std::endl;
 
-		playersao->setHP(playersao->getHP() - damage);
-		SendPlayerHPOrDie(playersao);
+		PlayerHPChangeReason reason(PlayerHPChangeReason::FALL);
+		playersao->setHP((s32)playersao->getHP() - (s32)damage, reason);
+		SendPlayerHPOrDie(playersao, reason);
 	}
 }
 
@@ -941,6 +953,38 @@ void Server::handleCommand_Respawn(NetworkPacket* pkt)
 	// the previous addition has been successfully removed
 }
 
+bool Server::checkInteractDistance(RemotePlayer *player, const f32 d, const std::string &what)
+{
+	PlayerSAO *playersao = player->getPlayerSAO();
+	const InventoryList *hlist = playersao->getInventory()->getList("hand");
+	const ItemDefinition &playeritem_def =
+		playersao->getWieldedItem().getDefinition(m_itemdef);
+	const ItemDefinition &hand_def =
+		hlist ? hlist->getItem(0).getDefinition(m_itemdef) : m_itemdef->get("");
+
+	float max_d = BS * playeritem_def.range;
+	float max_d_hand = BS * hand_def.range;
+
+	if (max_d < 0 && max_d_hand >= 0)
+		max_d = max_d_hand;
+	else if (max_d < 0)
+		max_d = BS * 4.0f;
+
+	// Cube diagonal * 1.5 for maximal supported node extents:
+	// sqrt(3) * 1.5 ≅ 2.6
+	if (d > max_d + 2.6f * BS) {
+		actionstream << "Player " << player->getName()
+				<< " tried to access " << what
+				<< " from too far: "
+				<< "d=" << d <<", max_d=" << max_d
+				<< ". ignoring." << std::endl;
+		// Call callbacks
+		m_script->on_cheat(playersao, "interacted_too_far");
+		return false;
+	}
+	return true;
+}
+
 void Server::handleCommand_Interact(NetworkPacket* pkt)
 {
 	/*
@@ -1051,7 +1095,7 @@ void Server::handleCommand_Interact(NetworkPacket* pkt)
 			client->SetBlockNotSent(blockpos);
 		}
 		// Placement -> above
-		if (action == 3) {
+		else if (action == 3) {
 			v3s16 blockpos = getNodeBlockPos(floatToInt(pointed_pos_above, BS));
 			client->SetBlockNotSent(blockpos);
 		}
@@ -1066,33 +1110,15 @@ void Server::handleCommand_Interact(NetworkPacket* pkt)
 			!g_settings->getBool("disable_anticheat");
 
 	if ((action == 0 || action == 2 || action == 3 || action == 4) &&
-			(enable_anticheat && !isSingleplayer())) {
-		float d = player_pos.getDistanceFrom(pointed_pos_under);
-		const ItemDefinition &playeritem_def =
-			playersao->getWieldedItem().getDefinition(m_itemdef);
-		float max_d = BS * playeritem_def.range;
-		InventoryList *hlist = playersao->getInventory()->getList("hand");
-		const ItemDefinition &hand_def =
-			hlist ? (hlist->getItem(0).getDefinition(m_itemdef)) : (m_itemdef->get(""));
-		float max_d_hand = BS * hand_def.range;
-		if (max_d < 0 && max_d_hand >= 0)
-			max_d = max_d_hand;
-		else if (max_d < 0)
-			max_d = BS * 4.0f;
-		// cube diagonal: sqrt(3) = 1.73
-		if (d > max_d * 1.73) {
-			actionstream << "Player " << player->getName()
-					<< " tried to access " << pointed.dump()
-					<< " from too far: "
-					<< "d=" << d <<", max_d=" << max_d
-					<< ". ignoring." << std::endl;
+			enable_anticheat && !isSingleplayer()) {
+		float d = playersao->getEyePosition()
+			.getDistanceFrom(pointed_pos_under);
+
+		if (!checkInteractDistance(player, d, pointed.dump())) {
 			// Re-send block to revert change on client-side
 			RemoteClient *client = getClient(pkt->getPeerId());
 			v3s16 blockpos = getNodeBlockPos(floatToInt(pointed_pos_under, BS));
 			client->SetBlockNotSent(blockpos);
-			// Call callbacks
-			m_script->on_cheat(playersao, "interacted_too_far");
-			// Do nothing else
 			return;
 		}
 	}
@@ -1144,8 +1170,8 @@ void Server::handleCommand_Interact(NetworkPacket* pkt)
 			float time_from_last_punch =
 				playersao->resetTimeFromLastPunch();
 
-			s16 src_original_hp = pointed_object->getHP();
-			s16 dst_origin_hp = playersao->getHP();
+			u16 src_original_hp = pointed_object->getHP();
+			u16 dst_origin_hp = playersao->getHP();
 
 			pointed_object->punch(dir, &toolcap, playersao,
 					time_from_last_punch);
@@ -1153,12 +1179,14 @@ void Server::handleCommand_Interact(NetworkPacket* pkt)
 			// If the object is a player and its HP changed
 			if (src_original_hp != pointed_object->getHP() &&
 					pointed_object->getType() == ACTIVEOBJECT_TYPE_PLAYER) {
-				SendPlayerHPOrDie((PlayerSAO *)pointed_object);
+				SendPlayerHPOrDie((PlayerSAO *)pointed_object,
+						PlayerHPChangeReason(PlayerHPChangeReason::PLAYER_PUNCH, playersao));
 			}
 
 			// If the puncher is a player and its HP changed
 			if (dst_origin_hp != playersao->getHP())
-				SendPlayerHPOrDie(playersao);
+				SendPlayerHPOrDie(playersao,
+						PlayerHPChangeReason(PlayerHPChangeReason::PLAYER_PUNCH, pointed_object));
 		}
 
 	} // action == 0
@@ -1448,10 +1476,10 @@ void Server::handleCommand_NodeMetaFields(NetworkPacket* pkt)
 
 void Server::handleCommand_InventoryFields(NetworkPacket* pkt)
 {
-	std::string formname;
+	std::string client_formspec_name;
 	u16 num;
 
-	*pkt >> formname >> num;
+	*pkt >> client_formspec_name >> num;
 
 	StringMap fields;
 	for (u16 k = 0; k < num; k++) {
@@ -1479,7 +1507,34 @@ void Server::handleCommand_InventoryFields(NetworkPacket* pkt)
 		return;
 	}
 
-	m_script->on_playerReceiveFields(playersao, formname, fields);
+	if (client_formspec_name.empty()) { // pass through inventory submits
+		m_script->on_playerReceiveFields(playersao, client_formspec_name, fields);
+		return;
+	}
+
+	// verify that we displayed the formspec to the user
+	const auto peer_state_iterator = m_formspec_state_data.find(pkt->getPeerId());
+	if (peer_state_iterator != m_formspec_state_data.end()) {
+		const std::string &server_formspec_name = peer_state_iterator->second;
+		if (client_formspec_name == server_formspec_name) {
+			auto it = fields.find("quit");
+			if (it != fields.end() && it->second == "true")
+				m_formspec_state_data.erase(peer_state_iterator);
+
+			m_script->on_playerReceiveFields(playersao, client_formspec_name, fields);
+			return;
+		}
+		actionstream << "'" << player->getName()
+			<< "' submitted formspec ('" << client_formspec_name
+			<< "') but the name of the formspec doesn't match the"
+			" expected name ('" << server_formspec_name << "')";
+
+	} else {
+		actionstream << "'" << player->getName()
+			<< "' submitted formspec ('" << client_formspec_name
+			<< "') but server hasn't sent formspec to client";
+	}
+	actionstream << ", possible exploitation attempt" << std::endl;
 }
 
 void Server::handleCommand_FirstSrp(NetworkPacket* pkt)
@@ -1713,10 +1768,12 @@ void Server::handleCommand_SrpBytesM(NetworkPacket* pkt)
 			return;
 		}
 
+		std::string ip = getPeerAddress(pkt->getPeerId()).serializeString();
 		actionstream << "Server: User " << client->getName()
-			<< " at " << getPeerAddress(pkt->getPeerId()).serializeString()
+			<< " at " << ip
 			<< " supplied wrong password (auth mechanism: SRP)."
 			<< std::endl;
+		m_script->on_auth_failure(client->getName(), ip);
 		DenyAccess(pkt->getPeerId(), SERVER_ACCESSDENIED_WRONG_PASSWORD);
 		return;
 	}

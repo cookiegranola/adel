@@ -21,7 +21,6 @@ mt_color_green = "#72FF63"
 mt_color_dark_green = "#25C191"
 
 local tabs = {}
-
 --------------------------------------------------------------------------------
 local function main_event_handler(tabview, event)
 	if event == "MenuQuit" then
@@ -35,7 +34,7 @@ local function init_globals()
 	-- Init gamedata
 	gamedata.worldindex = 0
 
-	if PLATFORM == "Android" then
+	if menustyle == "simple" then
 		local world_list = core.get_worlds()
 		local world_index
 
@@ -90,9 +89,8 @@ local function init_globals()
 	-- Create main tabview
 	local tv_main = tabview_create("maintab", {x = 12, y = 8.4}, {x = 0, y = 0})
 
-	if PLATFORM == "Android" then
+	if menustyle == "simple" then
 		tv_main:add(tabs.simple_main)
-		tv_main:add(tabs.settings)
 	else
 		tv_main:set_autosave_tab(true)
 		tv_main:add(tabs.home)
@@ -101,8 +99,11 @@ local function init_globals()
 	tv_main:set_global_event_handler(main_event_handler)
 	tv_main:set_fixed_size(false)
 
-	if PLATFORM ~= "Android" then
-		tv_main:set_tab(core.settings:get("maintab_LAST"))
+	if menustyle ~= "simple" then
+		local last_tab = core.settings:get("maintab_LAST")
+		if last_tab and tv_main.current_tab ~= last_tab then
+			tv_main:set_tab(last_tab)
+		end
 	end
 	ui.set_default("maintab")
 	tv_main:show()

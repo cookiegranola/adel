@@ -71,7 +71,7 @@ public:
 
 	void setHotbarImage(const std::string &name) { hud_hotbar_image = name; }
 
-	std::string getHotbarImage() const { return hud_hotbar_image; }
+	const std::string &getHotbarImage() const { return hud_hotbar_image; }
 
 	void setHotbarSelectedImage(const std::string &name)
 	{
@@ -138,6 +138,8 @@ public:
 	session_t getPeerId() const { return m_peer_id; }
 
 	void setPeerId(session_t peer_id) { m_peer_id = peer_id; }
+
+	void onSuccessfulSave();
 
 private:
 	/*

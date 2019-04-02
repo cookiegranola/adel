@@ -1,6 +1,8 @@
 /*
 Minetest
-Copyright (C) 2010-2013 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2010-2018 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2010-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2015-2018 paramat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -18,6 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "util/numeric.h"
+#include <cmath>
 #include "map.h"
 #include "mapgen.h"
 #include "mapgen_v5.h"
@@ -34,7 +37,7 @@ static NoiseParams nparams_caveliquids(0, 1, v3f(150.0, 150.0, 150.0), 776, 3, 0
 ////
 
 CavesNoiseIntersection::CavesNoiseIntersection(
-	INodeDefManager *nodedef, BiomeManager *biomemgr, v3s16 chunksize,
+	const NodeDefManager *nodedef, BiomeManager *biomemgr, v3s16 chunksize,
 	NoiseParams *np_cave1, NoiseParams *np_cave2, s32 seed, float cave_width)
 {
 	assert(nodedef);
@@ -98,7 +101,7 @@ void CavesNoiseIntersection::generateCaves(MMVManip *vm,
 		// This 'roof' is removed when the mapchunk above is generated.
 		for (s16 y = nmax.Y; y >= nmin.Y - 1; y--,
 				index3d -= m_ystride,
-				vm->m_area.add_y(em, vi, -1)) {
+				VoxelArea::add_y(em, vi, -1)) {
 			content_t c = vm->m_data[vi].getContent();
 
 			if (c == CONTENT_AIR || c == biome->c_water_top ||
@@ -172,7 +175,7 @@ void CavesNoiseIntersection::generateCaves(MMVManip *vm,
 ////
 
 CavernsNoise::CavernsNoise(
-	INodeDefManager *nodedef, v3s16 chunksize, NoiseParams *np_cavern,
+	const NodeDefManager *nodedef, v3s16 chunksize, NoiseParams *np_cavern,
 	s32 seed, float cavern_limit, float cavern_taper, float cavern_threshold)
 {
 	assert(nodedef);
@@ -243,10 +246,10 @@ bool CavernsNoise::generateCaverns(MMVManip *vm, v3s16 nmin, v3s16 nmax)
 		// This 'roof' is excavated when the mapchunk above is generated.
 		for (s16 y = nmax.Y; y >= nmin.Y - 1; y--,
 				index3d -= m_ystride,
-				vm->m_area.add_y(em, vi, -1),
+				VoxelArea::add_y(em, vi, -1),
 				cavern_amp_index++) {
 			content_t c = vm->m_data[vi].getContent();
-			float n_absamp_cavern = fabs(noise_cavern->result[index3d]) *
+			float n_absamp_cavern = std::fabs(noise_cavern->result[index3d]) *
 				cavern_amp[cavern_amp_index];
 			// Disable CavesRandomWalk at a safe distance from caverns
 			// to avoid excessively spreading liquids in caverns.
@@ -270,13 +273,14 @@ bool CavernsNoise::generateCaverns(MMVManip *vm, v3s16 nmin, v3s16 nmax)
 ////
 
 CavesRandomWalk::CavesRandomWalk(
-	INodeDefManager *ndef,
+	const NodeDefManager *ndef,
 	GenerateNotifier *gennotify,
 	s32 seed,
 	int water_level,
 	content_t water_source,
 	content_t lava_source,
-	int lava_depth)
+	int lava_depth,
+	BiomeGen *biomegen)
 {
 	assert(ndef);
 
@@ -286,6 +290,7 @@ CavesRandomWalk::CavesRandomWalk(
 	this->water_level    = water_level;
 	this->np_caveliquids = &nparams_caveliquids;
 	this->lava_depth     = lava_depth;
+	this->bmgn           = biomegen;
 
 	c_water_source = water_source;
 	if (c_water_source == CONTENT_IGNORE)
@@ -350,7 +355,7 @@ void CavesRandomWalk::makeCave(MMVManip *vm, v3s16 nmin, v3s16 nmax,
 
 	route_y_min = 0;
 	// Allow half a diameter + 7 over stone surface
-	route_y_max = -of.Y + max_stone_y + max_tunnel_diameter / 2 + 7;
+	route_y_max = -of.Y + max_stone_height + max_tunnel_diameter / 2 + 7;
 
 	// Limit maximum to area
 	route_y_max = rangelim(route_y_max, 0, ar.Y - 1);
@@ -492,15 +497,37 @@ void CavesRandomWalk::carveRoute(v3f vec, float f, bool randomize_xz)
 	v3s16 startp(orp.X, orp.Y, orp.Z);
 	startp += of;
 
-	float nval = NoisePerlin3D(np_caveliquids, startp.X,
-		startp.Y, startp.Z, seed);
-	MapNode liquidnode = (nval < 0.40f && node_max.Y < lava_depth) ?
-		lavanode : waternode;
-
 	v3f fp = orp + vec * f;
 	fp.X += 0.1f * ps->range(-10, 10);
 	fp.Z += 0.1f * ps->range(-10, 10);
 	v3s16 cp(fp.X, fp.Y, fp.Z);
+
+	// Get biome at 'cp + of', the absolute centre point of this route
+	v3s16 cpabs = cp + of;
+	MapNode liquidnode = CONTENT_IGNORE;
+
+	if (bmgn) {
+		Biome *biome = nullptr;
+		if (cpabs.X < node_min.X || cpabs.X > node_max.X ||
+				cpabs.Z < node_min.Z || cpabs.Z > node_max.Z)
+			// Point is outside heat and humidity noise maps so use point noise
+			// calculations.
+			biome = (Biome *)bmgn->calcBiomeAtPoint(cpabs);
+		else
+			// Point is inside heat and humidity noise maps so use them
+			biome = (Biome *)bmgn->getBiomeAtPoint(cpabs);
+
+		if (biome->c_cave_liquid != CONTENT_IGNORE)
+			liquidnode = biome->c_cave_liquid;
+	}
+
+	if (liquidnode == CONTENT_IGNORE) {
+		// Fallback to classic behaviour using point 'startp'
+		float nval = NoisePerlin3D(np_caveliquids, startp.X,
+			startp.Y, startp.Z, seed);
+		liquidnode = (nval < 0.40f && node_max.Y < lava_depth) ?
+			lavanode : waternode;
+	}
 
 	s16 d0 = -rs / 2;
 	s16 d1 = d0 + rs;
@@ -551,9 +578,6 @@ void CavesRandomWalk::carveRoute(v3f vec, float f, bool randomize_xz)
 					else
 						vm->m_data[i] = airnode;
 				} else {
-					if (c == CONTENT_IGNORE)
-						continue;
-
 					vm->m_data[i] = airnode;
 					vm->m_flags[i] |= VMANIP_FLAG_CAVE;
 				}
@@ -583,7 +607,7 @@ inline bool CavesRandomWalk::isPosAboveSurface(v3s16 p)
 //// CavesV6
 ////
 
-CavesV6::CavesV6(INodeDefManager *ndef, GenerateNotifier *gennotify,
+CavesV6::CavesV6(const NodeDefManager *ndef, GenerateNotifier *gennotify,
 	int water_level, content_t water_source, content_t lava_source)
 {
 	assert(ndef);
@@ -856,7 +880,7 @@ void CavesV6::carveRoute(v3f vec, float f, bool randomize_xz,
 						vm->m_data[i] = airnode;
 					}
 				} else {
-					if (c == CONTENT_IGNORE || c == CONTENT_AIR)
+					if (c == CONTENT_AIR)
 						continue;
 
 					vm->m_data[i] = airnode;

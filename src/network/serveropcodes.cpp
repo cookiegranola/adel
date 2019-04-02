@@ -155,7 +155,7 @@ const ClientCommandFactory clientCommandFactoryTable[TOCLIENT_NUM_MSG_TYPES] =
 	{ "TOCLIENT_INVENTORY",                0, true }, // 0x27
 	null_command_factory,
 	{ "TOCLIENT_TIME_OF_DAY",              0, true }, // 0x29
-	{ "TOCLIENT_CSM_FLAVOUR_LIMITS",       0, true }, // 0x2A
+	{ "TOCLIENT_CSM_RESTRICTION_FLAGS",    0, true }, // 0x2A
 	null_command_factory,
 	null_command_factory,
 	null_command_factory,
@@ -200,9 +200,9 @@ const ClientCommandFactory clientCommandFactoryTable[TOCLIENT_NUM_MSG_TYPES] =
 	{ "TOCLIENT_CLOUD_PARAMS",             0, true }, // 0x54
 	{ "TOCLIENT_FADE_SOUND",               0, true }, // 0x55
 	{ "TOCLIENT_UPDATE_PLAYER_LIST",       0, true }, // 0x56
-	{ "TOCLIENT_MODCHANNEL_MSG",           0, true}, // 0x57
-	{ "TOCLIENT_MODCHANNEL_SIGNAL",        0, true}, // 0x58
-	null_command_factory,
+	{ "TOCLIENT_MODCHANNEL_MSG",           0, true }, // 0x57
+	{ "TOCLIENT_MODCHANNEL_SIGNAL",        0, true }, // 0x58
+	{ "TOCLIENT_NODEMETA_CHANGED",         0, true }, // 0x59
 	null_command_factory,
 	null_command_factory,
 	null_command_factory,
@@ -210,4 +210,5 @@ const ClientCommandFactory clientCommandFactoryTable[TOCLIENT_NUM_MSG_TYPES] =
 	null_command_factory,
 	null_command_factory,
 	{ "TOSERVER_SRP_BYTES_S_B",            0, true }, // 0x60
+	{ "TOCLIENT_FORMSPEC_PREPEND",         0, true }, // 0x61
 };

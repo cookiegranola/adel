@@ -29,6 +29,10 @@ private:
 	// pos = {x=num, y=num, z=num}
 	static int l_set_node(lua_State *L);
 
+	// bulk_set_node([pos1, pos2, ...], node)
+	// pos = {x=num, y=num, z=num}
+	static int l_bulk_set_node(lua_State *L);
+
 	static int l_add_node(lua_State *L);
 
 	// remove_node(pos)
@@ -134,6 +138,9 @@ private:
 	// fix_light(p1, p2) -> true/false
 	static int l_fix_light(lua_State *L);
 
+	// load_area(p1)
+	static int l_load_area(lua_State *L);
+
 	// emerge_area(p1, p2)
 	static int l_emerge_area(lua_State *L);
 
@@ -159,7 +166,7 @@ private:
 	// spawn_tree(pos, treedef)
 	static int l_spawn_tree(lua_State *L);
 
-	// line_of_sight(pos1, pos2, stepsize) -> true/false
+	// line_of_sight(pos1, pos2) -> true/false
 	static int l_line_of_sight(lua_State *L);
 
 	// raycast(pos1, pos2, objects, liquids) -> Raycast

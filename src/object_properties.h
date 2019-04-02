@@ -27,7 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 struct ObjectProperties
 {
-	s16 hp_max = 1;
+	u16 hp_max = 1;
 	u16 breath_max = 0;
 	bool physical = false;
 	bool collideWithObjects = true;
@@ -38,7 +38,7 @@ struct ObjectProperties
 	bool pointable = true;
 	std::string visual = "sprite";
 	std::string mesh = "";
-	v2f visual_size = v2f(1, 1);
+	v3f visual_size = v3f(1, 1, 1);
 	std::vector<std::string> textures;
 	std::vector<video::SColor> colors;
 	v2s16 spritediv = v2s16(1, 1);
@@ -46,7 +46,6 @@ struct ObjectProperties
 	bool is_visible = true;
 	bool makes_footstep_sound = false;
 	f32 stepheight = 0.0f;
-	bool can_zoom = true;
 	float automatic_rotate = 0.0f;
 	bool automatic_face_movement_dir = false;
 	f32 automatic_face_movement_dir_offset = 0.0f;
@@ -59,6 +58,9 @@ struct ObjectProperties
 	//! For dropped items, this contains item information.
 	std::string wield_item;
 	bool static_save = true;
+	float eye_height = 1.625f;
+	float zoom_fov = 0.0f;
+	bool use_texture_alpha = false;
 
 	ObjectProperties();
 	std::string dump();

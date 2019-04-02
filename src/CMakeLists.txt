@@ -59,7 +59,7 @@ if(NOT USE_CURL)
 endif()
 
 
-option(ENABLE_GETTEXT "Use GetText for internationalization" FALSE)
+option(ENABLE_GETTEXT "Use GetText for internationalization" TRUE)
 set(USE_GETTEXT FALSE)
 
 if(ENABLE_GETTEXT)
@@ -101,19 +101,6 @@ if(BUILD_CLIENT AND ENABLE_SOUND)
 		message(FATAL_ERROR "Sound enabled, but cannot be used.\n"
 			"To continue, either fill in the required paths or disable sound. (-DENABLE_SOUND=0)")
 	endif()
-endif()
-
-if(USE_SOUND)
-	set(sound_SRCS sound_openal.cpp)
-	set(SOUND_INCLUDE_DIRS
-		${OPENAL_INCLUDE_DIR}
-		${VORBIS_INCLUDE_DIR}
-		${OGG_INCLUDE_DIR}
-		)
-	set(SOUND_LIBRARIES
-		${OPENAL_LIBRARY}
-		${VORBIS_LIBRARIES}
-		)
 endif()
 
 
@@ -311,6 +298,11 @@ else()
 		if(NOT HAIKU)
 			find_package(X11 REQUIRED)
 		endif(NOT HAIKU)
+
+		set(OPENGL_GL_PREFERENCE "LEGACY" CACHE STRING
+			"See CMake Policy CMP0072 for reference. GLVND is broken on some nvidia setups")
+		set(OpenGL_GL_PREFERENCE ${OPENGL_GL_PREFERENCE})
+
 		find_package(OpenGL REQUIRED)
 		find_package(JPEG REQUIRED)
 		find_package(BZip2 REQUIRED)
@@ -338,12 +330,12 @@ else()
 		endif(HAVE_LIBRT)
 	endif(APPLE)
 
-	if(NOT HAIKU)
+	if(NOT HAIKU AND NOT APPLE)
 	# This way Xxf86vm is found on OpenBSD too
 		find_library(XXF86VM_LIBRARY Xxf86vm)
 		mark_as_advanced(XXF86VM_LIBRARY)
 		set(CLIENT_PLATFORM_LIBS ${CLIENT_PLATFORM_LIBS} ${XXF86VM_LIBRARY})
-	endif(NOT HAIKU)
+	endif(NOT HAIKU AND NOT APPLE)
 
 	# Prefer local iconv if installed
 	find_library(ICONV_LIBRARY iconv)
@@ -373,6 +365,7 @@ add_custom_target(GenerateVersion
 
 
 add_subdirectory(threading)
+add_subdirectory(content)
 add_subdirectory(database)
 add_subdirectory(gui)
 add_subdirectory(mapgen)
@@ -381,10 +374,13 @@ add_subdirectory(script)
 add_subdirectory(unittest)
 add_subdirectory(util)
 add_subdirectory(irrlicht_changes)
+add_subdirectory(server)
 
 set(common_SRCS
 	${database_SRCS}
 	${mapgen_SRCS}
+	${server_SRCS}
+	${content_SRCS}
 	ban.cpp
 	chat.cpp
 	clientiface.cpp
@@ -403,12 +399,14 @@ set(common_SRCS
 	genericobject.cpp
 	gettext.cpp
 	httpfetch.cpp
+	hud.cpp
 	inventory.cpp
 	inventorymanager.cpp
 	itemdef.cpp
 	itemstackmetadata.cpp
 	light.cpp
 	log.cpp
+	main.cpp
 	map.cpp
 	map_settings_manager.cpp
 	mapblock.cpp
@@ -416,7 +414,6 @@ set(common_SRCS
 	mapsector.cpp
 	metadata.cpp
 	modchannels.cpp
-	mods.cpp
 	nameidmapping.cpp
 	nodedef.cpp
 	nodemetadata.cpp
@@ -440,9 +437,7 @@ set(common_SRCS
 	serverlist.cpp
 	serverobject.cpp
 	settings.cpp
-	sound.cpp
 	staticobject.cpp
-	subgame.cpp
 	terminal_chat_console.cpp
 	texture.cpp
 	texture_pool.cpp
@@ -452,6 +447,7 @@ set(common_SRCS
 	version.cpp
 	voxel.cpp
 	voxelalgorithms.cpp
+	hud.cpp
 	${common_network_SRCS}
 	${JTHREAD_SRCS}
 	${common_SCRIPT_SRCS}
@@ -474,9 +470,9 @@ if(WIN32)
 			-o ${CMAKE_CURRENT_BINARY_DIR}/winresource_rc.o
 			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 			DEPENDS ${WINRESOURCE_FILE})
-		SET(common_SRCS ${common_SRCS} ${CMAKE_CURRENT_BINARY_DIR}/winresource_rc.o)
+		SET(extra_windows_SRCS ${CMAKE_CURRENT_BINARY_DIR}/winresource_rc.o)
 	else(MINGW) # Probably MSVC
-		set(common_SRCS ${common_SRCS} ${WINRESOURCE_FILE} ${MINETEST_EXE_MANIFEST_FILE})
+		set(extra_windows_SRCS ${WINRESOURCE_FILE} ${MINETEST_EXE_MANIFEST_FILE})
 	endif(MINGW)
 endif()
 
@@ -490,37 +486,8 @@ set(client_SRCS
 	${client_SRCS}
 	${common_SRCS}
 	${gui_SRCS}
-	${sound_SRCS}
 	${client_network_SRCS}
 	${client_irrlicht_changes_SRCS}
-	camera.cpp
-	client.cpp
-	clientenvironment.cpp
-	clientmap.cpp
-	clientmedia.cpp
-	clientobject.cpp
-	clouds.cpp
-	content_cao.cpp
-	content_cso.cpp
-	content_mapblock.cpp
-	convert_json.cpp
-	filecache.cpp
-	fontengine.cpp
-	game.cpp
-	guiscalingfilter.cpp
-	hud.cpp
-	imagefilters.cpp
-	keycode.cpp
-	localplayer.cpp
-	main.cpp
-	mapblock_mesh.cpp
-	mesh.cpp
-	mesh_generator_thread.cpp
-	minimap.cpp
-	particles.cpp
-	shader.cpp
-	sky.cpp
-	wieldmesh.cpp
 	${client_SCRIPT_SRCS}
 	${UNITTEST_CLIENT_SRCS}
 )
@@ -529,9 +496,15 @@ list(SORT client_SRCS)
 # Server sources
 set(server_SRCS
 	${common_SRCS}
-	main.cpp
 )
 list(SORT server_SRCS)
+
+# Avoid source_group on broken CMake version.
+# see issue #7074 #7075
+if (CMAKE_VERSION VERSION_GREATER 3.8.1)
+	source_group(TREE ${PROJECT_SOURCE_DIR} PREFIX "Source Files" FILES ${client_SRCS})
+	source_group(TREE ${PROJECT_SOURCE_DIR} PREFIX "Source Files" FILES ${server_SRCS})
+endif()
 
 include_directories(
 	${PROJECT_BINARY_DIR}
@@ -540,7 +513,6 @@ include_directories(
 	${ZLIB_INCLUDE_DIR}
 	${CMAKE_BUILD_TYPE}
 	${PNG_INCLUDE_DIR}
-	${GETTEXT_INCLUDE_DIR}
 	${SOUND_INCLUDE_DIRS}
 	${SQLITE3_INCLUDE_DIR}
 	${LUA_INCLUDE_DIR}
@@ -550,6 +522,9 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/script
 )
 
+if(USE_GETTEXT)
+	include_directories(${GETTEXT_INCLUDE_DIR})
+endif()
 
 if(USE_FREETYPE)
 	include_directories(${FREETYPE_INCLUDE_DIRS})
@@ -564,7 +539,7 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
 
 
 if(BUILD_CLIENT)
-	add_executable(${PROJECT_NAME} ${client_SRCS})
+	add_executable(${PROJECT_NAME} ${client_SRCS} ${extra_windows_SRCS})
 	add_dependencies(${PROJECT_NAME} GenerateVersion)
 	set(client_LIBS
 		${PROJECT_NAME}
@@ -575,7 +550,6 @@ if(BUILD_CLIENT)
 		${BZIP2_LIBRARIES}
 		${PNG_LIBRARIES}
 		${X11_LIBRARIES}
-		${GETTEXT_LIBRARY}
 		${SOUND_LIBRARIES}
 		${SQLITE3_LIBRARY}
 		${LUA_LIBRARY}
@@ -593,6 +567,12 @@ if(BUILD_CLIENT)
 	else()
 		target_link_libraries(
 			${client_LIBS}
+		)
+	endif()
+	if(USE_GETTEXT)
+		target_link_libraries(
+			${PROJECT_NAME}
+			${GETTEXT_LIBRARY}
 		)
 	endif()
 	if(USE_CURL)
@@ -632,20 +612,22 @@ endif(BUILD_CLIENT)
 
 
 if(BUILD_SERVER)
-	add_executable(${PROJECT_NAME}server ${server_SRCS})
+	add_executable(${PROJECT_NAME}server ${server_SRCS} ${extra_windows_SRCS})
 	add_dependencies(${PROJECT_NAME}server GenerateVersion)
 	target_link_libraries(
 		${PROJECT_NAME}server
 		${ZLIB_LIBRARIES}
 		${SQLITE3_LIBRARY}
 		${JSON_LIBRARY}
-		${GETTEXT_LIBRARY}
 		${LUA_LIBRARY}
 		${GMP_LIBRARY}
 		${PLATFORM_LIBS}
 	)
 	set_target_properties(${PROJECT_NAME}server PROPERTIES
 			COMPILE_DEFINITIONS "SERVER")
+	if (USE_GETTEXT)
+		target_link_libraries(${PROJECT_NAME}server ${GETTEXT_LIBRARY})
+	endif()
 	if (USE_CURSES)
 		target_link_libraries(${PROJECT_NAME}server ${CURSES_LIBRARIES})
 	endif()
@@ -700,7 +682,7 @@ if(MSVC)
 	# Visual Studio
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D WIN32_LEAN_AND_MEAN /MP")
 	# EHa enables SEH exceptions (used for catching segfaults)
-	set(CMAKE_CXX_FLAGS_RELEASE "/EHa /Ox /GL /FD /MT /GS- /Zi /fp:fast /D NDEBUG /D _HAS_ITERATOR_DEBUGGING=0 /TP")
+	set(CMAKE_CXX_FLAGS_RELEASE "/EHa /Ox /GL /FD /MD /GS- /Zi /fp:fast /D NDEBUG /D _HAS_ITERATOR_DEBUGGING=0 /TP")
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE")
 	endif()
@@ -718,8 +700,8 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Zi /Ob0 /Od /RTC1")
 
 	# Flags for C files (sqlite)
-	# /MT = Link statically with standard library stuff
-	set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /MT")
+	# /MD = dynamically link to MSVCRxxx.dll
+	set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /MD")
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 	# Probably GCC
@@ -750,11 +732,11 @@ else()
 	endif()
 
 	set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG ${RELEASE_WARNING_FLAGS} ${WARNING_FLAGS} ${OTHER_FLAGS} -Wall -pipe -funroll-loops")
-	if(CMAKE_SYSTEM_NAME MATCHES "(Darwin|FreeBSD)")
+	if(CMAKE_SYSTEM_NAME MATCHES "(Darwin|BSD|DragonFly)")
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os")
 	else()
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -fomit-frame-pointer")
-	endif(CMAKE_SYSTEM_NAME MATCHES "(Darwin|FreeBSD)")
+	endif(CMAKE_SYSTEM_NAME MATCHES "(Darwin|BSD|DragonFly)")
 	set(CMAKE_CXX_FLAGS_SEMIDEBUG "-g -O1 -Wall -Wabi ${WARNING_FLAGS} ${OTHER_FLAGS}")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wabi ${WARNING_FLAGS} ${OTHER_FLAGS}")
 
@@ -830,6 +812,14 @@ if(BUILD_CLIENT)
 			set(MO_BUILD_PATH "${MO_BUILD_PATH}/${PROJECT_NAME}.mo")
 			install(FILES ${MO_BUILD_PATH} DESTINATION ${MO_DEST_PATH})
 		endforeach()
+	endif()
+
+	if(USE_FREETYPE)
+		install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../fonts" DESTINATION "${SHAREDIR}"
+				FILES_MATCHING PATTERN "*.ttf" PATTERN "*.txt")
+	else()
+		install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../fonts" DESTINATION "${SHAREDIR}"
+				FILES_MATCHING PATTERN "*.png" PATTERN "*.xml")
 	endif()
 
 	if(WIN32)

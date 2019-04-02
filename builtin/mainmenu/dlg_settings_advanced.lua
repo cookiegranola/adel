@@ -346,7 +346,7 @@ local function parse_config_file(read_all, parse_mods)
 		-- Parse games
 		local games_category_initialized = false
 		local index = 1
-		local game = gamemgr.get_game(index)
+		local game = pkgmgr.get_game(index)
 		while game do
 			local path = game.path .. DIR_DELIM .. FILENAME
 			local file = io.open(path, "r")
@@ -373,7 +373,7 @@ local function parse_config_file(read_all, parse_mods)
 			end
 
 			index = index + 1
-			game = gamemgr.get_game(index)
+			game = pkgmgr.get_game(index)
 		end
 
 		-- Parse mods
@@ -530,8 +530,10 @@ local function get_current_np_group_as_string(setting)
 			value.seed .. ", " ..
 			value.octaves .. ", " ..
 			value.persistence .. ", " ..
-			value.lacunarity .. ", " ..
-			value.flags
+			value.lacunarity
+		if value.flags ~= "" then
+			t = t .. ", " .. value.flags
+		end
 	end
 	return t
 end
@@ -577,19 +579,18 @@ local function create_change_setting_formspec(dialogdata)
 	formspec = formspec .. ";1]"
 
 	if setting.type == "bool" then
-		local selected_index
+		local selected_index = 1
 		if core.is_yes(get_current_value(setting)) then
 			selected_index = 2
-		else
-			selected_index = 1
 		end
-		formspec = formspec .. "dropdown[0.5,3.5;3,1;dd_setting_value;"
+		formspec = "dropdown[3," .. height .. ";4,1;dd_setting_value;"
 				.. fgettext("Disabled") .. "," .. fgettext("Enabled") .. ";"
 				.. selected_index .. "]"
+		height = height + 1.25
 
 	elseif setting.type == "enum" then
 		local selected_index = 0
-		formspec = formspec .. "dropdown[0.5,3.5;3,1;dd_setting_value;"
+		formspec = "dropdown[3," .. height .. ";4,1;dd_setting_value;"
 		for index, value in ipairs(setting.values) do
 			-- translating value is not possible, since it's the value
 			--  that we set the setting to
@@ -602,6 +603,7 @@ local function create_change_setting_formspec(dialogdata)
 			formspec = formspec:sub(1, -2) -- remove trailing comma
 		end
 		formspec = formspec .. ";" .. selected_index .. "]"
+		height = height + 1.25
 
 	elseif setting.type == "path" or setting.type == "filepath" then
 		local current_value = dialogdata.selected_path
@@ -615,7 +617,6 @@ local function create_change_setting_formspec(dialogdata)
 					minetest.colorize("#333333", fgettext("Browse")) .. ";;false]"
 	else
 		-- TODO: fancy input for float, int
-		local width = 10
 		local text = get_current_value(setting)
 		if dialogdata.error_message then
 			formspec = formspec .. "tablecolumns[color;text]" ..
@@ -630,7 +631,66 @@ local function create_change_setting_formspec(dialogdata)
 		formspec = formspec .. "field[0.5,4;" .. width .. ",1;te_setting_value;;"
 				.. core.formspec_escape(text) .. ";" .. field_color .. "99]"
 	end
-	return formspec
+
+	-- Box good, textarea bad. Calculate textarea size from box.
+	local function create_textfield(size, label, text, bg_color)
+		local textarea = {
+			x = size.x + 0.3,
+			y = size.y,
+			w = size.w + 0.25,
+			h = size.h * 1.16 + 0.12
+		}
+		return ("box[%f,%f;%f,%f;%s]textarea[%f,%f;%f,%f;;%s;%s]"):format(
+			size.x, size.y, size.w, size.h, bg_color or "#000",
+			textarea.x, textarea.y, textarea.w, textarea.h,
+			core.formspec_escape(label), core.formspec_escape(text)
+		)
+
+	end
+
+	-- When there's an error: Shrink description textarea and add error below
+	if dialogdata.error_message then
+		local error_box = {
+			x = 0,
+			y = description_height - 0.4,
+			w = width - 0.25,
+			h = 0.5
+		}
+		formspec = formspec ..
+			create_textfield(error_box, "", dialogdata.error_message, "#600")
+		description_height = description_height - 0.75
+	end
+
+	-- Get description field
+	local description_box = {
+		x = 0,
+		y = 0.2,
+		w = width - 0.25,
+		h = description_height
+	}
+
+	local setting_name = setting.name
+	if setting.readable_name then
+		setting_name = fgettext_ne(setting.readable_name) ..
+			" (" .. setting.name .. ")"
+	end
+
+	local comment_text = ""
+	if setting.comment == "" then
+		comment_text = fgettext_ne("(No description of setting given)")
+	else
+		comment_text = fgettext_ne(setting.comment)
+	end
+
+	return (
+		"size[" .. width .. "," .. height + 0.25 .. ",true]" ..
+		create_textfield(description_box, setting_name, comment_text) ..
+		formspec ..
+		"button[" .. width / 2 - 2.5 .. "," .. height - 0.4 .. ";2.5,1;btn_done;" ..
+			fgettext("Save") .. "]" ..
+		"button[" .. width / 2 .. "," .. height - 0.4 .. ";2.5,1;btn_cancel;" ..
+			fgettext("Cancel") .. "]"
+	)
 end
 
 local function handle_change_setting_buttons(this, fields)
@@ -675,6 +735,18 @@ local function handle_change_setting_buttons(this, fields)
 				core.update_formspec(this:get_formspec())
 				return true
 			end
+			if setting.min and new_value < setting.min then
+				this.data.error_message = fgettext_ne("The value must be at least $1.", setting.min)
+				this.data.entered_text = fields["te_setting_value"]
+				core.update_formspec(this:get_formspec())
+				return true
+			end
+			if setting.max and new_value > setting.max then
+				this.data.error_message = fgettext_ne("The value must not be larger than $1.", setting.max)
+				this.data.entered_text = fields["te_setting_value"]
+				core.update_formspec(this:get_formspec())
+				return true
+			end
 			core.settings:set(setting.name, new_value)
 
 		elseif setting.type == "flags" then
@@ -700,6 +772,9 @@ local function handle_change_setting_buttons(this, fields)
 
 			checkboxes = {}
 
+			if setting.type == "noise_params_2d" then
+				 fields["te_spready"] = fields["te_spreadz"]
+			end
 			local new_value = {
 				offset = fields["te_offset"],
 				scale = fields["te_scale"],
@@ -898,12 +973,7 @@ local function handle_settings_buttons(this, fields, tabname, tabdata)
 	if fields["btn_restore"] then
 		local setting = settings[selected_setting]
 		if setting and setting.type ~= "category" then
-			if setting.type == "noise_params_2d"
-					or setting.type == "noise_params_3d" then
-				core.settings:set_np_group(setting.name, setting.default_table)
-			else
-				core.settings:set(setting.name, setting.default)
-			end
+			core.settings:remove(setting.name)
 			core.settings:write()
 			core.update_formspec(this:get_formspec())
 		end
@@ -934,7 +1004,8 @@ function create_adv_settings_dlg()
 				return dlg
 end
 
--- Uncomment to generate minetest.conf.example and settings_translation_file.cpp
--- For RUN_IN_PLACE the generated files may appear in the bin folder
+-- Uncomment to generate 'minetest.conf.example' and 'settings_translation_file.cpp'.
+-- For RUN_IN_PLACE the generated files may appear in the 'bin' folder.
+-- See comment and alternative line at the end of 'generate_from_settingtypes.lua'.
 
 --assert(loadfile(core.get_builtin_path().."mainmenu"..DIR_DELIM.."generate_from_settingtypes.lua"))(parse_config_file(true, false))

@@ -63,33 +63,21 @@ function vector.distance(a, b)
 end
 
 function vector.direction(pos1, pos2)
-	local x_raw = pos2.x - pos1.x
-	local y_raw = pos2.y - pos1.y
-	local z_raw = pos2.z - pos1.z
-	local x_abs = math.abs(x_raw)
-	local y_abs = math.abs(y_raw)
-	local z_abs = math.abs(z_raw)
-	if x_abs >= y_abs and
-	   x_abs >= z_abs then
-		y_raw = y_raw * (1 / x_abs)
-		z_raw = z_raw * (1 / x_abs)
-		x_raw = x_raw / x_abs
-	end
-	if y_abs >= x_abs and
-	   y_abs >= z_abs then
-		x_raw = x_raw * (1 / y_abs)
-		z_raw = z_raw * (1 / y_abs)
-		y_raw = y_raw / y_abs
-	end
-	if z_abs >= y_abs and
-	   z_abs >= x_abs then
-		x_raw = x_raw * (1 / z_abs)
-		y_raw = y_raw * (1 / z_abs)
-		z_raw = z_raw / z_abs
-	end
-	return {x=x_raw, y=y_raw, z=z_raw}
+	return vector.normalize({
+		x = pos2.x - pos1.x,
+		y = pos2.y - pos1.y,
+		z = pos2.z - pos1.z
+	})
 end
 
+function vector.angle(a, b)
+	local dotp = a.x * b.x + a.y * b.y + a.z * b.z
+	local cpx = a.y * b.z - a.z * b.y
+	local cpy = a.z * b.x - a.x * b.z
+	local cpz = a.x * b.y - a.y * b.x
+	local crossplen = math.sqrt(cpx ^ 2 + cpy ^ 2 + cpz ^ 2)
+	return math.atan2(crossplen, dotp)
+end
 
 function vector.add(a, b)
 	if type(b) == "table" then

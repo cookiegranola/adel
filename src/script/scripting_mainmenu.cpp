@@ -18,7 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "scripting_mainmenu.h"
-#include "mods.h"
+#include "content/mods.h"
 #include "cpp_api/s_internal.h"
 #include "lua_api/l_base.h"
 #include "lua_api/l_mainmenu.h"
@@ -34,10 +34,10 @@ extern "C" {
 #define MAINMENU_NUM_ASYNC_THREADS 4
 
 
-MainMenuScripting::MainMenuScripting(GUIEngine* guiengine)
+MainMenuScripting::MainMenuScripting(GUIEngine* guiengine):
+		ScriptApiBase(ScriptingType::MainMenu)
 {
 	setGuiEngine(guiengine);
-	setType(ScriptingType::MainMenu);
 
 	SCRIPTAPI_PRECHECKHEADER
 

@@ -68,7 +68,7 @@ float disp_z;
 #endif
 
 
-#if (MATERIAL_TYPE == TILE_MATERIAL_LIQUID_TRANSPARENT || MATERIAL_TYPE == TILE_MATERIAL_LIQUID_OPAQUE) && ENABLE_WAVING_WATER
+#if (MATERIAL_TYPE == TILE_MATERIAL_WAVING_LIQUID_TRANSPARENT || MATERIAL_TYPE == TILE_MATERIAL_WAVING_LIQUID_OPAQUE || MATERIAL_TYPE == TILE_MATERIAL_WAVING_LIQUID_BASIC) && ENABLE_WAVING_WATER
 	vec4 pos = gl_Vertex;
 	pos.y -= 2.0;
 	float posYbuf = (pos.z / WATER_WAVE_LENGTH + animationTimer * WATER_WAVE_SPEED * WATER_WAVE_LENGTH);
@@ -135,7 +135,7 @@ float disp_z;
 	color.a = 1;
 	
 	// Emphase blue a bit in darker places
-	// See C++ implementation in mapblock_mesh.cpp finalColorBlend()
+	// See C++ implementation in mapblock_mesh.cpp final_color_blend()
 	float brightness = (color.r + color.g + color.b) / 3;
 	color.b += max(0.0, 0.021 - abs(0.2 * brightness - 0.021) +
 		0.07 * brightness);

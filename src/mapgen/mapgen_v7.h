@@ -1,7 +1,7 @@
 /*
 Minetest
-Copyright (C) 2013-2016 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
-Copyright (C) 2014-2017 paramat
+Copyright (C) 2013-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2014-2018 paramat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -37,16 +37,20 @@ extern FlagDesc flagdesc_mapgen_v7[];
 struct MapgenV7Params : public MapgenParams {
 	u32 spflags = MGV7_MOUNTAINS | MGV7_RIDGES | MGV7_CAVERNS;
 	s16 mount_zero_level = 0;
+	float float_mount_density = 0.6f;
+	float float_mount_height = 128.0f;
+	float float_mount_exponent = 0.75f;
+	s16 floatland_level = 1280;
+	s16 shadow_limit = 1024;
+
 	float cave_width = 0.09f;
 	s16 large_cave_depth = -33;
 	s16 lava_depth = -256;
-	float float_mount_density = 0.6f;
-	float float_mount_height = 128.0f;
-	s16 floatland_level = 1280;
-	s16 shadow_limit = 1024;
 	s16 cavern_limit = -256;
 	s16 cavern_taper = 256;
 	float cavern_threshold = 0.7f;
+	s16 dungeon_ymin = -31000;
+	s16 dungeon_ymax = 31000;
 
 	NoiseParams np_terrain_base;
 	NoiseParams np_terrain_alt;
@@ -70,9 +74,10 @@ struct MapgenV7Params : public MapgenParams {
 	void writeParams(Settings *settings) const;
 };
 
+
 class MapgenV7 : public MapgenBasic {
 public:
-	MapgenV7(int mapgenid, MapgenV7Params *params, EmergeManager *emerge);
+	MapgenV7(MapgenV7Params *params, EmergeManager *emerge);
 	~MapgenV7();
 
 	virtual MapgenType getType() const { return MAPGEN_V7; }
@@ -92,11 +97,15 @@ public:
 
 private:
 	s16 mount_zero_level;
-	s16 large_cave_depth;
 	float float_mount_density;
 	float float_mount_height;
+	float float_mount_exponent;
 	s16 floatland_level;
 	s16 shadow_limit;
+
+	s16 large_cave_depth;
+	s16 dungeon_ymin;
+	s16 dungeon_ymax;
 
 	Noise *noise_terrain_base;
 	Noise *noise_terrain_alt;

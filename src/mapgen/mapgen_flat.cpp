@@ -1,7 +1,7 @@
 /*
 Minetest
-Copyright (C) 2015-2017 paramat
-Copyright (C) 2015-2016 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2015-2018 paramat
+Copyright (C) 2015-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -48,8 +48,8 @@ FlagDesc flagdesc_mapgen_flat[] = {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 
-MapgenFlat::MapgenFlat(int mapgenid, MapgenFlatParams *params, EmergeManager *emerge)
-	: MapgenBasic(mapgenid, params, emerge)
+MapgenFlat::MapgenFlat(MapgenFlatParams *params, EmergeManager *emerge)
+	: MapgenBasic(MAPGEN_FLAT, params, emerge)
 {
 	spflags          = params->spflags;
 	ground_level     = params->ground_level;
@@ -60,6 +60,8 @@ MapgenFlat::MapgenFlat(int mapgenid, MapgenFlatParams *params, EmergeManager *em
 	lake_steepness   = params->lake_steepness;
 	hill_threshold   = params->hill_threshold;
 	hill_steepness   = params->hill_steepness;
+	dungeon_ymin     = params->dungeon_ymin;
+	dungeon_ymax     = params->dungeon_ymax;
 
 	// 2D noise
 	noise_filler_depth = new Noise(&params->np_filler_depth, seed, csize.X, csize.Z);
@@ -101,6 +103,8 @@ void MapgenFlatParams::readParams(const Settings *settings)
 	settings->getFloatNoEx("mgflat_lake_steepness", lake_steepness);
 	settings->getFloatNoEx("mgflat_hill_threshold", hill_threshold);
 	settings->getFloatNoEx("mgflat_hill_steepness", hill_steepness);
+	settings->getS16NoEx("mgflat_dungeon_ymin",     dungeon_ymin);
+	settings->getS16NoEx("mgflat_dungeon_ymax",     dungeon_ymax);
 
 	settings->getNoiseParams("mgflat_np_terrain",      np_terrain);
 	settings->getNoiseParams("mgflat_np_filler_depth", np_filler_depth);
@@ -120,6 +124,8 @@ void MapgenFlatParams::writeParams(Settings *settings) const
 	settings->setFloat("mgflat_lake_steepness", lake_steepness);
 	settings->setFloat("mgflat_hill_threshold", hill_threshold);
 	settings->setFloat("mgflat_hill_steepness", hill_steepness);
+	settings->setS16("mgflat_dungeon_ymin",     dungeon_ymin);
+	settings->setS16("mgflat_dungeon_ymax",     dungeon_ymax);
 
 	settings->setNoiseParams("mgflat_np_terrain",      np_terrain);
 	settings->setNoiseParams("mgflat_np_filler_depth", np_filler_depth);
@@ -189,27 +195,32 @@ void MapgenFlat::makeChunk(BlockMakeData *data)
 	updateHeightmap(node_min, node_max);
 
 	// Init biome generator, place biome-specific nodes, and build biomemap
-	biomegen->calcBiomeNoise(node_min);
+	if (flags & MG_BIOMES) {
+		biomegen->calcBiomeNoise(node_min);
+		generateBiomes();
+	}
 
-	MgStoneType mgstone_type;
-	content_t biome_stone;
-	generateBiomes(&mgstone_type, &biome_stone);
+	if (flags & MG_CAVES) {
+		// Generate tunnels
+		generateCavesNoiseIntersection(stone_surface_max_y);
+		// Generate large randomwalk caves
+		generateCavesRandomWalk(stone_surface_max_y, large_cave_depth);
+	}
 
-	if (flags & MG_CAVES)
-		generateCaves(stone_surface_max_y, large_cave_depth);
+	// Generate the registered ores
+	m_emerge->oremgr->placeAllOres(this, blockseed, node_min, node_max);
 
-	if (flags & MG_DUNGEONS)
-		generateDungeons(stone_surface_max_y, mgstone_type, biome_stone);
+	if ((flags & MG_DUNGEONS) && full_node_min.Y >= dungeon_ymin &&
+			full_node_max.Y <= dungeon_ymax)
+		generateDungeons(stone_surface_max_y);
 
 	// Generate the registered decorations
 	if (flags & MG_DECORATIONS)
 		m_emerge->decomgr->placeAllDecos(this, blockseed, node_min, node_max);
 
-	// Generate the registered ores
-	m_emerge->oremgr->placeAllOres(this, blockseed, node_min, node_max);
-
 	// Sprinkle some dust on top after everything else was generated
-	dustTopNodes();
+	if (flags & MG_BIOMES)
+		dustTopNodes();
 
 	//printf("makeChunk: %dms\n", t.stop());
 
@@ -266,7 +277,7 @@ s16 MapgenFlat::generateTerrain()
 					vm->m_data[vi] = n_air;
 				}
 			}
-			vm->m_area.add_y(em, vi, 1);
+			VoxelArea::add_y(em, vi, 1);
 		}
 	}
 

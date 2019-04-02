@@ -27,6 +27,9 @@
  */
 
 // clang-format off
+
+#include <cstddef>
+
 #ifdef WIN32
 	#include <windows.h>
 	#include <wincrypt.h>
@@ -39,10 +42,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <cstdint>
 
 #include <config.h>
 
-#if USE_SYSTEM_GMP || defined (__ANDROID__) || defined (ANDROID)
+#if USE_SYSTEM_GMP
 	#include <gmp.h>
 #else
 	#include <mini-gmp.h>
@@ -418,7 +422,7 @@ static SRP_Result H_nn(
 }
 
 static SRP_Result H_ns(mpz_t result, SRP_HashAlgorithm alg, const unsigned char *n,
-	size_t len_n, const unsigned char *bytes, size_t len_bytes)
+	size_t len_n, const unsigned char *bytes, uint32_t len_bytes)
 {
 	unsigned char buff[SHA512_DIGEST_LENGTH];
 	size_t nbytes = len_n + len_bytes;
@@ -612,7 +616,7 @@ SRP_Result srp_create_salted_verification_key( SRP_HashAlgorithm alg,
 			if (fill_buff() != SRP_OK) goto error_and_exit;
 		*bytes_s = (unsigned char *)srp_alloc(size_to_fill);
 		if (!*bytes_s) goto error_and_exit;
-		memcpy(*bytes_s, &g_rand_buff + g_rand_idx, size_to_fill);
+		memcpy(*bytes_s, &g_rand_buff[g_rand_idx], size_to_fill);
 		g_rand_idx += size_to_fill;
 	}
 

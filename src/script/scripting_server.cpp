@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "settings.h"
 #include "cpp_api/s_internal.h"
 #include "lua_api/l_areastore.h"
+#include "lua_api/l_auth.h"
 #include "lua_api/l_base.h"
 #include "lua_api/l_craft.h"
 #include "lua_api/l_env.h"
@@ -35,6 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "lua_api/l_nodetimer.h"
 #include "lua_api/l_noise.h"
 #include "lua_api/l_object.h"
+#include "lua_api/l_playermeta.h"
 #include "lua_api/l_particles.h"
 #include "lua_api/l_rollback.h"
 #include "lua_api/l_server.h"
@@ -48,10 +50,10 @@ extern "C" {
 #include "lualib.h"
 }
 
-ServerScripting::ServerScripting(Server* server)
+ServerScripting::ServerScripting(Server* server):
+		ScriptApiBase(ScriptingType::Server)
 {
 	setGameDef(server);
-	setType(ScriptingType::Server);
 
 	// setEnv(env) is called by ScriptApiEnv::initializeEnvironment()
 	// once the environment has been created
@@ -99,11 +101,13 @@ void ServerScripting::InitializeModApi(lua_State *L, int top)
 	NodeMetaRef::Register(L);
 	NodeTimerRef::Register(L);
 	ObjectRef::Register(L);
+	PlayerMetaRef::Register(L);
 	LuaSettings::Register(L);
 	StorageRef::Register(L);
 	ModChannelRef::Register(L);
 
 	// Initialize mod api modules
+	ModApiAuth::Initialize(L, top);
 	ModApiCraft::Initialize(L, top);
 	ModApiEnvMod::Initialize(L, top);
 	ModApiInventory::Initialize(L, top);

@@ -113,21 +113,6 @@ v2s16 read_v2s16(lua_State *L, int index)
 	return p;
 }
 
-v2s16 check_v2s16(lua_State *L, int index)
-{
-	v2s16 p;
-	CHECK_POS_TAB(index);
-	lua_getfield(L, index, "x");
-	CHECK_POS_COORD("x");
-	p.X = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-	lua_getfield(L, index, "y");
-	CHECK_POS_COORD("y");
-	p.Y = lua_tonumber(L, -1);
-	lua_pop(L, 1);
-	return p;
-}
-
 void push_v2s16(lua_State *L, v2s16 p)
 {
 	lua_newtable(L);
@@ -225,6 +210,44 @@ v3f check_v3f(lua_State *L, int index)
 	return pos;
 }
 
+v3d read_v3d(lua_State *L, int index)
+{
+	v3d pos;
+	CHECK_POS_TAB(index);
+	lua_getfield(L, index, "x");
+	pos.X = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	lua_getfield(L, index, "y");
+	pos.Y = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	lua_getfield(L, index, "z");
+	pos.Z = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	return pos;
+}
+
+v3d check_v3d(lua_State *L, int index)
+{
+	v3d pos;
+	CHECK_POS_TAB(index);
+	lua_getfield(L, index, "x");
+	CHECK_POS_COORD("x");
+	pos.X = lua_tonumber(L, -1);
+	CHECK_FLOAT_RANGE(pos.X, "x")
+	lua_pop(L, 1);
+	lua_getfield(L, index, "y");
+	CHECK_POS_COORD("y");
+	pos.Y = lua_tonumber(L, -1);
+	CHECK_FLOAT_RANGE(pos.Y, "y")
+	lua_pop(L, 1);
+	lua_getfield(L, index, "z");
+	CHECK_POS_COORD("z");
+	pos.Z = lua_tonumber(L, -1);
+	CHECK_FLOAT_RANGE(pos.Z, "z")
+	lua_pop(L, 1);
+	return pos;
+}
+
 void push_ARGB8(lua_State *L, video::SColor color)
 {
 	lua_newtable(L);
@@ -263,15 +286,15 @@ void push_v3s16(lua_State *L, v3s16 p)
 v3s16 read_v3s16(lua_State *L, int index)
 {
 	// Correct rounding at <0
-	v3f pf = read_v3f(L, index);
-	return floatToInt(pf, 1.0);
+	v3d pf = read_v3d(L, index);
+	return doubleToInt(pf, 1.0);
 }
 
 v3s16 check_v3s16(lua_State *L, int index)
 {
 	// Correct rounding at <0
-	v3f pf = check_v3f(L, index);
-	return floatToInt(pf, 1.0);
+	v3d pf = check_v3d(L, index);
+	return doubleToInt(pf, 1.0);
 }
 
 bool read_color(lua_State *L, int index, video::SColor *color)
@@ -429,71 +452,6 @@ bool getstringfield(lua_State *L, int table,
 	return got;
 }
 
-bool getintfield(lua_State *L, int table,
-		const char *fieldname, int &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isnumber(L, -1)){
-		result = lua_tointeger(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-bool getintfield(lua_State *L, int table,
-		const char *fieldname, u8 &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isnumber(L, -1)){
-		result = lua_tointeger(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-bool getintfield(lua_State *L, int table,
-		const char *fieldname, s8 &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if (lua_isnumber(L, -1)) {
-		result = lua_tointeger(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-bool getintfield(lua_State *L, int table,
-		const char *fieldname, u16 &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isnumber(L, -1)){
-		result = lua_tointeger(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
-bool getintfield(lua_State *L, int table,
-		const char *fieldname, u32 &result)
-{
-	lua_getfield(L, table, fieldname);
-	bool got = false;
-	if(lua_isnumber(L, -1)){
-		result = lua_tointeger(L, -1);
-		got = true;
-	}
-	lua_pop(L, 1);
-	return got;
-}
-
 bool getfloatfield(lua_State *L, int table,
 		const char *fieldname, float &result)
 {
@@ -572,6 +530,13 @@ bool getboolfield_default(lua_State *L, int table,
 	bool result = default_;
 	getboolfield(L, table, fieldname, result);
 	return result;
+}
+
+v3s16 getv3s16field_default(lua_State *L, int table,
+		const char *fieldname, v3s16 default_)
+{
+	getv3intfield(L, table, fieldname, default_);
+	return default_;
 }
 
 void setstringfield(lua_State *L, int table,

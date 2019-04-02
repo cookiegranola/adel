@@ -88,17 +88,17 @@ function on_step(dtime)
 	experimental.t1 = experimental.t1 + dtime
 	if experimental.t1 >= 2 then
 		experimental.t1 = experimental.t1 - 2
-		minetest.log("time of day is "..minetest.get_timeofday())
+		minetest.log("verbose", "time of day is "..minetest.get_timeofday())
 		if experimental.day then
-			minetest.log("forcing day->night")
+			minetest.log("verbose", "forcing day->night")
 			experimental.day = false
 			minetest.set_timeofday(0.0)
 		else
-			minetest.log("forcing night->day")
+			minetest.log("verbose", "forcing night->day")
 			experimental.day = true
 			minetest.set_timeofday(0.5)
 		end
-		minetest.log("time of day is "..minetest.get_timeofday())
+		minetest.log("verbose", "time of day is "..minetest.get_timeofday())
 	end
 	--]]
 end
@@ -228,7 +228,7 @@ minetest.register_entity("experimental:dummyball", {
 	phasetimer = 0,
 
 	on_activate = function(self, staticdata)
-		minetest.log("Dummyball activated!")
+		minetest.log("action", "Dummyball activated!")
 	end,
 
 	on_step = function(self, dtime)
@@ -615,6 +615,34 @@ minetest.register_craftitem("experimental:tester_tool_2", {
 	end,
 })
 
+-- Test the disable_repair=1 group
+minetest.register_tool("experimental:unrepairable_tool", {
+	description = "Unrepairable Tool",
+	wield_image = "default_stone.png",
+	inventory_image = "default_stone.png",
+	tool_capabilities = {
+		groupcaps = {
+			cracky = {
+				times = {3, 2, 1},
+			}
+		}
+	},
+	groups = { disable_repair = 1 }
+})
+
+minetest.register_tool("experimental:repairable_tool", {
+	description = "Repairable Tool",
+	wield_image = "default_dirt.png",
+	inventory_image = "default_dirt.png",
+	tool_capabilities = {
+		groupcaps = {
+			cracky = {
+				times = {3, 2, 1},
+			}
+		}
+	},
+})
+
 minetest.register_craft({
 	output = 'experimental:tester_tool_2',
 	recipe = {
@@ -682,19 +710,113 @@ minetest.register_chatcommand("test1", {
 	end,
 })
 
+minetest.register_chatcommand("test_bulk_set_node", {
+	params = "",
+	description = "Test 2: bulk set a node",
+	func = function(name, param)
+		local player = minetest.get_player_by_name(name)
+		if not player then
+			return
+		end
+		local pos_list = {}
+		local ppos = player:get_pos()
+		local i = 1
+		for x=2,10 do
+			for y=2,10 do
+				for z=2,10 do
+					pos_list[i] = {x=ppos.x + x,y = ppos.y + y,z = ppos.z + z}
+					i = i + 1
+				end
+			end
+		end
+		minetest.bulk_set_node(pos_list, {name = "default:stone"})
+		minetest.chat_send_player(name, "Done.");
+	end,
+})
+
+minetest.register_chatcommand("bench_bulk_set_node", {
+	params = "",
+	description = "Test 3: bulk set a node (bench)",
+	func = function(name, param)
+		local player = minetest.get_player_by_name(name)
+		if not player then
+			return
+		end
+		local pos_list = {}
+		local ppos = player:get_pos()
+		local i = 1
+		for x=2,100 do
+			for y=2,100 do
+				for z=2,100 do
+					pos_list[i] = {x=ppos.x + x,y = ppos.y + y,z = ppos.z + z}
+					i = i + 1
+				end
+			end
+		end
+
+		minetest.chat_send_player(name, "Benching bulk set node. Warming up...");
+
+		-- warm up with default:stone to prevent having different callbacks
+		-- due to different node topology
+		minetest.bulk_set_node(pos_list, {name = "default:stone"})
+
+		minetest.chat_send_player(name, "Warming up finished, now benching...");
+
+		local start_time = os.clock()
+		for i=1,#pos_list do
+			minetest.set_node(pos_list[i], {name = "default:stone"})
+		end
+		local middle_time = os.clock()
+		minetest.bulk_set_node(pos_list, {name = "default:stone"})
+		local end_time = os.clock()
+		minetest.chat_send_player(name,
+			string.format("Bench results: set_node loop[%.2fms], bulk_set_node[%.2fms]",
+				(middle_time - start_time) * 1000,
+				(end_time - middle_time) * 1000
+			)
+		);
+	end,
+})
+
+local formspec_test_active = false
+
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	experimental.print_to_everything("Inventory fields 1: player="..player:get_player_name()..", fields="..dump(fields))
+	if formspec_test_active then
+		experimental.print_to_everything("Inventory fields 1: player="..player:get_player_name()..", fields="..dump(fields))
+	end
 end)
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	experimental.print_to_everything("Inventory fields 2: player="..player:get_player_name()..", fields="..dump(fields))
-	return true -- Disable the first callback
+	if formspec_test_active then
+		experimental.print_to_everything("Inventory fields 2: player="..player:get_player_name()..", fields="..dump(fields))
+		return true -- Disable the first callback
+	end
 end)
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	experimental.print_to_everything("Inventory fields 3: player="..player:get_player_name()..", fields="..dump(fields))
+	if formspec_test_active then
+		experimental.print_to_everything("Inventory fields 3: player="..player:get_player_name()..", fields="..dump(fields))
+	end
 end)
 
-minetest.log("experimental modname="..dump(minetest.get_current_modname()))
-minetest.log("experimental modpath="..dump(minetest.get_modpath("experimental")))
-minetest.log("experimental worldpath="..dump(minetest.get_worldpath()))
+minetest.register_chatcommand("test_formspec", {
+	param = "",
+	description = "Test 4: Toggle formspec test",
+	func = function(name, param)
+		formspec_test_active = not formspec_test_active
+		if formspec_test_active then
+			minetest.chat_send_player(name, "Formspec test enabled!")
+		else
+			minetest.chat_send_player(name, "Formspec test disabled!")
+		end
+	end
+})
+
+minetest.log("info", "experimental modname="..dump(minetest.get_current_modname()))
+minetest.log("info", "experimental modpath="..dump(minetest.get_modpath("experimental")))
+minetest.log("info", "experimental worldpath="..dump(minetest.get_worldpath()))
+
+
+core.register_on_mods_loaded(function()
+	core.log("action", "Yeah experimental loaded mods.")
+end)
 
 -- END

@@ -114,6 +114,8 @@ public:
 		} else if (mod == m_modified) {
 			m_modified_reason |= reason;
 		}
+		if (mod == MOD_STATE_WRITE_NEEDED)
+			contents_cached = false;
 	}
 
 	inline u32 getModified()
@@ -348,10 +350,6 @@ public:
 			setNode(x0 + x, y0 + y, z0 + z, node);
 	}
 
-	// See comments in mapblock.cpp
-	bool propagateSunlight(std::set<v3s16> &light_sources,
-		bool remove_light=false, bool *black_air_left=NULL);
-
 	// Copies data to VoxelManipulator to getPosRelative()
 	void copyTo(VoxelManipulator &dst);
 
@@ -532,6 +530,14 @@ public:
 	static const u32 zstride = MAP_BLOCKSIZE * MAP_BLOCKSIZE;
 
 	static const u32 nodecount = MAP_BLOCKSIZE * MAP_BLOCKSIZE * MAP_BLOCKSIZE;
+
+	//// ABM optimizations ////
+	// Cache of content types
+	std::unordered_set<content_t> contents;
+	// True if content types are cached
+	bool contents_cached = false;
+	// True if we never want to cache content types for this block
+	bool do_not_cache_contents = false;
 
 private:
 	/*

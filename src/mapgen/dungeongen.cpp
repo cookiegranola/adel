@@ -1,6 +1,7 @@
 /*
 Minetest
-Copyright (C) 2010-2013 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2010-2018 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2015-2018 paramat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -18,6 +19,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "dungeongen.h"
+#include <cmath>
 #include "mapgen.h"
 #include "voxel.h"
 #include "noise.h"
@@ -36,7 +38,7 @@ NoiseParams nparams_dungeon_alt_wall(-0.4, 1.0, v3f(40.0, 40.0, 40.0), 32474, 6,
 ///////////////////////////////////////////////////////////////////////////////
 
 
-DungeonGen::DungeonGen(INodeDefManager *ndef,
+DungeonGen::DungeonGen(const NodeDefManager *ndef,
 	GenerateNotifier *gennotify, DungeonParams *dparams)
 {
 	assert(ndef);
@@ -49,19 +51,14 @@ DungeonGen::DungeonGen(INodeDefManager *ndef,
 #endif
 
 	if (dparams) {
-		memcpy(&dp, dparams, sizeof(dp));
+		dp = *dparams;
 	} else {
 		// Default dungeon parameters
 		dp.seed = 0;
 
-		dp.c_water       = ndef->getId("mapgen_water_source");
-		dp.c_river_water = ndef->getId("mapgen_river_water_source");
-		dp.c_wall        = ndef->getId("mapgen_cobble");
-		dp.c_alt_wall    = ndef->getId("mapgen_mossycobble");
-		dp.c_stair       = ndef->getId("mapgen_stair_cobble");
-
-		if (dp.c_river_water == CONTENT_IGNORE)
-			dp.c_river_water = ndef->getId("mapgen_water_source");
+		dp.c_wall     = ndef->getId("mapgen_cobble");
+		dp.c_alt_wall = ndef->getId("mapgen_mossycobble");
+		dp.c_stair    = ndef->getId("mapgen_stair_cobble");
 
 		dp.diagonal_dirs       = false;
 		dp.only_in_ground      = true;
@@ -74,8 +71,6 @@ DungeonGen::DungeonGen(INodeDefManager *ndef,
 		dp.room_size_large_max = v3s16(16, 16, 16);
 		dp.rooms_min           = 2;
 		dp.rooms_max           = 16;
-		dp.y_min               = -MAX_MAP_GENERATION_LIMIT;
-		dp.y_max               = MAX_MAP_GENERATION_LIMIT;
 		dp.notifytype          = GENNOTIFY_DUNGEON;
 
 		dp.np_density  = nparams_dungeon_density;
@@ -89,8 +84,6 @@ void DungeonGen::generate(MMVManip *vm, u32 bseed, v3s16 nmin, v3s16 nmax)
 	assert(vm);
 
 	//TimeTaker t("gen dungeons");
-	if (nmin.Y < dp.y_min || nmax.Y > dp.y_max)
-		return;
 
 	float nval_density = NoisePerlin3D(&dp.np_density, nmin.X, nmin.Y, nmin.Z, dp.seed);
 	if (nval_density < 1.0f)
@@ -106,17 +99,21 @@ void DungeonGen::generate(MMVManip *vm, u32 bseed, v3s16 nmin, v3s16 nmax)
 	vm->clearFlag(VMANIP_FLAG_DUNGEON_INSIDE | VMANIP_FLAG_DUNGEON_PRESERVE);
 
 	if (dp.only_in_ground) {
-		// Set all air and water to be untouchable to make dungeons open to
-		// caves and open air. Optionally set ignore to be untouchable to
-		// prevent protruding dungeons.
+		// Set all air and liquid drawtypes to be untouchable to make dungeons
+		// open to air and liquids.
+		// Optionally set ignore to be untouchable to prevent projecting dungeons.
+		// Like randomwalk caves, preserve nodes that have 'is_ground_content = false',
+		// to avoid dungeons that generate out beyond the edge of a mapchunk destroying
+		// nodes added by mods in 'register_on_generated()'.
 		for (s16 z = nmin.Z; z <= nmax.Z; z++) {
 			for (s16 y = nmin.Y; y <= nmax.Y; y++) {
 				u32 i = vm->m_area.index(nmin.X, y, z);
 				for (s16 x = nmin.X; x <= nmax.X; x++) {
 					content_t c = vm->m_data[i].getContent();
-					if (c == CONTENT_AIR || c == dp.c_water ||
+					NodeDrawType dtype = ndef->get(c).drawtype;
+					if (dtype == NDT_AIRLIKE || dtype == NDT_LIQUID ||
 							(preserve_ignore && c == CONTENT_IGNORE) ||
-							c == dp.c_river_water)
+							!ndef->get(c).is_ground_content)
 						vm->m_flags[i] |= VMANIP_FLAG_DUNGEON_PRESERVE;
 					i++;
 				}
@@ -125,7 +122,7 @@ void DungeonGen::generate(MMVManip *vm, u32 bseed, v3s16 nmin, v3s16 nmax)
 	}
 
 	// Add them
-	for (u32 i = 0; i < floor(nval_density); i++)
+	for (u32 i = 0; i < std::floor(nval_density); i++)
 		makeDungeon(v3s16(1, 1, 1) * MAP_BLOCKSIZE);
 
 	// Optionally convert some structure to alternative structure
@@ -434,8 +431,10 @@ void DungeonGen::makeCorridor(v3s16 doorplace, v3s16 doordir,
 					VMANIP_FLAG_DUNGEON_UNTOUCHABLE,
 					MapNode(dp.c_wall),
 					0);
-				makeHole(p);
-				makeHole(p - dir);
+				makeFill(p, dp.holesize, VMANIP_FLAG_DUNGEON_UNTOUCHABLE,
+					MapNode(CONTENT_AIR), VMANIP_FLAG_DUNGEON_INSIDE);
+				makeFill(p - dir, dp.holesize, VMANIP_FLAG_DUNGEON_UNTOUCHABLE,
+					MapNode(CONTENT_AIR), VMANIP_FLAG_DUNGEON_INSIDE);
 
 				// TODO: fix stairs code so it works 100%
 				// (quite difficult)
@@ -454,16 +453,21 @@ void DungeonGen::makeCorridor(v3s16 doorplace, v3s16 doordir,
 					v3s16 swv = (dir.Z != 0) ? v3s16(1, 0, 0) : v3s16(0, 0, 1);
 
 					for (u16 st = 0; st < stair_width; st++) {
-						u32 vi = vm->m_area.index(ps.X - dir.X, ps.Y - 1, ps.Z - dir.Z);
-						if (vm->m_area.contains(ps + v3s16(-dir.X, -1, -dir.Z)) &&
-								vm->m_data[vi].getContent() == dp.c_wall)
-							vm->m_data[vi] = MapNode(dp.c_stair, 0, facedir);
-
-						vi = vm->m_area.index(ps.X, ps.Y, ps.Z);
-						if (vm->m_area.contains(ps) &&
-								vm->m_data[vi].getContent() == dp.c_wall)
-							vm->m_data[vi] = MapNode(dp.c_stair, 0, facedir);
-
+						if (make_stairs == -1) {
+							u32 vi = vm->m_area.index(ps.X - dir.X, ps.Y - 1, ps.Z - dir.Z);
+							if (vm->m_area.contains(ps + v3s16(-dir.X, -1, -dir.Z)) &&
+									vm->m_data[vi].getContent() == dp.c_wall) {
+								vm->m_flags[vi] |= VMANIP_FLAG_DUNGEON_UNTOUCHABLE;
+								vm->m_data[vi] = MapNode(dp.c_stair, 0, facedir);
+							}
+						} else if (make_stairs == 1) {
+							u32 vi = vm->m_area.index(ps.X, ps.Y - 1, ps.Z);
+							if (vm->m_area.contains(ps + v3s16(0, -1, 0)) &&
+									vm->m_data[vi].getContent() == dp.c_wall) {
+								vm->m_flags[vi] |= VMANIP_FLAG_DUNGEON_UNTOUCHABLE;
+								vm->m_data[vi] = MapNode(dp.c_stair, 0, facedir);
+							}
+						}
 						ps += swv;
 					}
 				}

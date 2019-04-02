@@ -1,6 +1,8 @@
 /*
 Minetest
 Copyright (C) 2013 celeron55, Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2017-8 rubenwardy <rw@rubenwardy.com>
+Copyright (C) 2017 raymoo
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -38,7 +40,7 @@ private:
 
 	virtual void clearMeta();
 
-	virtual void reportMetadataChange();
+	virtual void reportMetadataChange(const std::string *name = nullptr);
 
 	void setToolCapabilities(const ToolCapabilities &caps)
 	{

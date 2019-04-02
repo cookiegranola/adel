@@ -128,13 +128,15 @@ EmergeManager::EmergeManager(Server *server)
 
 	enable_mapgen_debug_info = g_settings->getBool("enable_mapgen_debug_info");
 
-	// If unspecified, leave a proc for the main thread and one for
+	s16 nthreads = 1;
+	g_settings->getS16NoEx("num_emerge_threads", nthreads);
+	// If automatic, leave a proc for the main thread and one for
 	// some other misc thread
-	s16 nthreads = 0;
-	if (!g_settings->getS16NoEx("num_emerge_threads", nthreads))
+	if (nthreads == 0)
 		nthreads = Thread::getNumberOfProcessors() - 2;
 	if (nthreads < 1)
 		nthreads = 1;
+	verbosestream << "Using " << nthreads << " emerge threads." << std::endl;
 
 	m_qlimit_total = g_settings->getU16("emergequeue_limit_total");
 	if (!g_settings->getU16NoEx("emergequeue_limit_diskonly", m_qlimit_diskonly))
@@ -169,7 +171,10 @@ EmergeManager::~EmergeManager()
 		}
 
 		delete thread;
-		delete m_mapgens[i];
+
+		// Mapgen init might not be finished if there is an error during startup.
+		if (m_mapgens.size() > i)
+			delete m_mapgens[i];
 	}
 
 	delete biomemgr;
@@ -179,33 +184,28 @@ EmergeManager::~EmergeManager()
 }
 
 
-bool EmergeManager::initMapgens(MapgenParams *params)
+void EmergeManager::initMapgens(MapgenParams *params)
 {
-	if (!m_mapgens.empty())
-		return false;
+	FATAL_ERROR_IF(!m_mapgens.empty(), "Mapgen already initialised.");
 
-	this->mgparams = params;
+	mgparams = params;
 
-	for (u32 i = 0; i != m_threads.size(); i++) {
-		Mapgen *mg = Mapgen::createMapgen(params->mgtype, i, params, this);
-		m_mapgens.push_back(mg);
-	}
-
-	return true;
+	for (u32 i = 0; i != m_threads.size(); i++)
+		m_mapgens.push_back(Mapgen::createMapgen(params->mgtype, params, this));
 }
 
 
 Mapgen *EmergeManager::getCurrentMapgen()
 {
 	if (!m_threads_active)
-		return NULL;
+		return nullptr;
 
 	for (u32 i = 0; i != m_threads.size(); i++) {
 		if (m_threads[i]->isCurrentThread())
 			return m_threads[i]->m_mapgen;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
@@ -584,6 +584,12 @@ MapBlock *EmergeThread::finishGen(v3s16 pos, BlockMakeData *bmdata,
 	} catch (LuaError &e) {
 		m_server->setAsyncFatalError("Lua: finishGen" + std::string(e.what()));
 	}
+
+	/*
+		Clear generate notifier events
+	*/
+	Mapgen *mg = m_emerge->getCurrentMapgen();
+	mg->gennotify.clearEvents();
 
 	EMERGE_DBG_OUT("ended up with: " << analyze_block(block));
 

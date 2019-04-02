@@ -66,13 +66,13 @@ const ToClientCommandHandler toClientCommandTable[TOCLIENT_NUM_MSG_TYPES] =
 	{ "TOCLIENT_INVENTORY",                TOCLIENT_STATE_CONNECTED, &Client::handleCommand_Inventory }, // 0x27
 	null_command_handler,
 	{ "TOCLIENT_TIME_OF_DAY",              TOCLIENT_STATE_CONNECTED, &Client::handleCommand_TimeOfDay }, // 0x29
-	{ "TOCLIENT_CSM_FLAVOUR_LIMITS",       TOCLIENT_STATE_CONNECTED, &Client::handleCommand_CSMFlavourLimits }, // 0x2A
+	{ "TOCLIENT_CSM_RESTRICTION_FLAGS",    TOCLIENT_STATE_CONNECTED, &Client::handleCommand_CSMRestrictionFlags }, // 0x2A
 	null_command_handler,
 	null_command_handler,
 	null_command_handler,
 	null_command_handler,
 	{ "TOCLIENT_CHAT_MESSAGE",             TOCLIENT_STATE_CONNECTED, &Client::handleCommand_ChatMessage }, // 0x2F
-	{ "TOCLIENT_CHAT_MESSAGE_OLD",         TOCLIENT_STATE_CONNECTED, &Client::handleCommand_ChatMessageOld }, // 0x30
+	null_command_handler, // 0x30
 	{ "TOCLIENT_ACTIVE_OBJECT_REMOVE_ADD", TOCLIENT_STATE_CONNECTED, &Client::handleCommand_ActiveObjectRemoveAdd }, // 0x31
 	{ "TOCLIENT_ACTIVE_OBJECT_MESSAGES",   TOCLIENT_STATE_CONNECTED, &Client::handleCommand_ActiveObjectMessages }, // 0x32
 	{ "TOCLIENT_HP",                       TOCLIENT_STATE_CONNECTED, &Client::handleCommand_HP }, // 0x33
@@ -113,7 +113,7 @@ const ToClientCommandHandler toClientCommandTable[TOCLIENT_NUM_MSG_TYPES] =
 	{ "TOCLIENT_UPDATE_PLAYER_LIST",       TOCLIENT_STATE_CONNECTED, &Client::handleCommand_UpdatePlayerList }, // 0x56
 	{ "TOCLIENT_MODCHANNEL_MSG",           TOCLIENT_STATE_CONNECTED, &Client::handleCommand_ModChannelMsg }, // 0x57
 	{ "TOCLIENT_MODCHANNEL_SIGNAL",        TOCLIENT_STATE_CONNECTED, &Client::handleCommand_ModChannelSignal }, // 0x58
-	null_command_handler,
+	{ "TOCLIENT_NODEMETA_CHANGED",         TOCLIENT_STATE_CONNECTED, &Client::handleCommand_NodemetaChanged }, // 0x59
 	null_command_handler,
 	null_command_handler,
 	null_command_handler,
@@ -121,6 +121,7 @@ const ToClientCommandHandler toClientCommandTable[TOCLIENT_NUM_MSG_TYPES] =
 	null_command_handler,
 	null_command_handler,
 	{ "TOCLIENT_SRP_BYTES_S_B",            TOCLIENT_STATE_NOT_CONNECTED, &Client::handleCommand_SrpBytesSandB }, // 0x60
+	{ "TOCLIENT_FORMSPEC_PREPEND",         TOCLIENT_STATE_CONNECTED, &Client::handleCommand_FormspecPrepend }, // 0x61,
 };
 
 const static ServerCommandFactory null_command_factory = { "TOSERVER_NULL", 0, false };

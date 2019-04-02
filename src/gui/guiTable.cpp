@@ -36,7 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "util/string.h" // for parseColorString()
 #include "settings.h" // for settings
 #include "porting.h" // for dpi
-#include "guiscalingfilter.h"
+#include "client/guiscalingfilter.h"
 
 /*
 	GUITable
@@ -78,10 +78,12 @@ GUITable::GUITable(gui::IGUIEnvironment *env,
 	setTabStop(true);
 	setTabOrder(-1);
 	updateAbsolutePosition();
-
+	float density = RenderingEngine::getDisplayDensity();
+#ifdef __ANDROID__
+	density = 1; // dp scaling is applied by the skin
+#endif
 	core::rect<s32> relative_rect = m_scrollbar->getRelativePosition();
-	s32 width = (relative_rect.getWidth()/(2.0/3.0)) *
-			RenderingEngine::getDisplayDensity() *
+	s32 width = (relative_rect.getWidth() / (2.0 / 3.0)) * density *
 			g_settings->getFloat("gui_scaling");
 	m_scrollbar->setRelativePosition(core::rect<s32>(
 			relative_rect.LowerRightCorner.X-width,relative_rect.UpperLeftCorner.Y,
@@ -334,7 +336,6 @@ void GUITable::setTable(const TableOptions &options,
 
 		// Make template for new cells
 		Cell newcell;
-		memset(&newcell, 0, sizeof newcell);
 		newcell.content_type = columntype;
 		newcell.tooltip_index = tooltip_index;
 		newcell.reported_column = j+1;

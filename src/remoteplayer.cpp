@@ -72,14 +72,13 @@ void RemotePlayer::serializeExtraAttributes(std::string &output)
 {
 	assert(m_sao);
 	Json::Value json_root;
-	const PlayerAttributes &attrs = m_sao->getExtendedAttributes();
+
+	const StringMap &attrs = m_sao->getMeta().getStrings();
 	for (const auto &attr : attrs) {
 		json_root[attr.first] = attr.second;
 	}
 
 	output = fastWriteJson(json_root);
-
-	m_sao->setExtendedAttributeModified(false);
 }
 
 
@@ -99,7 +98,7 @@ void RemotePlayer::deSerialize(std::istream &is, const std::string &playername,
 
 	if (sao) {
 		try {
-			sao->setHPRaw(args.getS32("hp"));
+			sao->setHPRaw(args.getU16("hp"));
 		} catch(SettingNotFoundException &e) {
 			sao->setHPRaw(PLAYER_MAX_HP_DEFAULT);
 		}
@@ -109,14 +108,14 @@ void RemotePlayer::deSerialize(std::istream &is, const std::string &playername,
 		} catch (SettingNotFoundException &e) {}
 
 		try {
-			sao->setPitch(args.getFloat("pitch"));
+			sao->setLookPitch(args.getFloat("pitch"));
 		} catch (SettingNotFoundException &e) {}
 		try {
-			sao->setYaw(args.getFloat("yaw"));
+			sao->setPlayerYaw(args.getFloat("yaw"));
 		} catch (SettingNotFoundException &e) {}
 
 		try {
-			sao->setBreath(args.getS32("breath"), false);
+			sao->setBreath(args.getU16("breath"), false);
 		} catch (SettingNotFoundException &e) {}
 
 		try {
@@ -132,14 +131,20 @@ void RemotePlayer::deSerialize(std::istream &is, const std::string &playername,
 			const Json::Value::Members attr_list = attr_root.getMemberNames();
 			for (const auto &it : attr_list) {
 				Json::Value attr_value = attr_root[it];
-				sao->setExtendedAttribute(it, attr_value.asString());
+				sao->getMeta().setString(it, attr_value.asString());
 			}
+			sao->getMeta().setModified(false);
 		} catch (SettingNotFoundException &e) {}
 	}
 
-	inventory.deSerialize(is);
+	try {
+		inventory.deSerialize(is);
+	} catch (SerializationError &e) {
+		errorstream << "Failed to deserialize player inventory. player_name="
+			<< name << " " << e.what() << std::endl;
+	}
 
-	if (inventory.getList("craftpreview") == NULL) {
+	if (!inventory.getList("craftpreview") && inventory.getList("craftresult")) {
 		// Convert players without craftpreview
 		inventory.addList("craftpreview", 1);
 
@@ -163,11 +168,11 @@ void RemotePlayer::serialize(std::ostream &os)
 
 	// This should not happen
 	assert(m_sao);
-	args.setS32("hp", m_sao->getHP());
+	args.setU16("hp", m_sao->getHP());
 	args.setV3F("position", m_sao->getBasePosition());
-	args.setFloat("pitch", m_sao->getPitch());
-	args.setFloat("yaw", m_sao->getYaw());
-	args.setS32("breath", m_sao->getBreath());
+	args.setFloat("pitch", m_sao->getLookPitch());
+	args.setFloat("yaw", m_sao->getRotation().Y);
+	args.setU16("breath", m_sao->getBreath());
 
 	std::string extended_attrs;
 	serializeExtraAttributes(extended_attrs);
@@ -217,4 +222,11 @@ const RemotePlayerChatResult RemotePlayer::canSendChatMessage()
 
 	m_chat_message_allowance -= 1.0f;
 	return RPLAYER_CHATRESULT_OK;
+}
+
+void RemotePlayer::onSuccessfulSave()
+{
+	setModified(false);
+	if (m_sao)
+		m_sao->getMeta().setModified(false);
 }

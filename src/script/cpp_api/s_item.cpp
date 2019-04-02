@@ -177,7 +177,7 @@ bool ScriptApiItem::item_CraftPredict(ItemStack &item, ServerActiveObject *user,
 		const InventoryList *old_craft_grid, const InventoryLocation &craft_inv)
 {
 	SCRIPTAPI_PRECHECKHEADER
-
+	sanity_check(old_craft_grid);
 	int error_handler = PUSH_ERROR_HANDLER(L);
 
 	lua_getglobal(L, "core");
@@ -255,10 +255,10 @@ bool ScriptApiItem::getItemCallback(const char *name, const char *callbackname,
 	return false;
 }
 
-void ScriptApiItem::pushPointedThing(const PointedThing& pointed)
+void ScriptApiItem::pushPointedThing(const PointedThing &pointed, bool hitpoint)
 {
 	lua_State* L = getStack();
 
-	push_pointed_thing(L, pointed);
+	push_pointed_thing(L, pointed, false, hitpoint);
 }
 

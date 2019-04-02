@@ -161,7 +161,7 @@ private:
 	std_mutex m_mutex;    // :PATCH:
 	std_mutex m_start_finished_mutex;    // :PATCH:
 
-	std::thread *m_thread_obj;
+	std::thread *m_thread_obj = nullptr;
 
 
 #ifdef _AIX

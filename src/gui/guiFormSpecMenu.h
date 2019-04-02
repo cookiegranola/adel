@@ -242,7 +242,7 @@ class GUIFormSpecMenu : public GUIModalMenu
 
 	struct BoxDrawSpec
 	{
-		BoxDrawSpec(v2s32 a_pos, v2s32 a_geom,irr::video::SColor a_color):
+		BoxDrawSpec(v2s32 a_pos, v2s32 a_geom, irr::video::SColor a_color):
 			pos(a_pos),
 			geom(a_geom),
 			color(a_color)
@@ -306,9 +306,14 @@ public:
 			ISimpleTextureSource *tsrc,
 			IFormSource* fs_src,
 			TextDest* txt_dst,
+			std::string formspecPrepend,
 			bool remap_dbl_click = true);
 
 	~GUIFormSpecMenu();
+
+	static void create(GUIFormSpecMenu *&cur_formspec, Client *client,
+		JoystickController *joystick, IFormSource *fs_src, TextDest *txt_dest,
+		const std::string &formspecPrepend);
 
 	void setFormSpec(const std::string &formspec_string,
 			const InventoryLocation &current_inventory_location)
@@ -316,6 +321,11 @@ public:
 		m_formspec_string = formspec_string;
 		m_current_inventory_location = current_inventory_location;
 		regenerateGui(m_screensize_old);
+	}
+
+	void setFormspecPrepend(const std::string &formspecPrepend)
+	{
+		m_formspec_prepend = formspecPrepend;
 	}
 
 	// form_src is deleted by this GUIFormSpecMenu
@@ -357,7 +367,7 @@ public:
 	void regenerateGui(v2u32 screensize);
 
 	ItemSpec getItemAtPos(v2s32 p) const;
-	void drawList(const ListDrawSpec &s, int phase,	bool &item_hovered);
+	void drawList(const ListDrawSpec &s, int layer,	bool &item_hovered);
 	void drawSelectedItem();
 	void drawMenu();
 	void updateSelectedItem();
@@ -381,19 +391,24 @@ protected:
 	{
 			return padding + offset + AbsoluteRect.UpperLeftCorner;
 	}
+	std::wstring getLabelByID(s32 id);
+	std::string getNameByID(s32 id);
+	v2s32 getElementBasePos(bool absolute,
+			const std::vector<std::string> *v_pos);
 
 	v2s32 padding;
-	v2s32 spacing;
+	v2f32 spacing;
 	v2s32 imgsize;
 	v2s32 offset;
-	v2s32 pos_offset;
-	std::stack<v2s32> container_stack;
+	v2f32 pos_offset;
+	std::stack<v2f32> container_stack;
 
 	InventoryManager *m_invmgr;
 	ISimpleTextureSource *m_tsrc;
 	Client *m_client;
 
 	std::string m_formspec_string;
+	std::string m_formspec_prepend;
 	InventoryLocation m_current_inventory_location;
 
 	std::vector<ListDrawSpec> m_inventorylists;
@@ -408,21 +423,15 @@ protected:
 	std::vector<std::pair<FieldSpec,GUITable*> > m_tables;
 	std::vector<std::pair<FieldSpec,gui::IGUICheckBox*> > m_checkboxes;
 	std::map<std::string, TooltipSpec> m_tooltips;
+	std::vector<std::pair<irr::core::rect<s32>, TooltipSpec>> m_tooltip_rects;
 	std::vector<std::pair<FieldSpec,gui::IGUIScrollBar*> > m_scrollbars;
 	std::vector<std::pair<FieldSpec, std::vector<std::string> > > m_dropdowns;
 
 	ItemSpec *m_selected_item = nullptr;
-	u32 m_selected_amount = 0;
+	u16 m_selected_amount = 0;
 	bool m_selected_dragging = false;
+	ItemStack m_selected_swap;
 
-	// WARNING: BLACK MAGIC
-	// Used to guess and keep up with some special things the server can do.
-	// If name is "", no guess exists.
-	ItemStack m_selected_content_guess;
-	InventoryLocation m_selected_content_guess_inventory;
-
-	v2s32 m_pointer;
-	v2s32 m_old_pointer;  // Mouse position after previous mouse event
 	gui::IGUIStaticText *m_tooltip_element = nullptr;
 
 	u64 m_tooltip_show_delay;
@@ -500,6 +509,8 @@ private:
 	void parseFieldCloseOnEnter(parserData *data, const std::string &element);
 	void parsePwdField(parserData* data, const std::string &element);
 	void parseField(parserData* data, const std::string &element, const std::string &type);
+	void createTextField(parserData *data, FieldSpec &spec,
+		core::rect<s32> &rect, bool is_multiline);
 	void parseSimpleField(parserData* data,std::vector<std::string> &parts);
 	void parseTextArea(parserData* data,std::vector<std::string>& parts,
 			const std::string &type);
@@ -543,13 +554,6 @@ private:
 
 	int m_btn_height;
 	gui::IGUIFont *m_font = nullptr;
-
-	std::wstring getLabelByID(s32 id);
-	std::string getNameByID(s32 id);
-#ifdef __ANDROID__
-	v2s32 m_down_pos;
-	std::string m_JavaDialogFieldName;
-#endif
 
 	/* If true, remap a double-click (or double-tap) action to ESC. This is so
 	 * that, for example, Android users can double-tap to close a formspec.

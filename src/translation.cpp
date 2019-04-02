@@ -40,8 +40,8 @@ const std::wstring &Translations::getTranslation(
 	std::wstring key = textdomain + L"|" + s;
 	try {
 		return m_translations.at(key);
-	} catch (std::out_of_range) {
-		warningstream << "Translations: can't find translation for string \""
+	} catch (const std::out_of_range &) {
+		verbosestream << "Translations: can't find translation for string \""
 		              << wide_to_utf8(s) << "\" in textdomain \""
 		              << wide_to_utf8(textdomain) << "\"" << std::endl;
 		// Silence that warning in the future
@@ -58,6 +58,10 @@ void Translations::loadTranslation(const std::string &data)
 
 	while (is.good()) {
 		std::getline(is, line);
+		// Trim last character if file was using a \r\n line ending
+		if (line.length () > 0 && line[line.length() - 1] == '\r')
+			line.resize(line.length() - 1);
+
 		if (str_starts_with(line, "# textdomain:")) {
 			textdomain = utf8_to_wide(trim(str_split(line, ':')[1]));
 		}

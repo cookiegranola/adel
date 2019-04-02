@@ -3,7 +3,6 @@
 core.features = {
 	glasslike_framed = true,
 	nodebox_as_selectionbox = true,
-	chat_send_player_param3 = true,
 	get_all_craft_recipes_works = true,
 	use_texture_alpha = true,
 	no_legacy_abms = true,
@@ -11,6 +10,8 @@ core.features = {
 	area_store_custom_ids = true,
 	add_entity_with_staticdata = true,
 	no_chat_message_prediction = true,
+	object_use_texture_alpha = true,
+	object_independent_selectionbox = true,
 }
 
 function core.has_feature(arg)

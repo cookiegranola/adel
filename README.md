@@ -5,9 +5,9 @@ Minetest
 [![Translation status](https://hosted.weblate.org/widgets/minetest/-/svg-badge.svg)](https://hosted.weblate.org/engage/minetest/?utm_source=widget)
 [![License](https://img.shields.io/badge/license-LGPLv2.1%2B-blue.svg)](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html)
 
-An InfiniMiner/Minecraft inspired game.
+Minetest is a free open-source voxel game engine with easy modding and game creation.
 
-Copyright (c) 2010-2017 Perttu Ahola <celeron55@gmail.com>
+Copyright (C) 2010-2018 Perttu Ahola <celeron55@gmail.com>
 and contributors (see source file comments and the version control log)
 
 In case you downloaded the source code:
@@ -16,24 +16,32 @@ If you downloaded the Minetest Engine source code in which this file is
 contained, you probably want to download the [Minetest Game](https://github.com/minetest/minetest_game/)
 project too. See its README.txt for more information.
 
+Table of Contents
+------------------
+
+1. [Further Documentation](#further-documentation)
+2. [Default Controls](#default-controls)
+3. [Paths](#paths)
+4. [Configuration File](#configuration-file)
+5. [Command-line Options](#command-line-options)
+6. [Compiling](#compiling)
+7. [Docker](#docker)
+8. [Version Scheme](#version-scheme)
+
+
 Further documentation
 ----------------------
 - Website: http://minetest.net/
 - Wiki: http://wiki.minetest.net/
 - Developer wiki: http://dev.minetest.net/
 - Forum: http://forum.minetest.net/
-- Github: https://github.com/minetest/minetest/
-- doc/ directory of source distribution
-
-This game is not finished
---------------------------
-- Don't expect it to work as well as a finished game will.
-- Please report any bugs. When doing that, debug.txt is useful.
+- GitHub: https://github.com/minetest/minetest/
+- [doc/](doc/) directory of source distribution
 
 Default controls
 ----------------
 All controls are re-bindable using settings.
-Some can be changes in the key config dialog in the settings tab.
+Some can be changed in the key config dialog in the settings tab.
 
 | Button                        | Action                                                         |
 |-------------------------------|----------------------------------------------------------------|
@@ -57,47 +65,50 @@ Some can be changes in the key config dialog in the settings tab.
 | +                             | Increase view range                                            |
 | -                             | Decrease view range                                            |
 | K                             | Enable/disable fly mode (needs fly privilege)                  |
+| L                             | Enable/disable pitch move mode                                 |
 | J                             | Enable/disable fast mode (needs fast privilege)                |
 | H                             | Enable/disable noclip mode (needs noclip privilege)            |
 | E                             | Move fast in fast mode                                         |
-| F1                            |  Hide/show HUD                                                 |
-| F2                            |  Hide/show chat                                                |
-| F3                            |  Disable/enable fog                                            |
-| F4                            |  Disable/enable camera update (Mapblocks are not updated anymore when disabled, disabled in release builds)  |
-| F5                            |  Cycle through debug info screens                              |
-| F6                            |  Cycle through profiler info screens                           |
-| F7                            |  Cycle through camera modes                                    |
-| F8                            |  Toggle cinematic mode                                         |
-| F9                            |  Cycle through minimap modes                                   |
+| F1                            | Hide/show HUD                                                  |
+| F2                            | Hide/show chat                                                 |
+| F3                            | Disable/enable fog                                             |
+| F4                            | Disable/enable camera update (Mapblocks are not updated anymore when disabled, disabled in release builds)  |
+| F5                            | Cycle through debug information screens                        |
+| F6                            | Cycle through profiler info screens                            |
+| F7                            | Cycle through camera modes                                     |
+| F9                            | Cycle through minimap modes                                    |
 | Shift + F9                    | Change minimap orientation                                     |
 | F10                           | Show/hide console                                              |
 | F12                           | Take screenshot                                                |
 
 Paths
 -----
-
 Locations:
 
-* bin   - Compiled binaries
-* share - Distributed read-only data
-* user  - User-created modifiable data
+* `bin`   - Compiled binaries
+* `share` - Distributed read-only data
+* `user`  - User-created modifiable data
 
 Where each location is on each platform:
 
 * Windows .zip / RUN_IN_PLACE source:
-    * bin   = bin
-    * share = .
-    * user  = .
+    * bin   = `bin`
+    * share = `.`
+    * user  = `.`
+* Windows installed:
+    * $bin   = `C:\Program Files\Minetest\bin (Depends on the install location)`
+    * $share = `C:\Program Files\Minetest (Depends on the install location)`
+    * $user  = `%Appdata%\Minetest`
 * Linux installed:
-    * bin   = /usr/bin
-    * share = /usr/share/minetest
-    * user  = ~/.minetest
+    * `bin`   = `/usr/bin`
+    * `share` = `/usr/share/minetest`
+    * `user`  = `~/.minetest`
 * macOS:
-    * bin   = Contents/MacOS
-    * share = Contents/Resources
-    * user  = Contents/User OR ~/Library/Application Support/minetest
+    * `bin`   = `Contents/MacOS`
+    * `share` = `Contents/Resources`
+    * `user`  = `Contents/User OR ~/Library/Application Support/minetest`
 
-Worlds can be found as separate folders in: user/worlds/
+Worlds can be found as separate folders in: `user/worlds/`
 
 Configuration file:
 -------------------
@@ -111,104 +122,120 @@ Configuration file:
 
 Command-line options:
 ---------------------
-- Use --help
+- Use `--help`
 
 Compiling
 ---------
-
 ### Compiling on GNU/Linux
 
-Install dependencies. Here's an example for Debian/Ubuntu:
+#### Dependencies
 
-    $ sudo apt-get install build-essential libirrlicht-dev cmake libbz2-dev libpng-dev libjpeg-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-gnutls-dev libfreetype6-dev zlib1g-dev libgmp-dev libjsoncpp-dev
+| Dependency | Version | Commentary |
+|------------|---------|------------|
+| GCC        | 4.9+    | Can be replaced with Clang 3.4+ |
+| CMake      | 2.6+    |            |
+| Irrlicht   | 1.7.3+  |            |
+| SQLite3    | 3.0+    |            |
+| LuaJIT     | 2.0+    | Bundled Lua 5.1 is used if not present |
+| GMP        | 5.0.0+  | Bundled mini-GMP is used if not present |
+| JsonCPP    | 1.0.0+  | Bundled JsonCPP is used if not present |
+
+For Debian/Ubuntu:
+
+    sudo apt install build-essential libirrlicht-dev cmake libbz2-dev libpng-dev libjpeg-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-gnutls-dev libfreetype6-dev zlib1g-dev libgmp-dev libjsoncpp-dev
 
 For Fedora users:
 
-    $ sudo dnf install make automake gcc gcc-c++ kernel-devel cmake libcurl* openal* libvorbis* libXxf86vm-devel libogg-devel freetype-devel mesa-libGL-devel zlib-devel jsoncpp-devel irrlicht-devel bzip2-libs gmp-devel sqlite-devel luajit-devel leveldb-devel ncurses-devel doxygen spatialindex-devel bzip2-devel
+    sudo dnf install make automake gcc gcc-c++ kernel-devel cmake libcurl-devel openal-soft-devel libvorbis-devel libXxf86vm-devel libogg-devel freetype-devel mesa-libGL-devel zlib-devel jsoncpp-devel irrlicht-devel bzip2-libs gmp-devel sqlite-devel luajit-devel leveldb-devel ncurses-devel doxygen spatialindex-devel bzip2-devel
 
-You can install git for easily keeping your copy up to date.
-If you don’t want git, read below on how to get the source without git.  
-This is an example for installing git on Debian/Ubuntu:
+#### Download
 
-    $ sudo apt-get install git
+You can install Git for easily keeping your copy up to date.
+If you don’t want Git, read below on how to get the source without Git.
+This is an example for installing Git on Debian/Ubuntu:
+
+    sudo apt install git
 
 For Fedora users:
 
-    $ sudo dnf install git
+    sudo dnf install git
 
-Download source (this is the URL to the latest of source repository, which might not work at all times) using git:
+Download source (this is the URL to the latest of source repository, which might not work at all times) using Git:
 
-    $ git clone --depth 1 https://github.com/minetest/minetest.git
-    $ cd minetest
+    git clone --depth 1 https://github.com/minetest/minetest.git
+    cd minetest
 
-Download minetest_game (otherwise only the "Minimal development test" game is available) using git:
+Download minetest_game (otherwise only the "Minimal development test" game is available) using Git:
 
-    $ git clone --depth 1 https://github.com/minetest/minetest_game.git games/minetest_game
+    git clone --depth 1 https://github.com/minetest/minetest_game.git games/minetest_game
 
-Download source, without using git:
+Download source, without using Git:
 
-    $ wget https://github.com/minetest/minetest/archive/master.tar.gz
-    $ tar xf master.tar.gz
-    $ cd minetest-master
+    wget https://github.com/minetest/minetest/archive/master.tar.gz
+    tar xf master.tar.gz
+    cd minetest-master
 
-Download minetest_game, without using git:
+Download minetest_game, without using Git:
 
-    $ cd games/
-    $ wget https://github.com/minetest/minetest_game/archive/master.tar.gz
-    $ tar xf master.tar.gz
-    $ mv minetest_game-master minetest_game
-    $ cd ..
+    cd games/
+    wget https://github.com/minetest/minetest_game/archive/master.tar.gz
+    tar xf master.tar.gz
+    mv minetest_game-master minetest_game
+    cd ..
+
+#### Build
 
 Build a version that runs directly from the source directory:
 
-    $ cmake . -DRUN_IN_PLACE=TRUE
-    $ make -j <number of processors>
+    cmake . -DRUN_IN_PLACE=TRUE
+    make -j <number of processors>
 
 Run it:
 
-    $ ./bin/minetest
+    ./bin/minetest
 
-- Use cmake . -LH to see all CMake options and their current state
+- Use `cmake . -LH` to see all CMake options and their current state
 - If you want to install it system-wide (or are making a distribution package),
-  you will want to use -DRUN_IN_PLACE=FALSE
-- You can build a bare server by specifying -DBUILD_SERVER=TRUE
-- You can disable the client build by specifying -DBUILD_CLIENT=FALSE
-- You can select between Release and Debug build by -DCMAKE_BUILD_TYPE=<Debug or Release>
+  you will want to use `-DRUN_IN_PLACE=FALSE`
+- You can build a bare server by specifying `-DBUILD_SERVER=TRUE`
+- You can disable the client build by specifying `-DBUILD_CLIENT=FALSE`
+- You can select between Release and Debug build by `-DCMAKE_BUILD_TYPE=<Debug or Release>`
   - Debug build is slower, but gives much more useful output in a debugger
 - If you build a bare server, you don't need to have Irrlicht installed.
-  In that case use -DIRRLICHT_SOURCE_DIR=/the/irrlicht/source
+  - In that case use `-DIRRLICHT_SOURCE_DIR=/the/irrlicht/source`
 
 ### CMake options
 
-General options:
+General options and their default values:
 
-    BUILD_CLIENT           - Build Minetest client
-    BUILD_SERVER           - Build Minetest server
-    CMAKE_BUILD_TYPE       - Type of build (Release vs. Debug)
-        Release            - Release build
-        Debug              - Debug build
-        SemiDebug          - Partially optimized debug build
-        RelWithDebInfo     - Release build with Debug information
-        MinSizeRel         - Release build with -Os passed to compiler to make executable as small as possible
-    ENABLE_CURL            - Build with cURL; Enables use of online mod repo, public serverlist and remote media fetching via http
-    ENABLE_CURSES          - Build with (n)curses; Enables a server side terminal (command line option: --terminal)
-    ENABLE_FREETYPE        - Build with FreeType2; Allows using TTF fonts
-    ENABLE_GETTEXT         - Build with Gettext; Allows using translations
-    ENABLE_GLES            - Search for Open GLES headers & libraries and use them
-    ENABLE_LEVELDB         - Build with LevelDB; Enables use of LevelDB map backend
-    ENABLE_POSTGRESQL      - Build with libpq; Enables use of PostgreSQL map backend (PostgreSQL 9.5 or greater recommended)
-    ENABLE_REDIS           - Build with libhiredis; Enables use of Redis map backend
-    ENABLE_SPATIAL         - Build with LibSpatial; Speeds up AreaStores
-    ENABLE_SOUND           - Build with OpenAL, libogg & libvorbis; in-game Sounds
-    ENABLE_LUAJIT          - Build with LuaJIT (much faster than non-JIT Lua)
-    ENABLE_SYSTEM_GMP      - Use GMP from system (much faster than bundled mini-gmp)
-    ENABLE_SYSTEM_JSONCPP  - Use JsonCPP from system
-    RUN_IN_PLACE           - Create a portable install (worlds, settings etc. in current directory)
-    USE_GPROF              - Enable profiling using GProf
-    VERSION_EXTRA          - Text to append to version (e.g. VERSION_EXTRA=foobar -> Minetest 0.4.9-foobar)
+    BUILD_CLIENT=TRUE          - Build Minetest client
+    BUILD_SERVER=FALSE         - Build Minetest server
+    CMAKE_BUILD_TYPE=Release   - Type of build (Release vs. Debug)
+        Release                - Release build
+        Debug                  - Debug build
+        SemiDebug              - Partially optimized debug build
+        RelWithDebInfo         - Release build with debug information
+        MinSizeRel             - Release build with -Os passed to compiler to make executable as small as possible
+    ENABLE_CURL=ON             - Build with cURL; Enables use of online mod repo, public serverlist and remote media fetching via http
+    ENABLE_CURSES=ON           - Build with (n)curses; Enables a server side terminal (command line option: --terminal)
+    ENABLE_FREETYPE=ON         - Build with FreeType2; Allows using TTF fonts
+    ENABLE_GETTEXT=ON          - Build with Gettext; Allows using translations
+    ENABLE_GLES=OFF            - Search for Open GLES headers & libraries and use them
+    ENABLE_LEVELDB=ON          - Build with LevelDB; Enables use of LevelDB map backend
+    ENABLE_POSTGRESQL=ON       - Build with libpq; Enables use of PostgreSQL map backend (PostgreSQL 9.5 or greater recommended)
+    ENABLE_REDIS=ON            - Build with libhiredis; Enables use of Redis map backend
+    ENABLE_SPATIAL=ON          - Build with LibSpatial; Speeds up AreaStores
+    ENABLE_SOUND=ON            - Build with OpenAL, libogg & libvorbis; in-game sounds
+    ENABLE_LUAJIT=ON           - Build with LuaJIT (much faster than non-JIT Lua)
+    ENABLE_SYSTEM_GMP=ON       - Use GMP from system (much faster than bundled mini-gmp)
+    ENABLE_SYSTEM_JSONCPP=OFF  - Use JsonCPP from system
+    OPENGL_GL_PREFERENCE=LEGACY - Linux client build only; See CMake Policy CMP0072 for reference
+    RUN_IN_PLACE=FALSE         - Create a portable install (worlds, settings etc. in current directory)
+    USE_GPROF=FALSE            - Enable profiling using GProf
+    VERSION_EXTRA=             - Text to append to version (e.g. VERSION_EXTRA=foobar -> Minetest 0.4.9-foobar)
 
 Library specific options:
-    
+
     BZIP2_INCLUDE_DIR               - Linux only; directory where bzlib.h is located
     BZIP2_LIBRARY                   - Linux only; path to libbz2.a/libbz2.so
     CURL_DLL                        - Only if building with cURL on Windows; path to libcurl.dll
@@ -216,15 +243,15 @@ Library specific options:
     CURL_LIBRARY                    - Only if building with cURL; path to libcurl.a/libcurl.so/libcurl.lib
     EGL_INCLUDE_DIR                 - Only if building with GLES; directory that contains egl.h
     EGL_LIBRARY                     - Only if building with GLES; path to libEGL.a/libEGL.so
-    FREETYPE_INCLUDE_DIR_freetype2  - Only if building with Freetype2; directory that contains an freetype directory with files such as ftimage.h in it
-    FREETYPE_INCLUDE_DIR_ft2build   - Only if building with Freetype2; directory that contains ft2build.h
-    FREETYPE_LIBRARY                - Only if building with Freetype2; path to libfreetype.a/libfreetype.so/freetype.lib
-    FREETYPE_DLL                    - Only if building with Freetype2 on Windows; path to libfreetype.dll
-    GETTEXT_DLL                     - Only when building with Gettext on Windows; path to libintl3.dll
-    GETTEXT_ICONV_DLL               - Only when building with Gettext on Windows; path to libiconv2.dll
-    GETTEXT_INCLUDE_DIR             - Only when building with Gettext; directory that contains iconv.h
-    GETTEXT_LIBRARY                 - Only when building with Gettext on Windows; path to libintl.dll.a
-    GETTEXT_MSGFMT                  - Only when building with Gettext; path to msgfmt/msgfmt.exe
+    FREETYPE_INCLUDE_DIR_freetype2  - Only if building with FreeType 2; directory that contains an freetype directory with files such as ftimage.h in it
+    FREETYPE_INCLUDE_DIR_ft2build   - Only if building with FreeType 2; directory that contains ft2build.h
+    FREETYPE_LIBRARY                - Only if building with FreeType 2; path to libfreetype.a/libfreetype.so/freetype.lib
+    FREETYPE_DLL                    - Only if building with FreeType 2 on Windows; path to libfreetype.dll
+    GETTEXT_DLL                     - Only when building with gettext on Windows; path to libintl3.dll
+    GETTEXT_ICONV_DLL               - Only when building with gettext on Windows; path to libiconv2.dll
+    GETTEXT_INCLUDE_DIR             - Only when building with gettext; directory that contains iconv.h
+    GETTEXT_LIBRARY                 - Only when building with gettext on Windows; path to libintl.dll.a
+    GETTEXT_MSGFMT                  - Only when building with gettext; path to msgfmt/msgfmt.exe
     IRRLICHT_DLL                    - Only on Windows; path to Irrlicht.dll
     IRRLICHT_INCLUDE_DIR            - Directory that contains IrrCompileConfig.h
     IRRLICHT_LIBRARY                - Path to libIrrlicht.a/libIrrlicht.so/libIrrlicht.dll.a/Irrlicht.lib
@@ -264,9 +291,9 @@ Library specific options:
 ### Compiling on Windows
 
 * This section is outdated. In addition to what is described here:
-  * In addition to minetest, you need to download minetest_game.
+  * In addition to minetest, you need to download [minetest_game](https://github.com/minetest/minetest_game).
   * If you wish to have sound support, you need libogg, libvorbis and libopenal
-  
+
 * You need:
 	* CMake:
 		http://www.cmake.org/cmake/resources/software.html
@@ -292,10 +319,10 @@ Library specific options:
 	* Download all the other stuff to DIR and extract them into there.
 	  ("extract here", not "extract to packagename/")
 	    * NOTE: zlib125dll.zip needs to be extracted into zlib125dll
-	    * NOTE: You need to extract sqlite3.h & sqlite3ext.h from sqlite3 source
-	      and sqlite3.dll & sqlite3.def from sqlite3 precompiled binaries
-	      into "sqlite3" directory, and generate sqlite3.lib using command
-	      "LIB /DEF:sqlite3.def /OUT:sqlite3.lib"
+	    * NOTE: You need to extract sqlite3.h & sqlite3ext.h from the SQLite 3
+	      source and sqlite3.dll & sqlite3.def from the SQLite 3 precompiled
+	      binaries into "sqlite3" directory, and generate sqlite3.lib using
+	      command "LIB /DEF:sqlite3.def /OUT:sqlite3.lib"
 	* All those packages contain a nice base directory in them, which
 	  should end up being the direct subdirectories of DIR.
 	* You will end up with a directory structure like this (+=dir, -=file):
@@ -345,7 +372,7 @@ Library specific options:
 	* It will warn about missing stuff, ignore that at this point. (later don't)
 	* Make sure the configuration is as follows
 	  (note that the versions may differ for you):
-	  
+
                 BUILD_CLIENT             [X]
                 BUILD_SERVER             [ ]
                 CMAKE_BUILD_TYPE         Release
@@ -360,7 +387,7 @@ Library specific options:
                 GETTEXT_INCLUDE_DIR      DIR/gettext/include
                 GETTEXT_LIBRARIES        DIR/gettext/lib/intl.lib
                 GETTEXT_MSGFMT           DIR/gettext/bin/msgfmt
-	
+
 	* If CMake complains it couldn't find SQLITE3, choose "Advanced" box on the
 	  right top corner, then specify the location of SQLITE3_INCLUDE_DIR and
 	  SQLITE3_LIBRARY manually.
@@ -396,7 +423,7 @@ This is how we build Windows releases.
     set sourcedir=%CD%
     set installpath="C:\tmp\minetest_install"
     set irrlichtpath="C:\tmp\irrlicht-1.7.2"
-    
+
     set builddir=%sourcedir%\bvc10
     mkdir %builddir%
     pushd %builddir%
@@ -411,18 +438,63 @@ This is how we build Windows releases.
     popd
     echo Finished.
     exit /b 0
-    
+
     :fail
     popd
     echo Failed.
     exit /b 1
 
+### Windows Installer using WIX Toolset
+
+Requirements:
+* Visual Studio 2017
+* Wix Toolset
+
+In Visual Studio 2017 Installer select "Optional Features" -> "Wix Toolset"
+
+Build the binaries like described above, but make sure you unselect "RUN_IN_PLACE".
+
+Open the generated Project file with VS. Right click "PACKAGE" and choose "Generate".
+It may take some minutes to generate the installer.
+
+
+Docker
+------
+We provide Minetest server docker images using the Gitlab mirror registry.
+
+Images are built on each commit and available using the following tag scheme:
+
+* `registry.gitlab.com/minetest/minetest/server:latest` (latest build)
+* `registry.gitlab.com/minetest/minetest/server:<branch/tag>` (current branch or current tag)
+* `registry.gitlab.com/minetest/minetest/server:<commit-id>` (current commit id)
+
+If you want to test it on a docker server, you can easily run:
+
+	sudo docker run registry.gitlab.com/minetest/minetest/server:<docker tag>
+
+If you want to use it in a production environment you should use volumes bound to the docker host
+to persist data and modify the configuration:
+
+	sudo docker create -v /home/minetest/data/:/var/lib/minetest/ -v /home/minetest/conf/:/etc/minetest/ registry.gitlab.com/minetest/minetest/server:master
+
+Data will be written to `/home/minetest/data` on the host, and configuration will be read from `/home/minetest/conf/minetest.conf`.
+
+Note: If you don't understand the previous commands, please read the official Docker documentation before use.
+
+You can also host your minetest server inside a Kubernetes cluster. See our example implementation in `misc/kubernetes.yml`.
+
+
 Version scheme
 --------------
+We use `major.minor.patch` since 5.0.0-dev. Prior to that we used `0.major.minor`.
 
-Minetest doesn't follow semver. Instead, we do something roughly similar to 0.major.minor.
+- Major is incremented when the release contains breaking changes, all other
+numbers are set to 0.
+- Minor is incremented when the release contains new non-breaking features,
+patch is set to 0.
+- Patch is incremented when the release only contains bugfixes and very
+minor/trivial features considered necessary.
 
-Since 0.5.0-dev and 0.4.17-dev, the dev notation refers to the next release, 
-ie: 0.5.0-dev is the development version leading to 0.5.0.
-
-Prior to that, we used oldversion-dev.
+Since 5.0.0-dev and 0.4.17-dev, the dev notation refers to the next release,
+i.e.: 5.0.0-dev is the development version leading to 5.0.0.
+Prior to that we used `previous_version-dev`.

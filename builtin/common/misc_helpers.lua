@@ -120,7 +120,12 @@ end
 -- The dumped and level arguments are internal-only.
 
 function dump(o, indent, nested, level)
-	if type(o) ~= "table" then
+	local t = type(o)
+	if not level and t == "userdata" then
+		-- when userdata (e.g. player) is passed directly, print its metatable:
+		return "userdata metatable: " .. dump(getmetatable(o))
+	end
+	if t ~= "table" then
 		return basic_dump(o)
 	end
 	-- Contains table -> true/nil of currently nested tables
@@ -161,9 +166,9 @@ end
 --------------------------------------------------------------------------------
 function string.split(str, delim, include_empty, max_splits, sep_is_pattern)
 	delim = delim or ","
-	max_splits = max_splits or -1
+	max_splits = max_splits or -2
 	local items = {}
-	local pos, len, seplen = 1, #str, #delim
+	local pos, len = 1, #str
 	local plain = not sep_is_pattern
 	max_splits = max_splits + 1
 	repeat
@@ -236,6 +241,20 @@ function math.sign(x, tolerance)
 		return -1
 	end
 	return 0
+end
+
+--------------------------------------------------------------------------------
+function math.factorial(x)
+	assert(x % 1 == 0 and x >= 0, "factorial expects a non-negative integer")
+	if x >= 171 then
+		-- 171! is greater than the biggest double, no need to calculate
+		return math.huge
+	end
+	local v = 1
+	for k = 2, x do
+		v = v * k
+	end
+	return v
 end
 
 --------------------------------------------------------------------------------
@@ -336,7 +355,7 @@ if INIT == "game" then
 	local dirs2 = {20, 23, 22, 21}
 
 	function core.rotate_and_place(itemstack, placer, pointed_thing,
-				infinitestacks, orient_flags)
+			infinitestacks, orient_flags, prevent_after_place)
 		orient_flags = orient_flags or {}
 
 		local unode = core.get_node_or_nil(pointed_thing.under)
@@ -345,39 +364,18 @@ if INIT == "game" then
 		end
 		local undef = core.registered_nodes[unode.name]
 		if undef and undef.on_rightclick then
-			undef.on_rightclick(pointed_thing.under, unode, placer,
+			return undef.on_rightclick(pointed_thing.under, unode, placer,
 					itemstack, pointed_thing)
-			return
 		end
 		local fdir = placer and core.dir_to_facedir(placer:get_look_dir()) or 0
-		local wield_name = itemstack:get_name()
 
 		local above = pointed_thing.above
 		local under = pointed_thing.under
 		local iswall = (above.y == under.y)
 		local isceiling = not iswall and (above.y < under.y)
-		local anode = core.get_node_or_nil(above)
-		if not anode then
-			return
-		end
-		local pos = pointed_thing.above
-		local node = anode
 
 		if undef and undef.buildable_to then
-			pos = pointed_thing.under
-			node = unode
 			iswall = false
-		end
-
-		local name = placer and placer:get_player_name() or ""
-		if core.is_protected(pos, name) then
-			core.record_protection_violation(pos, name)
-			return
-		end
-
-		local ndef = core.registered_nodes[node.name]
-		if not ndef or not ndef.buildable_to then
-			return
 		end
 
 		if orient_flags.force_floor then
@@ -393,31 +391,26 @@ if INIT == "game" then
 			iswall = not iswall
 		end
 
+		local param2 = fdir
 		if iswall then
-			core.set_node(pos, {name = wield_name,
-					param2 = dirs1[fdir + 1]})
+			param2 = dirs1[fdir + 1]
 		elseif isceiling then
 			if orient_flags.force_facedir then
-				core.set_node(pos, {name = wield_name,
-						param2 = 20})
+				param2 = 20
 			else
-				core.set_node(pos, {name = wield_name,
-						param2 = dirs2[fdir + 1]})
+				param2 = dirs2[fdir + 1]
 			end
 		else -- place right side up
 			if orient_flags.force_facedir then
-				core.set_node(pos, {name = wield_name,
-						param2 = 0})
-			else
-				core.set_node(pos, {name = wield_name,
-						param2 = fdir})
+				param2 = 0
 			end
 		end
 
-		if not infinitestacks then
-			itemstack:take_item()
-			return itemstack
-		end
+		local old_itemstack = ItemStack(itemstack)
+		local new_itemstack, removed = core.item_place_node(
+			itemstack, placer, pointed_thing, param2, prevent_after_place
+		)
+		return infinitestacks and old_itemstack or new_itemstack
 	end
 
 
@@ -436,7 +429,7 @@ if INIT == "game" then
 		local invert_wall = placer and placer:get_player_control().sneak or false
 		core.rotate_and_place(itemstack, placer, pointed_thing,
 				is_creative(name),
-				{invert_wall = invert_wall})
+				{invert_wall = invert_wall}, true)
 		return itemstack
 	end
 end
@@ -516,7 +509,7 @@ function core.string_to_pos(value)
 		p.z = tonumber(p.z)
 		return p
 	end
-	local p = {}
+	p = {}
 	p.x, p.y, p.z = string.match(value, "^%( *([%d.-]+)[, ] *([%d.-]+)[, ] *([%d.-]+) *%)$")
 	if p.x and p.y and p.z then
 		p.x = tonumber(p.x)
@@ -572,12 +565,22 @@ function table.copy(t, seen)
 	end
 	return n
 end
+
+
+function table.insert_all(t, other)
+	for i=1, #other do
+		t[#t + 1] = other[i]
+	end
+	return t
+end
+
+
 --------------------------------------------------------------------------------
 -- mainmenu only functions
 --------------------------------------------------------------------------------
 if INIT == "mainmenu" then
 	function core.get_game(index)
-		local games = game.get_games()
+		local games = core.get_games()
 
 		if index > 0 and index <= #games then
 			return games[index]
@@ -696,6 +699,13 @@ end
 -- Returns the exact coordinate of a pointed surface
 --------------------------------------------------------------------------------
 function core.pointed_thing_to_face_pos(placer, pointed_thing)
+	-- Avoid crash in some situations when player is inside a node, causing
+	-- 'above' to equal 'under'.
+	if vector.equals(pointed_thing.above, pointed_thing.under) then
+		return pointed_thing.under
+	end
+
+	local eye_height = placer:get_properties().eye_height
 	local eye_offset_first = placer:get_eye_offset()
 	local node_pos = pointed_thing.under
 	local camera_pos = placer:get_pos()
@@ -715,7 +725,7 @@ function core.pointed_thing_to_face_pos(placer, pointed_thing)
 	end
 
 	local fine_pos = {[nc] = node_pos[nc] + offset}
-	camera_pos.y = camera_pos.y + 1.625 + eye_offset_first.y / 10
+	camera_pos.y = camera_pos.y + eye_height + eye_offset_first.y / 10
 	local f = (node_pos[nc] + offset - camera_pos[nc]) / look_dir[nc]
 
 	for i = 1, #oc do

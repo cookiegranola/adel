@@ -1,8 +1,8 @@
 /*
 Minetest
-Copyright (C) 2010-2016 paramat, Matt Gregory
-Copyright (C) 2010-2016 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
-Copyright (C) 2017 vlapsley, Vaughan Lapsley <vlapsley@gmail.com>
+Copyright (C) 2017-2018 vlapsley, Vaughan Lapsley <vlapsley@gmail.com>
+Copyright (C) 2010-2018 paramat
+Copyright (C) 2010-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -33,6 +33,8 @@ extern FlagDesc flagdesc_mapgen_carpathian[];
 
 struct MapgenCarpathianParams : public MapgenParams
 {
+	float base_level       = 12.0f;
+
 	u32 spflags            = MGCARPATHIAN_CAVERNS;
 	float cave_width       = 0.09f;
 	s16 large_cave_depth   = -33;
@@ -40,8 +42,9 @@ struct MapgenCarpathianParams : public MapgenParams
 	s16 cavern_limit       = -256;
 	s16 cavern_taper       = 256;
 	float cavern_threshold = 0.7f;
+	s16 dungeon_ymin       = -31000;
+	s16 dungeon_ymax       = 31000;
 
-	NoiseParams np_base;
 	NoiseParams np_filler_depth;
 	NoiseParams np_height1;
 	NoiseParams np_height2;
@@ -68,8 +71,7 @@ struct MapgenCarpathianParams : public MapgenParams
 class MapgenCarpathian : public MapgenBasic
 {
 public:
-	MapgenCarpathian(int mapgenid, MapgenCarpathianParams *params,
-			EmergeManager *emerge);
+	MapgenCarpathian(MapgenCarpathianParams *params, EmergeManager *emerge);
 	~MapgenCarpathian();
 
 	virtual MapgenType getType() const { return MAPGEN_CARPATHIAN; }
@@ -81,10 +83,13 @@ public:
 	int getSpawnLevelAtPoint(v2s16 p);
 
 private:
-	s16 large_cave_depth;
+	float base_level;
 	s32 grad_wl;
 
-	Noise *noise_base;
+	s16 large_cave_depth;
+	s16 dungeon_ymin;
+	s16 dungeon_ymax;
+
 	Noise *noise_height1;
 	Noise *noise_height2;
 	Noise *noise_height3;

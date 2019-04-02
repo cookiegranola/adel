@@ -18,12 +18,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "collision.h"
+#include <cmath>
 #include "mapblock.h"
 #include "map.h"
 #include "nodedef.h"
 #include "gamedef.h"
 #ifndef SERVER
-#include "clientenvironment.h"
+#include "client/clientenvironment.h"
 #endif
 #include "serverenvironment.h"
 #include "serverobject.h"
@@ -202,8 +203,8 @@ bool wouldCollideWithCeiling(
 	return false;
 }
 
-static inline void getNeighborConnectingFace(const v3s16 &p, INodeDefManager *nodedef,
-		Map *map, MapNode n, int v, int *neighbors)
+static inline void getNeighborConnectingFace(const v3s16 &p,
+	const NodeDefManager *nodedef, Map *map, MapNode n, int v, int *neighbors)
 {
 	MapNode n2 = map->getNodeNoEx(p);
 	if (nodedef->nodeboxConnects(n, n2, v))
@@ -279,11 +280,11 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 		bool is_position_valid;
 		MapNode n = map->getNodeNoEx(p, &is_position_valid);
 
-		if (is_position_valid) {
+		if (is_position_valid && n.getContent() != CONTENT_IGNORE) {
 			// Object collides into walkable nodes
 
 			any_position_valid = true;
-			INodeDefManager *nodedef = gamedef->getNodeDefManager();
+			const NodeDefManager *nodedef = gamedef->getNodeDefManager();
 			const ContentFeatures &f = nodedef->get(n);
 
 			if (!f.walkable)
@@ -321,13 +322,17 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 			}
 			std::vector<aabb3f> nodeboxes;
 			n.getCollisionBoxes(gamedef->ndef(), &nodeboxes, neighbors);
+
+			// Calculate float position only once
+			v3f posf = intToFloat(p, BS);
 			for (auto box : nodeboxes) {
-				box.MinEdge += intToFloat(p, BS);
-				box.MaxEdge += intToFloat(p, BS);
+				box.MinEdge += posf;
+				box.MaxEdge += posf;
 				cinfo.emplace_back(false, false, n_bouncy_value, p, box);
 			}
 		} else {
-			// Collide with unloaded nodes
+			// Collide with unloaded nodes (position invalid) and loaded
+			// CONTENT_IGNORE nodes (position valid)
 			aabb3f box = getNodeBox(p, BS);
 			cinfo.emplace_back(true, false, 0, p, box);
 		}
@@ -335,6 +340,8 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 
 	// Do not move if world has not loaded yet, since custom node boxes
 	// are not available for collision detection.
+	// This also intentionally occurs in the case of the object being positioned
+	// solely on loaded CONTENT_IGNORE nodes, no matter where they come from.
 	if (!any_position_valid) {
 		*speed_f = v3f(0, 0, 0);
 		return result;
@@ -353,11 +360,16 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 #ifndef SERVER
 		ClientEnvironment *c_env = dynamic_cast<ClientEnvironment*>(env);
 		if (c_env != 0) {
-			f32 distance = speed_f->getLength();
+			// Calculate distance by speed, add own extent and 1.5m of tolerance
+			f32 distance = speed_f->getLength() * dtime +
+				box_0.getExtent().getLength() + 1.5f * BS;
 			std::vector<DistanceSortedActiveObject> clientobjects;
-			c_env->getActiveObjects(*pos_f, distance * 1.5f, clientobjects);
+			c_env->getActiveObjects(*pos_f, distance, clientobjects);
+
 			for (auto &clientobject : clientobjects) {
-				if (!self || (self != clientobject.obj)) {
+				// Do collide with everything but itself and the parent CAO
+				if (!self || (self != clientobject.obj &&
+						self != clientobject.obj->getParent())) {
 					objects.push_back((ActiveObject*) clientobject.obj);
 				}
 			}
@@ -367,12 +379,17 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 		{
 			ServerEnvironment *s_env = dynamic_cast<ServerEnvironment*>(env);
 			if (s_env != NULL) {
-				f32 distance = speed_f->getLength();
+				// Calculate distance by speed, add own extent and 1.5m of tolerance
+				f32 distance = speed_f->getLength() * dtime +
+					box_0.getExtent().getLength() + 1.5f * BS;
 				std::vector<u16> s_objects;
-				s_env->getObjectsInsideRadius(s_objects, *pos_f, distance * 1.5f);
+				s_env->getObjectsInsideRadius(s_objects, *pos_f, distance);
+
 				for (u16 obj_id : s_objects) {
 					ServerActiveObject *current = s_env->getActiveObject(obj_id);
-					if (!self || (self != current)) {
+
+					if (!self || (self != current &&
+							self != current->getParent())) {
 						objects.push_back((ActiveObject*)current);
 					}
 				}
@@ -433,7 +450,7 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 			Go through every nodebox, find nearest collision
 		*/
 		for (u32 boxindex = 0; boxindex < cinfo.size(); boxindex++) {
-			NearbyCollisionInfo box_info = cinfo[boxindex];
+			const NearbyCollisionInfo &box_info = cinfo[boxindex];
 			// Ignore if already stepped up this nodebox.
 			if (box_info.is_step_up)
 				continue;
@@ -498,6 +515,7 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 
 			info.node_p = nearest_info.position;
 			info.old_speed = *speed_f;
+			info.plane = nearest_collided;
 
 			// Set the speed component that caused the collision to zero
 			if (step_up) {
@@ -561,7 +579,7 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 				box.MinEdge += *pos_f;
 				box.MaxEdge += *pos_f;
 			}
-			if (fabs(cbox.MaxEdge.Y - box.MinEdge.Y) < 0.15f * BS) {
+			if (std::fabs(cbox.MaxEdge.Y - box.MinEdge.Y) < 0.15f * BS) {
 				result.touching_ground = true;
 
 				if (box_info.is_object)

@@ -134,8 +134,8 @@ void RemoteClient::GetNextBlocks (
 	// Camera position and direction
 	v3f camera_pos = sao->getEyePosition();
 	v3f camera_dir = v3f(0,0,1);
-	camera_dir.rotateYZBy(sao->getPitch());
-	camera_dir.rotateXZBy(sao->getYaw());
+	camera_dir.rotateYZBy(sao->getLookPitch());
+	camera_dir.rotateXZBy(sao->getRotation().Y);
 
 	/*infostream<<"camera_dir=("<<camera_dir.X<<","<<camera_dir.Y<<","
 			<<camera_dir.Z<<")"<<std::endl;*/
@@ -192,9 +192,33 @@ void RemoteClient::GetNextBlocks (
 	*/
 	s32 new_nearest_unsent_d = -1;
 
-	// get view range and camera fov from the client
+	// Get view range and camera fov (radians) from the client
 	s16 wanted_range = sao->getWantedRange() + 1;
 	float camera_fov = sao->getFov();
+
+	// Distrust client-sent FOV and get server-set player object property
+	// zoom FOV (degrees) as a check to avoid hacked clients using FOV to load
+	// distant world.
+	// (zoom is disabled by value 0)
+	float prop_zoom_fov = sao->getZoomFOV() < 0.001f ?
+		0.0f :
+		std::max(camera_fov, sao->getZoomFOV() * core::DEGTORAD);
+
+	const s16 full_d_max = std::min(adjustDist(m_max_send_distance, prop_zoom_fov),
+		wanted_range);
+	const s16 d_opt = std::min(adjustDist(m_block_optimize_distance, prop_zoom_fov),
+		wanted_range);
+	const s16 d_blocks_in_sight = full_d_max * BS * MAP_BLOCKSIZE;
+
+	s16 d_max = full_d_max;
+	s16 d_max_gen = std::min(adjustDist(m_max_gen_distance, prop_zoom_fov),
+		wanted_range);
+
+	// Don't loop very much at a time, adjust with distance,
+	// do more work per RTT with greater distances.
+	s16 max_d_increment_at_time = full_d_max / 9 + 1;
+	if (d_max > d_start + max_d_increment_at_time)
+		d_max = d_start + max_d_increment_at_time;
 
 	// cos(angle between velocity and camera) * |velocity|
 	// Limit to 0.0f in case player moves backwards.
@@ -203,19 +227,6 @@ void RemoteClient::GetNextBlocks (
 	// Reduce the field of view when a player moves and looks forward.
 	// limit max fov effect to 50%, 60% at 20n/s fly speed
 	camera_fov = camera_fov / (1 + dot / 300.0f);
-
-	const s16 full_d_max = std::min(m_max_send_distance, wanted_range);
-	const s16 d_opt = std::min(m_block_optimize_distance, wanted_range);
-	const s16 d_blocks_in_sight = full_d_max * BS * MAP_BLOCKSIZE;
-	//infostream << "Fov from client " << camera_fov << " full_d_max " << full_d_max << std::endl;
-
-	s16 d_max = full_d_max;
-	s16 d_max_gen = std::min(m_max_gen_distance, wanted_range);
-
-	// Don't loop very much at a time
-	s16 max_d_increment_at_time = 2;
-	if (d_max > d_start + max_d_increment_at_time)
-		d_max = d_start + max_d_increment_at_time;
 
 	s32 nearest_emerged_d = -1;
 	s32 nearest_emergefull_d = -1;
@@ -321,7 +332,7 @@ void RemoteClient::GetNextBlocks (
 					differs from day-time mesh.
 				*/
 				if (d >= d_opt) {
-					if (!block->getDayNightDiff())
+					if (!block->getIsUnderground() && !block->getDayNightDiff())
 						continue;
 				}
 
@@ -645,6 +656,15 @@ std::vector<session_t> ClientInterface::getClientIDs(ClientState min_state)
 	}
 
 	return reply;
+}
+
+void ClientInterface::markBlockposAsNotSent(const v3s16 &pos)
+{
+	MutexAutoLock clientslock(m_clients_mutex);
+	for (const auto &client : m_clients) {
+		if (client.second->getState() >= CS_Active)
+			client.second->SetBlockNotSent(pos);
+	}
 }
 
 /**

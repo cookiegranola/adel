@@ -1,7 +1,7 @@
 /*
 Minetest
-Copyright (C) 2014-2016 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
-Copyright (C) 2015-2017 paramat
+Copyright (C) 2014-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2015-2018 paramat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -137,8 +137,8 @@ void Schematic::blitToVManip(MMVManip *vm, v3s16 p, Rotation rot, bool force_pla
 		for (s16 z = 0; z != sz; z++) {
 			u32 i = z * i_step_z + y * ystride + i_start;
 			for (s16 x = 0; x != sx; x++, i += i_step_x) {
-				u32 vi = vm->m_area.index(p.X + x, y_map, p.Z + z);
-				if (!vm->m_area.contains(vi))
+				v3s16 pos(p.X + x, y_map, p.Z + z);
+				if (!vm->m_area.contains(pos))
 					continue;
 
 				if (schemdata[i].getContent() == CONTENT_IGNORE)
@@ -150,6 +150,7 @@ void Schematic::blitToVManip(MMVManip *vm, v3s16 p, Rotation rot, bool force_pla
 				if (placement_prob == MTSCHEM_PROB_NEVER)
 					continue;
 
+				u32 vi = vm->m_area.index(pos);
 				if (!force_place && !force_place_node) {
 					content_t c = vm->m_data[vi].getContent();
 					if (c != CONTENT_AIR && c != CONTENT_IGNORE)
@@ -188,15 +189,15 @@ bool Schematic::placeOnVManip(MMVManip *vm, v3s16 p, u32 flags,
 
 	//// Adjust placement position if necessary
 	if (flags & DECO_PLACE_CENTER_X)
-		p.X -= (s.X + 1) / 2;
+		p.X -= (s.X - 1) / 2;
 	if (flags & DECO_PLACE_CENTER_Y)
-		p.Y -= (s.Y + 1) / 2;
+		p.Y -= (s.Y - 1) / 2;
 	if (flags & DECO_PLACE_CENTER_Z)
-		p.Z -= (s.Z + 1) / 2;
+		p.Z -= (s.Z - 1) / 2;
 
 	blitToVManip(vm, p, rot, force_place);
 
-	return vm->m_area.contains(VoxelArea(p, p + s - v3s16(1,1,1)));
+	return vm->m_area.contains(VoxelArea(p, p + s - v3s16(1, 1, 1)));
 }
 
 void Schematic::placeOnMap(ServerMap *map, v3s16 p, u32 flags,
@@ -219,16 +220,16 @@ void Schematic::placeOnMap(ServerMap *map, v3s16 p, u32 flags,
 
 	//// Adjust placement position if necessary
 	if (flags & DECO_PLACE_CENTER_X)
-		p.X -= (s.X + 1) / 2;
+		p.X -= (s.X - 1) / 2;
 	if (flags & DECO_PLACE_CENTER_Y)
-		p.Y -= (s.Y + 1) / 2;
+		p.Y -= (s.Y - 1) / 2;
 	if (flags & DECO_PLACE_CENTER_Z)
-		p.Z -= (s.Z + 1) / 2;
+		p.Z -= (s.Z - 1) / 2;
 
 	//// Create VManip for effected area, emerge our area, modify area
 	//// inside VManip, then blit back.
 	v3s16 bp1 = getNodeBlockPos(p);
-	v3s16 bp2 = getNodeBlockPos(p + s - v3s16(1,1,1));
+	v3s16 bp2 = getNodeBlockPos(p + s - v3s16(1, 1, 1));
 
 	MMVManip vm(map);
 	vm.initialEmerge(bp1, bp2);
@@ -427,7 +428,7 @@ bool Schematic::serializeToLua(std::ostream *os,
 
 
 bool Schematic::loadSchematicFromFile(const std::string &filename,
-	INodeDefManager *ndef, StringMap *replace_names)
+	const NodeDefManager *ndef, StringMap *replace_names)
 {
 	std::ifstream is(filename.c_str(), std::ios_base::binary);
 	if (!is.good()) {
@@ -461,7 +462,7 @@ bool Schematic::loadSchematicFromFile(const std::string &filename,
 
 
 bool Schematic::saveSchematicToFile(const std::string &filename,
-	INodeDefManager *ndef)
+	const NodeDefManager *ndef)
 {
 	MapNode *orig_schemdata = schemdata;
 	std::vector<std::string> ndef_nodenames;
@@ -554,7 +555,7 @@ void Schematic::applyProbabilities(v3s16 p0,
 
 
 void generate_nodelist_and_update_ids(MapNode *nodes, size_t nodecount,
-	std::vector<std::string> *usednodes, INodeDefManager *ndef)
+	std::vector<std::string> *usednodes, const NodeDefManager *ndef)
 {
 	std::unordered_map<content_t, content_t> nodeidmap;
 	content_t numids = 0;

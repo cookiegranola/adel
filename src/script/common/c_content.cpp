@@ -191,7 +191,7 @@ void read_object_properties(lua_State *L, int index,
 
 	int hp_max = 0;
 	if (getintfield(L, -1, "hp_max", hp_max))
-		prop->hp_max = (s16)rangelim(hp_max, 0, S16_MAX);
+		prop->hp_max = (u16)rangelim(hp_max, 0, U16_MAX);
 
 	getintfield(L, -1, "breath_max", prop->breath_max);
 	getboolfield(L, -1, "physical", prop->physical);
@@ -218,8 +218,18 @@ void read_object_properties(lua_State *L, int index,
 	getstringfield(L, -1, "mesh", prop->mesh);
 
 	lua_getfield(L, -1, "visual_size");
-	if(lua_istable(L, -1))
-		prop->visual_size = read_v2f(L, -1);
+	if (lua_istable(L, -1)) {
+		// Backwards compatibility: Also accept { x = ?, y = ? }
+		v2f scale_xy = read_v2f(L, -1);
+
+		f32 scale_z = scale_xy.X;
+		lua_getfield(L, -1, "z");
+		if (lua_isnumber(L, -1))
+			scale_z = lua_tonumber(L, -1);
+		lua_pop(L, 1);
+
+		prop->visual_size = v3f(scale_xy.X, scale_xy.Y, scale_z);
+	}
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "textures");
@@ -265,7 +275,8 @@ void read_object_properties(lua_State *L, int index,
 	getboolfield(L, -1, "makes_footstep_sound", prop->makes_footstep_sound);
 	if (getfloatfield(L, -1, "stepheight", prop->stepheight))
 		prop->stepheight *= BS;
-	getboolfield(L, -1, "can_zoom", prop->can_zoom);
+
+	getfloatfield(L, -1, "eye_height", prop->eye_height);
 
 	getfloatfield(L, -1, "automatic_rotate", prop->automatic_rotate);
 	lua_getfield(L, -1, "automatic_face_movement_dir");
@@ -302,6 +313,9 @@ void read_object_properties(lua_State *L, int index,
 	if (!lua_isnil(L, -1))
 		prop->wield_item = read_item(L, -1, idef).getItemString();
 	lua_pop(L, 1);
+
+	getfloatfield(L, -1, "zoom_fov", prop->zoom_fov);
+	getboolfield(L, -1, "use_texture_alpha", prop->use_texture_alpha);
 }
 
 /******************************************************************************/
@@ -328,14 +342,14 @@ void push_object_properties(lua_State *L, ObjectProperties *prop)
 	lua_setfield(L, -2, "visual");
 	lua_pushlstring(L, prop->mesh.c_str(), prop->mesh.size());
 	lua_setfield(L, -2, "mesh");
-	push_v2f(L, prop->visual_size);
+	push_v3f(L, prop->visual_size);
 	lua_setfield(L, -2, "visual_size");
 
 	lua_newtable(L);
 	u16 i = 1;
 	for (const std::string &texture : prop->textures) {
 		lua_pushlstring(L, texture.c_str(), texture.size());
-		lua_rawseti(L, -2, i);
+		lua_rawseti(L, -2, i++);
 	}
 	lua_setfield(L, -2, "textures");
 
@@ -343,7 +357,7 @@ void push_object_properties(lua_State *L, ObjectProperties *prop)
 	i = 1;
 	for (const video::SColor &color : prop->colors) {
 		push_ARGB8(L, color);
-		lua_rawseti(L, -2, i);
+		lua_rawseti(L, -2, i++);
 	}
 	lua_setfield(L, -2, "colors");
 
@@ -357,9 +371,8 @@ void push_object_properties(lua_State *L, ObjectProperties *prop)
 	lua_setfield(L, -2, "makes_footstep_sound");
 	lua_pushnumber(L, prop->stepheight / BS);
 	lua_setfield(L, -2, "stepheight");
-	lua_pushboolean(L, prop->can_zoom);
-	lua_setfield(L, -2, "can_zoom");
-
+	lua_pushnumber(L, prop->eye_height);
+	lua_setfield(L, -2, "eye_height");
 	lua_pushnumber(L, prop->automatic_rotate);
 	lua_setfield(L, -2, "automatic_rotate");
 	if (prop->automatic_face_movement_dir)
@@ -383,6 +396,10 @@ void push_object_properties(lua_State *L, ObjectProperties *prop)
 	lua_setfield(L, -2, "static_save");
 	lua_pushlstring(L, prop->wield_item.c_str(), prop->wield_item.size());
 	lua_setfield(L, -2, "wield_item");
+	lua_pushnumber(L, prop->zoom_fov);
+	lua_setfield(L, -2, "zoom_fov");
+	lua_pushboolean(L, prop->use_texture_alpha);
+	lua_setfield(L, -2, "use_texture_alpha");
 }
 
 /******************************************************************************/
@@ -822,7 +839,7 @@ void push_content_features(lua_State *L, const ContentFeatures &c)
 	u16 i = 1;
 	for (const std::string &it : c.connects_to) {
 		lua_pushlstring(L, it.c_str(), it.size());
-		lua_rawseti(L, -2, i);
+		lua_rawseti(L, -2, i++);
 	}
 	lua_setfield(L, -2, "connects_to");
 
@@ -945,7 +962,7 @@ void push_box(lua_State *L, const std::vector<aabb3f> &box)
 	u8 i = 1;
 	for (const aabb3f &it : box) {
 		push_aabb3f(L, it);
-		lua_rawseti(L, -2, i);
+		lua_rawseti(L, -2, i++);
 	}
 }
 
@@ -1059,17 +1076,25 @@ NodeBox read_nodebox(lua_State *L, int index)
 		NODEBOXREADVEC(nodebox.connect_left, "connect_left");
 		NODEBOXREADVEC(nodebox.connect_back, "connect_back");
 		NODEBOXREADVEC(nodebox.connect_right, "connect_right");
+		NODEBOXREADVEC(nodebox.disconnected_top, "disconnected_top");
+		NODEBOXREADVEC(nodebox.disconnected_bottom, "disconnected_bottom");
+		NODEBOXREADVEC(nodebox.disconnected_front, "disconnected_front");
+		NODEBOXREADVEC(nodebox.disconnected_left, "disconnected_left");
+		NODEBOXREADVEC(nodebox.disconnected_back, "disconnected_back");
+		NODEBOXREADVEC(nodebox.disconnected_right, "disconnected_right");
+		NODEBOXREADVEC(nodebox.disconnected, "disconnected");
+		NODEBOXREADVEC(nodebox.disconnected_sides, "disconnected_sides");
 	}
 	return nodebox;
 }
 
 /******************************************************************************/
-MapNode readnode(lua_State *L, int index, INodeDefManager *ndef)
+MapNode readnode(lua_State *L, int index, const NodeDefManager *ndef)
 {
 	lua_getfield(L, index, "name");
 	if (!lua_isstring(L, -1))
 		throw LuaError("Node name is not set or is not a string!");
-	const char *name = lua_tostring(L, -1);
+	std::string name = lua_tostring(L, -1);
 	lua_pop(L, 1);
 
 	u8 param1 = 0;
@@ -1084,11 +1109,15 @@ MapNode readnode(lua_State *L, int index, INodeDefManager *ndef)
 		param2 = lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
-	return {ndef, name, param1, param2};
+	content_t id = CONTENT_IGNORE;
+	if (!ndef->getId(name, id))
+		throw LuaError("\"" + name + "\" is not a registered node!");
+
+	return {id, param1, param2};
 }
 
 /******************************************************************************/
-void pushnode(lua_State *L, const MapNode &n, INodeDefManager *ndef)
+void pushnode(lua_State *L, const MapNode &n, const NodeDefManager *ndef)
 {
 	lua_newtable(L);
 	lua_pushstring(L, ndef->get(n).name.c_str());
@@ -1743,7 +1772,8 @@ void read_json_value(lua_State *L, Json::Value &root, int index, u8 recursion)
 	lua_pop(L, 1); // Pop value
 }
 
-void push_pointed_thing(lua_State *L, const PointedThing &pointed, bool csm)
+void push_pointed_thing(lua_State *L, const PointedThing &pointed, bool csm,
+	bool hitpoint)
 {
 	lua_newtable(L);
 	if (pointed.type == POINTEDTHING_NODE) {
@@ -1768,6 +1798,14 @@ void push_pointed_thing(lua_State *L, const PointedThing &pointed, bool csm)
 		lua_pushstring(L, "nothing");
 		lua_setfield(L, -2, "type");
 	}
+	if (hitpoint && (pointed.type != POINTEDTHING_NOTHING)) {
+		push_v3f(L, pointed.intersection_point / BS); // convert to node coords
+		lua_setfield(L, -2, "intersection_point");
+		push_v3s16(L, pointed.intersection_normal);
+		lua_setfield(L, -2, "intersection_normal");
+		lua_pushinteger(L, pointed.box_id + 1); // change to Lua array index
+		lua_setfield(L, -2, "box_id");
+	}
 }
 
 void push_objectRef(lua_State *L, const u16 id)
@@ -1780,4 +1818,152 @@ void push_objectRef(lua_State *L, const u16 id)
 	lua_gettable(L, -2);
 	lua_remove(L, -2); // object_refs
 	lua_remove(L, -2); // core
+}
+
+void read_hud_element(lua_State *L, HudElement *elem)
+{
+	elem->type = (HudElementType)getenumfield(L, 2, "hud_elem_type",
+									es_HudElementType, HUD_ELEM_TEXT);
+
+	lua_getfield(L, 2, "position");
+	elem->pos = lua_istable(L, -1) ? read_v2f(L, -1) : v2f();
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "scale");
+	elem->scale = lua_istable(L, -1) ? read_v2f(L, -1) : v2f();
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "size");
+	elem->size = lua_istable(L, -1) ? read_v2s32(L, -1) : v2s32();
+	lua_pop(L, 1);
+
+	elem->name   = getstringfield_default(L, 2, "name", "");
+	elem->text   = getstringfield_default(L, 2, "text", "");
+	elem->number = getintfield_default(L, 2, "number", 0);
+	elem->item   = getintfield_default(L, 2, "item", 0);
+	elem->dir    = getintfield_default(L, 2, "direction", 0);
+
+	// Deprecated, only for compatibility's sake
+	if (elem->dir == 0)
+		elem->dir = getintfield_default(L, 2, "dir", 0);
+
+	lua_getfield(L, 2, "alignment");
+	elem->align = lua_istable(L, -1) ? read_v2f(L, -1) : v2f();
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "offset");
+	elem->offset = lua_istable(L, -1) ? read_v2f(L, -1) : v2f();
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "world_pos");
+	elem->world_pos = lua_istable(L, -1) ? read_v3f(L, -1) : v3f();
+	lua_pop(L, 1);
+
+	/* check for known deprecated element usage */
+	if ((elem->type  == HUD_ELEM_STATBAR) && (elem->size == v2s32()))
+		log_deprecated(L,"Deprecated usage of statbar without size!");
+}
+
+void push_hud_element(lua_State *L, HudElement *elem)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, es_HudElementType[(u8)elem->type].str);
+	lua_setfield(L, -2, "type");
+
+	push_v2f(L, elem->pos);
+	lua_setfield(L, -2, "position");
+
+	lua_pushstring(L, elem->name.c_str());
+	lua_setfield(L, -2, "name");
+
+	push_v2f(L, elem->scale);
+	lua_setfield(L, -2, "scale");
+
+	lua_pushstring(L, elem->text.c_str());
+	lua_setfield(L, -2, "text");
+
+	lua_pushnumber(L, elem->number);
+	lua_setfield(L, -2, "number");
+
+	lua_pushnumber(L, elem->item);
+	lua_setfield(L, -2, "item");
+
+	lua_pushnumber(L, elem->dir);
+	lua_setfield(L, -2, "direction");
+
+	push_v2f(L, elem->offset);
+	lua_setfield(L, -2, "offset");
+
+	push_v2f(L, elem->align);
+	lua_setfield(L, -2, "alignment");
+
+	push_v2s32(L, elem->size);
+	lua_setfield(L, -2, "size");
+
+	// Deprecated, only for compatibility's sake
+	lua_pushnumber(L, elem->dir);
+	lua_setfield(L, -2, "dir");
+
+	push_v3f(L, elem->world_pos);
+	lua_setfield(L, -2, "world_pos");
+}
+
+HudElementStat read_hud_change(lua_State *L, HudElement *elem, void **value)
+{
+	HudElementStat stat = HUD_STAT_NUMBER;
+	if (lua_isstring(L, 3)) {
+		int statint;
+		std::string statstr = lua_tostring(L, 3);
+		stat = string_to_enum(es_HudElementStat, statint, statstr) ?
+				(HudElementStat)statint : stat;
+	}
+
+	switch (stat) {
+		case HUD_STAT_POS:
+			elem->pos = read_v2f(L, 4);
+			*value = &elem->pos;
+			break;
+		case HUD_STAT_NAME:
+			elem->name = luaL_checkstring(L, 4);
+			*value = &elem->name;
+			break;
+		case HUD_STAT_SCALE:
+			elem->scale = read_v2f(L, 4);
+			*value = &elem->scale;
+			break;
+		case HUD_STAT_TEXT:
+			elem->text = luaL_checkstring(L, 4);
+			*value = &elem->text;
+			break;
+		case HUD_STAT_NUMBER:
+			elem->number = luaL_checknumber(L, 4);
+			*value = &elem->number;
+			break;
+		case HUD_STAT_ITEM:
+			elem->item = luaL_checknumber(L, 4);
+			*value = &elem->item;
+			break;
+		case HUD_STAT_DIR:
+			elem->dir = luaL_checknumber(L, 4);
+			*value = &elem->dir;
+			break;
+		case HUD_STAT_ALIGN:
+			elem->align = read_v2f(L, 4);
+			*value = &elem->align;
+			break;
+		case HUD_STAT_OFFSET:
+			elem->offset = read_v2f(L, 4);
+			*value = &elem->offset;
+			break;
+		case HUD_STAT_WORLD_POS:
+			elem->world_pos = read_v3f(L, 4);
+			*value = &elem->world_pos;
+			break;
+		case HUD_STAT_SIZE:
+			elem->size = read_v2s32(L, 4);
+			*value = &elem->size;
+			break;
+	}
+	return stat;
 }

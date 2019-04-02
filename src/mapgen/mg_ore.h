@@ -1,7 +1,7 @@
 /*
 Minetest
-Copyright (C) 2014-2016 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
-Copyright (C) 2015-2017 paramat
+Copyright (C) 2014-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2015-2018 paramat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -35,6 +35,7 @@ class MMVManip;
 #define OREFLAG_PUFF_CLIFFS   0x02
 #define OREFLAG_PUFF_ADDITIVE 0x04
 #define OREFLAG_USE_NOISE     0x08
+#define OREFLAG_USE_NOISE2    0x10
 
 enum OreType {
 	ORE_SCATTER,
@@ -125,6 +126,7 @@ public:
 
 	float random_factor;
 	Noise *noise2 = nullptr;
+	int sizey_prev = 0;
 
 	OreVein() = default;
 	virtual ~OreVein();
@@ -139,6 +141,7 @@ public:
 
 	NoiseParams np_stratum_thickness;
 	Noise *noise_stratum_thickness = nullptr;
+	u16 stratum_thickness;
 
 	OreStratum() = default;
 	virtual ~OreStratum();

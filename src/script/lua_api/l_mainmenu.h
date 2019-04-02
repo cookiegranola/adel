@@ -53,11 +53,12 @@ private:
 	static int getBoolData(lua_State *L, std::string name,bool& valid);
 
 	/**
-	 * check if a path is within some of minetests folders
+	 * Checks if a path may be modified. Paths in the temp directory or the user
+	 * games, mods, textures, or worlds directories may be modified.
 	 * @param path path to check
-	 * @return true/false
+	 * @return true if the path may be modified
 	 */
-	static bool isMinetestPath(std::string path);
+	static bool mayModifyPath(const std::string &path);
 
 	//api calls
 
@@ -71,8 +72,6 @@ private:
 
 	static int l_get_worlds(lua_State *L);
 
-	static int l_get_games(lua_State *L);
-
 	static int l_get_mapgen_names(lua_State *L);
 
 	static int l_get_favorites(lua_State *L);
@@ -80,6 +79,12 @@ private:
 	static int l_delete_favorite(lua_State *L);
 
 	static int l_gettext(lua_State *L);
+
+	//packages
+
+	static int l_get_games(lua_State *L);
+
+	static int l_get_content_info(lua_State *L);
 
 	//gui
 
@@ -115,6 +120,8 @@ private:
 
 	static int l_get_texturepath_share(lua_State *L);
 
+	static int l_get_cache_path(lua_State *L);
+
 	static int l_create_dir(lua_State *L);
 
 	static int l_delete_dir(lua_State *L);
@@ -122,6 +129,8 @@ private:
 	static int l_copy_dir(lua_State *L);
 
 	static int l_extract_zip(lua_State *L);
+
+	static int l_may_modify_path(lua_State *L);
 
 	static int l_download_file(lua_State *L);
 

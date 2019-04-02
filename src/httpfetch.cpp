@@ -250,12 +250,16 @@ HTTPFetchOngoing::HTTPFetchOngoing(const HTTPFetchRequest &request_,
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 3);
 	curl_easy_setopt(curl, CURLOPT_ENCODING, "gzip");
 
 	std::string bind_address = g_settings->get("bind_address");
 	if (!bind_address.empty()) {
 		curl_easy_setopt(curl, CURLOPT_INTERFACE, bind_address.c_str());
+	}
+
+	if (!g_settings->getBool("enable_ipv6")) {
+		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 	}
 
 #if LIBCURL_VERSION_NUM >= 0x071304

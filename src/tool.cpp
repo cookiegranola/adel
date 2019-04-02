@@ -55,8 +55,8 @@ void ToolGroupCap::fromJson(const Json::Value &json)
 
 void ToolCapabilities::serialize(std::ostream &os, u16 protocol_version) const
 {
-	writeU8(os, 3); // protocol_version >= 36
-	writeF1000(os, full_punch_interval);
+	writeU8(os, 4); // protocol_version >= 37
+	writeF32(os, full_punch_interval);
 	writeS16(os, max_drop_level);
 	writeU32(os, groupcaps.size());
 	for (const auto &groupcap : groupcaps) {
@@ -68,7 +68,7 @@ void ToolCapabilities::serialize(std::ostream &os, u16 protocol_version) const
 		writeU32(os, cap->times.size());
 		for (const auto &time : cap->times) {
 			writeS16(os, time.first);
-			writeF1000(os, time.second);
+			writeF32(os, time.second);
 		}
 	}
 
@@ -83,10 +83,10 @@ void ToolCapabilities::serialize(std::ostream &os, u16 protocol_version) const
 void ToolCapabilities::deSerialize(std::istream &is)
 {
 	int version = readU8(is);
-	if (version < 3)
+	if (version < 4)
 		throw SerializationError("unsupported ToolCapabilities version");
 
-	full_punch_interval = readF1000(is);
+	full_punch_interval = readF32(is);
 	max_drop_level = readS16(is);
 	groupcaps.clear();
 	u32 groupcaps_size = readU32(is);
@@ -98,7 +98,7 @@ void ToolCapabilities::deSerialize(std::istream &is)
 		u32 times_size = readU32(is);
 		for(u32 i = 0; i < times_size; i++) {
 			int level = readS16(is);
-			float time = readF1000(is);
+			float time = readF32(is);
 			cap.times[level] = time;
 		}
 		groupcaps[name] = cap;
@@ -170,16 +170,13 @@ void ToolCapabilities::deserializeJson(std::istream &is)
 }
 
 DigParams getDigParams(const ItemGroupList &groups,
-		const ToolCapabilities *tp, float time_from_last_punch)
+		const ToolCapabilities *tp)
 {
-	//infostream<<"getDigParams"<<std::endl;
-	/* Check group dig_immediate */
-	switch(itemgroup_get(groups, "dig_immediate")){
+	// Group dig_immediate has fixed time and no wear
+	switch (itemgroup_get(groups, "dig_immediate")) {
 	case 2:
-		//infostream<<"dig_immediate=2"<<std::endl;
 		return DigParams(true, 0.5, 0, "dig_immediate");
 	case 3:
-		//infostream<<"dig_immediate=3"<<std::endl;
 		return DigParams(true, 0, 0, "dig_immediate");
 	default:
 		break;
@@ -192,46 +189,35 @@ DigParams getDigParams(const ItemGroupList &groups,
 	std::string result_main_group;
 
 	int level = itemgroup_get(groups, "level");
-	//infostream<<"level="<<level<<std::endl;
 	for (const auto &groupcap : tp->groupcaps) {
-		const std::string &name = groupcap.first;
-		//infostream<<"group="<<name<<std::endl;
 		const ToolGroupCap &cap = groupcap.second;
-		int rating = itemgroup_get(groups, name);
+
+		int leveldiff = cap.maxlevel - level;
+		if (leveldiff < 0)
+			continue;
+
+		const std::string &groupname = groupcap.first;
 		float time = 0;
+		int rating = itemgroup_get(groups, groupname);
 		bool time_exists = cap.getTime(rating, &time);
-		if(!result_diggable || time < result_time){
-			if(cap.maxlevel >= level && time_exists){
-				result_diggable = true;
-				int leveldiff = cap.maxlevel - level;
-				result_time = time / MYMAX(1, leveldiff);
-				if(cap.uses != 0)
-					result_wear = 1.0 / cap.uses / pow(3.0, (double)leveldiff);
-				else
-					result_wear = 0;
-				result_main_group = name;
-			}
+		if (!time_exists)
+			continue;
+
+		if (leveldiff > 1)
+			time /= leveldiff;
+		if (!result_diggable || time < result_time) {
+			result_time = time;
+			result_diggable = true;
+			if (cap.uses != 0)
+				result_wear = 1.0 / cap.uses / pow(3.0, leveldiff);
+			else
+				result_wear = 0;
+			result_main_group = groupname;
 		}
 	}
-	//infostream<<"result_diggable="<<result_diggable<<std::endl;
-	//infostream<<"result_time="<<result_time<<std::endl;
-	//infostream<<"result_wear="<<result_wear<<std::endl;
 
-	if(time_from_last_punch < tp->full_punch_interval){
-		float f = time_from_last_punch / tp->full_punch_interval;
-		//infostream<<"f="<<f<<std::endl;
-		result_time /= f;
-		result_wear /= f;
-	}
-
-	u16 wear_i = 65535.*result_wear;
+	u16 wear_i = U16_MAX * result_wear;
 	return DigParams(result_diggable, result_time, wear_i, result_main_group);
-}
-
-DigParams getDigParams(const ItemGroupList &groups,
-		const ToolCapabilities *tp)
-{
-	return getDigParams(groups, tp, 1000000);
 }
 
 HitParams getHitParams(const ItemGroupList &armor_groups,

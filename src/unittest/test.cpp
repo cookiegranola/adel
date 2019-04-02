@@ -19,12 +19,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "test.h"
 
+#include "client/sound.h"
 #include "nodedef.h"
 #include "itemdef.h"
 #include "gamedef.h"
 #include "modchannels.h"
-#include "mods.h"
+#include "content/mods.h"
 #include "util/numeric.h"
+#include "porting.h"
 
 content_t t_CONTENT_STONE;
 content_t t_CONTENT_GRASS;
@@ -45,12 +47,11 @@ public:
 	~TestGameDef();
 
 	IItemDefManager *getItemDefManager() { return m_itemdef; }
-	INodeDefManager *getNodeDefManager() { return m_nodedef; }
+	const NodeDefManager *getNodeDefManager() { return m_nodedef; }
 	ICraftDefManager *getCraftDefManager() { return m_craftdef; }
 	ITextureSource *getTextureSource() { return m_texturesrc; }
 	IShaderSource *getShaderSource() { return m_shadersrc; }
 	ISoundManager *getSoundManager() { return m_soundmgr; }
-	MtEventManager *getEventManager() { return m_eventmgr; }
 	scene::ISceneManager *getSceneManager() { return m_scenemgr; }
 	IRollbackManager *getRollbackManager() { return m_rollbackmgr; }
 	EmergeManager *getEmergeManager() { return m_emergemgr; }
@@ -80,12 +81,11 @@ public:
 
 private:
 	IItemDefManager *m_itemdef = nullptr;
-	INodeDefManager *m_nodedef = nullptr;
+	const NodeDefManager *m_nodedef = nullptr;
 	ICraftDefManager *m_craftdef = nullptr;
 	ITextureSource *m_texturesrc = nullptr;
 	IShaderSource *m_shadersrc = nullptr;
 	ISoundManager *m_soundmgr = nullptr;
-	MtEventManager *m_eventmgr = nullptr;
 	scene::ISceneManager *m_scenemgr = nullptr;
 	IRollbackManager *m_rollbackmgr = nullptr;
 	EmergeManager *m_emergemgr = nullptr;
@@ -113,7 +113,7 @@ TestGameDef::~TestGameDef()
 void TestGameDef::defineSomeNodes()
 {
 	IWritableItemDefManager *idef = (IWritableItemDefManager *)m_itemdef;
-	IWritableNodeDefManager *ndef = (IWritableNodeDefManager *)m_nodedef;
+	NodeDefManager *ndef = (NodeDefManager *)m_nodedef;
 
 	ItemDefinition itemdef;
 	ContentFeatures f;
@@ -324,7 +324,7 @@ std::string TestBase::getTestTempDirectory()
 		return m_test_dir;
 
 	char buf[32];
-	snprintf(buf, sizeof(buf), "%08X", myrand());
+	porting::mt_snprintf(buf, sizeof(buf), "%08X", myrand());
 
 	m_test_dir = fs::TempPath() + DIR_DELIM "mttest_" + buf;
 	if (!fs::CreateDir(m_test_dir))
@@ -336,7 +336,7 @@ std::string TestBase::getTestTempDirectory()
 std::string TestBase::getTestTempFile()
 {
 	char buf[32];
-	snprintf(buf, sizeof(buf), "%08X", myrand());
+	porting::mt_snprintf(buf, sizeof(buf), "%08X", myrand());
 
 	return getTestTempDirectory() + DIR_DELIM + buf + ".tmp";
 }

@@ -88,8 +88,8 @@ char *mystrtok_r(char *s, const char *sep, char **lasts);
 u64 read_seed(const char *str);
 void parseTextString(const std::string &value, std::string &text, std::string &params, 
 		const char sep, const char esc='\\');
-bool parseColorString(const std::string &value, video::SColor &color, bool quiet);
-
+bool parseColorString(const std::string &value, video::SColor &color, bool quiet,
+		unsigned char default_alpha = 0xff);
 
 /**
  * Returns a copy of \p str with spaces inserted at the right hand side to ensure
@@ -710,4 +710,23 @@ inline const std::string duration_to_string(int sec)
 	}
 
 	return ss.str();
+}
+
+/**
+ * Joins a vector of strings by the string \p delimiter.
+ *
+ * @return A std::string
+ */
+inline std::string str_join(const std::vector<std::string> &list,
+		const std::string &delimiter)
+{
+	std::ostringstream oss;
+	bool first = true;
+	for (const auto &part : list) {
+		if (!first)
+			oss << delimiter;
+		oss << part;
+		first = false;
+	}
+	return oss.str();
 }

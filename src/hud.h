@@ -1,6 +1,7 @@
 /*
 Minetest
 Copyright (C) 2010-2013 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2017 red-001 <red-001@outlook.ie>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -17,11 +18,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#pragma once
+#ifndef HUD_HEADER
+#define HUD_HEADER
 
 #include "irrlichttypes_extrabloated.h"
 #include "texture_pool.h"
 #include <string>
+#include "common/c_types.h"
 
 #define HUD_DIR_LEFT_RIGHT 0
 #define HUD_DIR_RIGHT_LEFT 1
@@ -48,7 +51,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define HUD_PARAM_HOTBAR_SELECTED_IMAGE 3
 
 #define HUD_HOTBAR_ITEMCOUNT_DEFAULT 8
-#define HUD_HOTBAR_ITEMCOUNT_MAX     23
+#define HUD_HOTBAR_ITEMCOUNT_MAX     32
 
 
 #define HOTBAR_IMAGE_SIZE 48

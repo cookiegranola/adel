@@ -1,7 +1,7 @@
 /*
 Minetest
 Copyright (C) 2010-2013 celeron55, Perttu Ahola <celeron55@gmail.com>
-Copyright (C) 2017 numzero, Lobachesky Vitaly <numzer0@yandex.ru>
+Copyright (C) 2017 numzero, Lobachevskiy Vitaliy <numzer0@yandex.ru>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -19,6 +19,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "pageflip.h"
+
+#ifdef STEREO_PAGEFLIP_SUPPORTED
 
 void RenderingCorePageflip::initTextures()
 {
@@ -53,3 +55,5 @@ void RenderingCorePageflip::resetEye()
 	driver->setRenderTarget(video::ERT_FRAME_BUFFER, false, false, skycolor);
 	RenderingCoreStereo::resetEye();
 }
+
+#endif // STEREO_PAGEFLIP_SUPPORTED

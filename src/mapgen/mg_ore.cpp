@@ -1,7 +1,7 @@
 /*
 Minetest
-Copyright (C) 2014-2016 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
-Copyright (C) 2015-2017 paramat
+Copyright (C) 2014-2018 kwolekr, Ryan Kwolek <kwolekr@minetest.net>
+Copyright (C) 2015-2018 paramat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "map.h"
 #include "log.h"
 #include "util/numeric.h"
+#include <cmath>
 #include <algorithm>
 
 
@@ -345,7 +346,7 @@ void OreBlob::generate(MMVManip *vm, int mapseed, u32 blockseed,
 			float ydist = (s32)y1 - (s32)csize / 2;
 			float zdist = (s32)z1 - (s32)csize / 2;
 
-			noiseval -= (sqrt(xdist * xdist + ydist * ydist + zdist * zdist) / csize);
+			noiseval -= std::sqrt(xdist * xdist + ydist * ydist + zdist * zdist) / csize;
 
 			if (noiseval < nthresh)
 				continue;
@@ -371,17 +372,23 @@ void OreVein::generate(MMVManip *vm, int mapseed, u32 blockseed,
 	PcgRandom pr(blockseed + 520);
 	MapNode n_ore(c_ore, 0, ore_param2);
 
-	u32 sizex = (nmax.X - nmin.X + 1);
-
-	if (!noise) {
-		int sx = nmax.X - nmin.X + 1;
-		int sy = nmax.Y - nmin.Y + 1;
-		int sz = nmax.Z - nmin.Z + 1;
-		noise  = new Noise(&np, mapseed, sx, sy, sz);
-		noise2 = new Noise(&np, mapseed + 436, sx, sy, sz);
+	int sizex = nmax.X - nmin.X + 1;
+	int sizey = nmax.Y - nmin.Y + 1;
+	// Because this ore uses 3D noise the perlinmap Y size can be different in
+	// different mapchunks due to ore Y limits. So recreate the noise objects
+	// if Y size has changed.
+	// Because these noise objects are created multiple times for this ore type
+	// it is necessary to 'delete' them here.
+	if (!noise || sizey != sizey_prev) {
+		delete noise;
+		delete noise2;
+		int sizez = nmax.Z - nmin.Z + 1;
+		noise  = new Noise(&np, mapseed, sizex, sizey, sizez);
+		noise2 = new Noise(&np, mapseed + 436, sizex, sizey, sizez);
+		sizey_prev = sizey;
 	}
-	bool noise_generated = false;
 
+	bool noise_generated = false;
 	size_t index = 0;
 	for (int z = nmin.Z; z <= nmax.Z; z++)
 	for (int y = nmin.Y; y <= nmax.Y; y++)
@@ -434,13 +441,20 @@ void OreStratum::generate(MMVManip *vm, int mapseed, u32 blockseed,
 	MapNode n_ore(c_ore, 0, ore_param2);
 
 	if (flags & OREFLAG_USE_NOISE) {
-		if (!(noise && noise_stratum_thickness)) {
+		if (!noise) {
 			int sx = nmax.X - nmin.X + 1;
 			int sz = nmax.Z - nmin.Z + 1;
 			noise = new Noise(&np, 0, sx, sz);
-			noise_stratum_thickness = new Noise(&np_stratum_thickness, 0, sx, sz);
 		}
 		noise->perlinMap2D(nmin.X, nmin.Z);
+	}
+
+	if (flags & OREFLAG_USE_NOISE2) {
+		if (!noise_stratum_thickness) {
+			int sx = nmax.X - nmin.X + 1;
+			int sz = nmax.Z - nmin.Z + 1;
+			noise_stratum_thickness = new Noise(&np_stratum_thickness, 0, sx, sz);
+		}
 		noise_stratum_thickness->perlinMap2D(nmin.X, nmin.Z);
 	}
 
@@ -458,11 +472,13 @@ void OreStratum::generate(MMVManip *vm, int mapseed, u32 blockseed,
 		int y1;
 
 		if (flags & OREFLAG_USE_NOISE) {
+			float nhalfthick = ((flags & OREFLAG_USE_NOISE2) ?
+				noise_stratum_thickness->result[index] : (float)stratum_thickness) /
+				2.0f;
 			float nmid = noise->result[index];
-			float nhalfthick = noise_stratum_thickness->result[index] / 2.0f;
-			y0 = MYMAX(nmin.Y, nmid - nhalfthick);
+			y0 = MYMAX(nmin.Y, std::ceil(nmid - nhalfthick));
 			y1 = MYMIN(nmax.Y, nmid + nhalfthick);
-		} else {
+		} else { // Simple horizontal stratum
 			y0 = nmin.Y;
 			y1 = nmax.Y;
 		}

@@ -204,7 +204,11 @@ local function formspec(tabview, name, tabdata)
 		"checkbox[4,0;cb_shaders;" .. fgettext("Shaders") .. ";"
 				.. dump(core.settings:get_bool("enable_shaders")) .. "]"
 
-	if PLATFORM == "Android" then
+	local video_driver = core.settings:get("video_driver")
+	local shaders_supported = video_driver == "opengl"
+	local shaders_enabled = false
+	if shaders_supported then
+		shaders_enabled = core.settings:get_bool("enable_shaders")
 		tab_string = tab_string ..
 			"image_button[8,4.75;3.75,0.8;" .. defaulttexturedir ..
 				"mainmenu_button_long.png;btn_reset_singleplayer;"
@@ -226,12 +230,13 @@ local function formspec(tabview, name, tabdata)
 
 	if core.settings:get("touchscreen_threshold") ~= nil then
 		tab_string = tab_string ..
-			"label[4.3,4.1;" .. fgettext("Touchthreshold (px)") .. "]" ..
-			"dropdown[3.85,4.55;3.85;dd_touchthreshold;0,10,20,30,40,50;" ..
-			((tonumber(core.settings:get("touchscreen_threshold")) / 10) + 1) .. "]"
+			"label[4.3,4.2;" .. fgettext("Touchthreshold: (px)") .. "]" ..
+			"dropdown[4.25,4.65;3.5;dd_touchthreshold;0,10,20,30,40,50;" ..
+			((tonumber(core.settings:get("touchscreen_threshold")) / 10) + 1) ..
+			"]box[4.0,4.5;3.75,1.0;#999999]"
 	end
 
-	if core.settings:get_bool("enable_shaders") then
+	if shaders_enabled then
 		tab_string = tab_string ..
 			"checkbox[4,0.5;cb_bumpmapping;" ..
 					fgettext("Bump Mapping") .. ";"

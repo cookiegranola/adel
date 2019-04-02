@@ -32,8 +32,6 @@
 #include <util/numeric.h>
 #include "intlGUIEditBox.h"
 
-#if defined(_IRR_COMPILE_WITH_GUI_) && IRRLICHT_VERSION_MAJOR == 1 && IRRLICHT_VERSION_MINOR < 9
-
 #include "IGUISkin.h"
 #include "IGUIEnvironment.h"
 #include "IGUIFont.h"
@@ -192,7 +190,6 @@ void intlGUIEditBox::enableOverrideColor(bool enable)
 
 bool intlGUIEditBox::isOverrideColorEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return OverrideColorEnabled;
 }
 
@@ -218,7 +215,6 @@ void intlGUIEditBox::updateAbsolutePosition()
 //! Checks if word wrap is enabled
 bool intlGUIEditBox::isWordWrapEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return WordWrap;
 }
 
@@ -233,7 +229,6 @@ void intlGUIEditBox::setMultiLine(bool enable)
 //! Checks if multi line editing is enabled
 bool intlGUIEditBox::isMultiLineEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return MultiLine;
 }
 
@@ -253,7 +248,6 @@ void intlGUIEditBox::setPasswordBox(bool passwordBox, wchar_t passwordChar)
 
 bool intlGUIEditBox::isPasswordBox() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return PasswordBox;
 }
 
@@ -286,7 +280,7 @@ bool intlGUIEditBox::OnEvent(const SEvent& event)
 			break;
 		case EET_KEY_INPUT_EVENT:
         {
-#if (defined(__linux__) || defined(__FreeBSD__))
+#if (defined(__linux__) || defined(__FreeBSD__)) || defined(__DragonFly__)
             // ################################################################
 			// ValkaTR:
             // This part is the difference from the original intlGUIEditBox
@@ -363,8 +357,7 @@ bool intlGUIEditBox::processKey(const SEvent& event)
 			break;
 		case KEY_KEY_X:
 			// cut to the clipboard
-			if (!PasswordBox && Operator && MarkBegin != MarkEnd)
-			{
+			if (!PasswordBox && Operator && MarkBegin != MarkEnd) {
 				const s32 realmbgn = MarkBegin < MarkEnd ? MarkBegin : MarkEnd;
 				const s32 realmend = MarkBegin < MarkEnd ? MarkEnd : MarkBegin;
 
@@ -373,8 +366,7 @@ bool intlGUIEditBox::processKey(const SEvent& event)
 				sc = Text.subString(realmbgn, realmend - realmbgn).c_str();
 				Operator->copyToClipboard(sc.c_str());
 
-				if (IsEnabled)
-				{
+				if (IsEnabled && m_writable) {
 					// delete
 					core::stringw s;
 					s = Text.subString(0, realmbgn);
@@ -389,7 +381,7 @@ bool intlGUIEditBox::processKey(const SEvent& event)
 			}
 			break;
 		case KEY_KEY_V:
-			if ( !IsEnabled )
+			if (!IsEnabled || !m_writable)
 				break;
 
 			// paste from the clipboard
@@ -645,7 +637,7 @@ bool intlGUIEditBox::processKey(const SEvent& event)
 		break;
 
 	case KEY_BACK:
-		if ( !this->IsEnabled )
+		if (!this->IsEnabled || !m_writable)
 			break;
 
 		if (!Text.empty()) {
@@ -684,7 +676,7 @@ bool intlGUIEditBox::processKey(const SEvent& event)
 		}
 		break;
 	case KEY_DELETE:
-		if ( !this->IsEnabled )
+		if (!this->IsEnabled || !m_writable)
 			break;
 
 		if (!Text.empty()) {
@@ -1002,7 +994,6 @@ void intlGUIEditBox::setAutoScroll(bool enable)
 //! \return true if automatic scrolling is enabled, false if not
 bool intlGUIEditBox::isAutoScrollEnabled() const
 {
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return AutoScroll;
 }
 
@@ -1106,7 +1097,7 @@ bool intlGUIEditBox::processMouse(const SEvent& event)
 		}
 		break;
 	case EMIE_MOUSE_WHEEL:
-		if (m_vscrollbar) {
+		if (m_vscrollbar && m_vscrollbar->isVisible()) {
 			s32 pos = m_vscrollbar->getPos();
 			s32 step = m_vscrollbar->getSmallStep();
 			m_vscrollbar->setPos(pos - event.MouseInput.Wheel * step);
@@ -1372,7 +1363,7 @@ s32 intlGUIEditBox::getLineFromPos(s32 pos)
 
 void intlGUIEditBox::inputChar(wchar_t c)
 {
-	if (!IsEnabled)
+	if (!IsEnabled || !m_writable)
 		return;
 
 	if (c != 0)
@@ -1451,6 +1442,9 @@ void intlGUIEditBox::calculateScrollPos()
 		// todo: adjust scrollbar
 	}
 
+	if (!WordWrap && !MultiLine)
+		return;
+
 	// vertical scroll position
 	if (FrameRect.LowerRightCorner.Y < CurrentTextRect.LowerRightCorner.Y + VScrollPos)
 		VScrollPos = CurrentTextRect.LowerRightCorner.Y - FrameRect.LowerRightCorner.Y + VScrollPos - 1;
@@ -1506,6 +1500,8 @@ void intlGUIEditBox::createVScrollBar()
 			}
 		}
 	}
+
+	RelativeRect.LowerRightCorner.X -= m_scrollbar_width + 4;
 
 	irr::core::rect<s32> scrollbarrect = FrameRect;
 	scrollbarrect.UpperLeftCorner.X += FrameRect.getWidth() - m_scrollbar_width;
@@ -1626,5 +1622,3 @@ void intlGUIEditBox::deserializeAttributes(io::IAttributes* in, io::SAttributeRe
 
 } // end namespace gui
 } // end namespace irr
-
-#endif // _IRR_COMPILE_WITH_GUI_

@@ -24,12 +24,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "irrlichttypes.h"
 
 class IItemDefManager;
-class INodeDefManager;
+class NodeDefManager;
 class ICraftDefManager;
 class ITextureSource;
-class ISoundManager;
 class IShaderSource;
-class MtEventManager;
 class IRollbackManager;
 class EmergeManager;
 class Camera;
@@ -53,13 +51,11 @@ public:
 	// These are thread-safe IF they are not edited while running threads.
 	// Thus, first they are set up and then they are only read.
 	virtual IItemDefManager* getItemDefManager()=0;
-	virtual INodeDefManager* getNodeDefManager()=0;
+	virtual const NodeDefManager* getNodeDefManager()=0;
 	virtual ICraftDefManager* getCraftDefManager()=0;
 
 	// Used for keeping track of names/ids of unknown nodes
 	virtual u16 allocateUnknownNodeId(const std::string &name)=0;
-
-	virtual MtEventManager* getEventManager()=0;
 
 	// Only usable on the server, and NOT thread-safe. It is usable from the
 	// environment thread.
@@ -67,10 +63,8 @@ public:
 
 	// Shorthands
 	IItemDefManager  *idef()     { return getItemDefManager(); }
-	INodeDefManager  *ndef()     { return getNodeDefManager(); }
+	const NodeDefManager  *ndef() { return getNodeDefManager(); }
 	ICraftDefManager *cdef()     { return getCraftDefManager(); }
-
-	MtEventManager   *event()    { return getEventManager(); }
 	IRollbackManager *rollback() { return getRollbackManager(); }
 
 	virtual const std::vector<ModSpec> &getMods() const = 0;

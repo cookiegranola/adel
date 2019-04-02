@@ -27,6 +27,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "log.h"
 #include "config.h"
 #include "porting.h"
+#ifdef __ANDROID__
+#include "settings.h" // For g_settings
+#endif
 
 namespace fs
 {
@@ -122,45 +125,32 @@ bool IsDirDelimiter(char c)
 
 bool RecursiveDelete(const std::string &path)
 {
-	infostream<<"Recursively deleting \""<<path<<"\""<<std::endl;
-
-	DWORD attr = GetFileAttributes(path.c_str());
-	bool is_directory = (attr != INVALID_FILE_ATTRIBUTES &&
-			(attr & FILE_ATTRIBUTE_DIRECTORY));
-	if(!is_directory)
-	{
-		infostream<<"RecursiveDelete: Deleting file "<<path<<std::endl;
-		//bool did = DeleteFile(path.c_str());
-		bool did = true;
-		if(!did){
-			errorstream<<"RecursiveDelete: Failed to delete file "
-					<<path<<std::endl;
+	infostream << "Recursively deleting \"" << path << "\"" << std::endl;
+	if (!IsDir(path)) {
+		infostream << "RecursiveDelete: Deleting file  " << path << std::endl;
+		if (!DeleteFile(path.c_str())) {
+			errorstream << "RecursiveDelete: Failed to delete file "
+					<< path << std::endl;
+			return false;
+		}
+		return true;
+	}
+	infostream << "RecursiveDelete: Deleting content of directory "
+			<< path << std::endl;
+	std::vector<DirListNode> content = GetDirListing(path);
+	for (const DirListNode &n: content) {
+		std::string fullpath = path + DIR_DELIM + n.name;
+		if (!RecursiveDelete(fullpath)) {
+			errorstream << "RecursiveDelete: Failed to recurse to "
+					<< fullpath << std::endl;
 			return false;
 		}
 	}
-	else
-	{
-		infostream<<"RecursiveDelete: Deleting content of directory "
-				<<path<<std::endl;
-		std::vector<DirListNode> content = GetDirListing(path);
-		for(size_t i=0; i<content.size(); i++){
-			const DirListNode &n = content[i];
-			std::string fullpath = path + DIR_DELIM + n.name;
-			bool did = RecursiveDelete(fullpath);
-			if(!did){
-				errorstream<<"RecursiveDelete: Failed to recurse to "
-						<<fullpath<<std::endl;
-				return false;
-			}
-		}
-		infostream<<"RecursiveDelete: Deleting directory "<<path<<std::endl;
-		//bool did = RemoveDirectory(path.c_str();
-		bool did = true;
-		if(!did){
-			errorstream<<"Failed to recursively delete directory "
-					<<path<<std::endl;
-			return false;
-		}
+	infostream << "RecursiveDelete: Deleting directory " << path << std::endl;
+	if (!RemoveDirectory(path.c_str())) {
+		errorstream << "Failed to recursively delete directory "
+				<< path << std::endl;
+		return false;
 	}
 	return true;
 }
@@ -313,9 +303,13 @@ bool RecursiveDelete(const std::string &path)
 	{
 		// Child
 		char argv_data[3][10000];
+#ifdef __ANDROID__
+		strcpy(argv_data[0], "/system/bin/rm");
+#else
 		strcpy(argv_data[0], "/bin/rm");
+#endif
 		strcpy(argv_data[1], "-rf");
-		strncpy(argv_data[2], path.c_str(), 10000);
+		strncpy(argv_data[2], path.c_str(), sizeof(argv_data[2]) - 1);
 		char *argv[4];
 		argv[0] = argv_data[0];
 		argv[1] = argv_data[1];
@@ -372,7 +366,7 @@ std::string TempPath()
 		configuration hardcodes mkstemp("/tmp/lua_XXXXXX").
 	*/
 #ifdef __ANDROID__
-	return DIR_DELIM "sdcard" DIR_DELIM PROJECT_NAME DIR_DELIM "tmp";
+	return g_settings->get("TMPFolder");
 #else
 	return DIR_DELIM "tmp";
 #endif
@@ -380,15 +374,36 @@ std::string TempPath()
 
 #endif
 
-void GetRecursiveSubPaths(const std::string &path, std::vector<std::string> &dst)
+void GetRecursiveDirs(std::vector<std::string> &dirs, const std::string &dir)
+{
+	static const std::set<char> chars_to_ignore = { '_', '.' };
+	if (dir.empty() || !IsDir(dir))
+		return;
+	dirs.push_back(dir);
+	fs::GetRecursiveSubPaths(dir, dirs, false, chars_to_ignore);
+}
+
+std::vector<std::string> GetRecursiveDirs(const std::string &dir)
+{
+	std::vector<std::string> result;
+	GetRecursiveDirs(result, dir);
+	return result;
+}
+
+void GetRecursiveSubPaths(const std::string &path,
+		  std::vector<std::string> &dst,
+		  bool list_files,
+		  const std::set<char> &ignore)
 {
 	std::vector<DirListNode> content = GetDirListing(path);
 	for (const auto &n : content) {
 		std::string fullpath = path + DIR_DELIM + n.name;
-		dst.push_back(fullpath);
-		if (n.dir) {
-			GetRecursiveSubPaths(fullpath, dst);
-		}
+		if (ignore.count(n.name[0]))
+			continue;
+		if (list_files || n.dir)
+			dst.push_back(fullpath);
+		if (n.dir)
+			GetRecursiveSubPaths(fullpath, dst, list_files, ignore);
 	}
 }
 

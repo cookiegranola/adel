@@ -493,7 +493,7 @@ void PathGridnode::setCost(v3s16 dir, const PathCost &cost)
 
 void GridNodeContainer::initNode(v3s16 ipos, PathGridnode *p_node)
 {
-	INodeDefManager *ndef = m_pathf->m_env->getGameDef()->ndef();
+	const NodeDefManager *ndef = m_pathf->m_env->getGameDef()->ndef();
 	PathGridnode &elem = *p_node;
 
 	v3s16 realpos = m_pathf->getRealPos(ipos);
@@ -707,6 +707,7 @@ std::vector<v3s16> Pathfinder::getPath(ServerEnvironment *env,
 
 		//finalize path
 		std::vector<v3s16> full_path;
+		full_path.reserve(path.size());
 		for (const v3s16 &i : path) {
 			full_path.push_back(getIndexElement(i).pos);
 		}
@@ -754,7 +755,7 @@ v3s16 Pathfinder::getRealPos(v3s16 ipos)
 /******************************************************************************/
 PathCost Pathfinder::calcCost(v3s16 pos, v3s16 dir)
 {
-	INodeDefManager *ndef = m_env->getGameDef()->ndef();
+	const NodeDefManager *ndef = m_env->getGameDef()->ndef();
 	PathCost retval;
 
 	retval.updated = true;

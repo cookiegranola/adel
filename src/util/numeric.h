@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "irr_v2d.h"
 #include "irr_v3d.h"
 #include "irr_aabb3d.h"
+#include <matrix4.h>
 
 #define rangelim(d, min, max) ((d) < (min) ? (min) : ((d) > (max) ? (max) : (d)))
 #define myfloor(x) ((x) < 0.0 ? (int)(x) - 1 : (int)(x))
@@ -182,6 +183,23 @@ inline float wrapDegrees_0_360(float f)
 }
 
 
+/** Returns \p v3f wrapped to the range [0, 360]
+  */
+inline v3f wrapDegrees_0_360_v3f(v3f v)
+{
+	v3f value_v3f;
+	value_v3f.X = modulo360f(v.X);
+	value_v3f.Y = modulo360f(v.Y);
+	value_v3f.Z = modulo360f(v.Z);
+
+	// Now that values are wrapped, use to get values for certain ranges
+	value_v3f.X = value_v3f.X < 0 ? value_v3f.X + 360 : value_v3f.X;
+	value_v3f.Y = value_v3f.Y < 0 ? value_v3f.Y + 360 : value_v3f.Y;
+	value_v3f.Z = value_v3f.Z < 0 ? value_v3f.Z + 360 : value_v3f.Z;
+	return value_v3f;
+}
+
+
 /** Returns \p f wrapped to the range [-180, 180]
   */
 inline float wrapDegrees_180(float f)
@@ -232,6 +250,8 @@ u64 murmur_hash_64_ua(const void *key, int len, unsigned int seed);
 bool isBlockInSight(v3s16 blockpos_b, v3f camera_pos, v3f camera_dir,
 		f32 camera_fov, f32 range, f32 *distance_ptr=NULL);
 
+s16 adjustDist(s16 dist, float zoom_fov);
+
 /*
 	Returns nearest 32-bit integer for given floating point number.
 	<cmath> and <math.h> in VC++ don't provide round().
@@ -241,10 +261,26 @@ inline s32 myround(f32 f)
 	return (s32)(f < 0.f ? (f - 0.5f) : (f + 0.5f));
 }
 
+inline constexpr f32 sqr(f32 f)
+{
+	return f * f;
+}
+
 /*
 	Returns integer position of node in given floating point position
 */
 inline v3s16 floatToInt(v3f p, f32 d)
+{
+	return v3s16(
+		(p.X + (p.X > 0 ? d / 2 : -d / 2)) / d,
+		(p.Y + (p.Y > 0 ? d / 2 : -d / 2)) / d,
+		(p.Z + (p.Z > 0 ? d / 2 : -d / 2)) / d);
+}
+
+/*
+	Returns integer position of node in given double precision position
+ */
+inline v3s16 doubleToInt(v3d p, double d)
 {
 	return v3s16(
 		(p.X + (p.X > 0 ? d / 2 : -d / 2)) / d,
@@ -362,4 +398,37 @@ inline u32 npot2(u32 orig) {
 	orig |= orig >> 8;
 	orig |= orig >> 16;
 	return orig + 1;
+}
+
+// Gradual steps towards the target value in a wrapped (circular) system
+// using the shorter of both ways
+template<typename T>
+inline void wrappedApproachShortest(T &current, const T target, const T stepsize,
+	const T maximum)
+{
+	T delta = target - current;
+	if (delta < 0)
+		delta += maximum;
+
+	if (delta > stepsize && maximum - delta > stepsize) {
+		current += (delta < maximum / 2) ? stepsize : -stepsize;
+		if (current >= maximum)
+			current -= maximum;
+	} else {
+		current = target;
+	}
+}
+
+void setPitchYawRollRad(core::matrix4 &m, const v3f &rot);
+
+inline void setPitchYawRoll(core::matrix4 &m, const v3f &rot)
+{
+	setPitchYawRollRad(m, rot * core::DEGTORAD64);
+}
+
+v3f getPitchYawRollRad(const core::matrix4 &m);
+
+inline v3f getPitchYawRoll(const core::matrix4 &m)
+{
+	return getPitchYawRollRad(m) * core::RADTODEG64;
 }
