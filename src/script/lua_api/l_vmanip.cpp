@@ -183,6 +183,7 @@ int LuaVoxelManip::l_update_liquids(lua_State *L)
 	mg.vm   = vm;
 	mg.ndef = ndef;
 
+	// &map->m_liquid_logic.scanArea()
 	mg.updateLiquid(&map->m_transforming_liquid,
 			vm->m_area.MinEdge, vm->m_area.MaxEdge);
 

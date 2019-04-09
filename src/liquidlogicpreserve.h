@@ -36,6 +36,7 @@ public:
 	void scanBlock(MapBlock *block);
 	void transform(std::map<v3s16, MapBlock*> &modified_blocks,
 		ServerEnvironment *env);
+	void LiquidLogicClassic::addTransformingFromData(BlockMakeData *data);
 
 private:
 	void setNodeLevel(

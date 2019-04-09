@@ -50,6 +50,13 @@ void LiquidLogicPreserve::addTransforming(v3s16 p) {
 	m_liquid_queue.push_back(p);
 }
 
+void LiquidLogicClassic::addTransformingFromData(BlockMakeData *data)
+	while (data->transforming_liquid.size()) {
+		m_liquid_queue.push_back(data->transforming_liquid.front());
+		data->transforming_liquid.pop_front();
+	}
+}
+
 void LiquidLogicPreserve::scanBlock(MapBlock *block)
 {
 	// Very basic scan: pushes all liquid blocks with PRESERVE logic

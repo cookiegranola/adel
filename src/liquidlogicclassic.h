@@ -35,13 +35,15 @@ public:
 	LiquidLogicClassic(Map *map, IGameDef *gamedef);
 	void addTransforming(v3s16 p);
 	void scanBlock(MapBlock *block);
+	void scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax);
 	void transform(std::map<v3s16, MapBlock*> &modified_blocks,
 		ServerEnvironment *env);
-
+	void addTransformingFromData(BlockMakeData *data);
 private:
 	MapBlock *lookupBlock(int x, int y, int z);
 	bool isLiquidFlowableTo(int x, int y, int z);
 	bool isLiquidHorizontallyFlowable(int x, int y, int z);
+	bool isLiquidHorizontallyFlowable(MMVManip *vm, u32 vi, v3s16 em);
 	void scanColumn(int x, int z);
 
 private:

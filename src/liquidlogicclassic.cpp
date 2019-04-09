@@ -63,10 +63,18 @@ LiquidLogicClassic::LiquidLogicClassic(Map *map, IGameDef *gamedef) :
 	m_ndef = m_map->getNodeDefManager();
 }
 
+void LiquidLogicClassic::addTransformingFromData(BlockMakeData *data)
+	while (data->transforming_liquid.size()) {
+		m_liquid_queue.push_back(data->transforming_liquid.front());
+		data->transforming_liquid.pop_front();
+	}
+}
+
 void LiquidLogicClassic::addTransforming(v3s16 p)
 {
 	m_liquid_queue.push_back(p);
 }
+
 
 void LiquidLogicClassic::scanBlock(MapBlock *block)
 {
@@ -122,13 +130,13 @@ inline MapBlock *LiquidLogicClassic::lookupBlock(int x, int y, int z)
 inline bool LiquidLogicClassic::isLiquidFlowableTo(int x, int y, int z)
 {
 	// Tests whether (x,y,z) is a node to which liquid might flow.
-	bool valid_position;
+	bool dummy;
 	MapBlock *block = lookupBlock(x, y, z);
 	if (block) {
 		int dx = (MAP_BLOCKSIZE + x) % MAP_BLOCKSIZE;
 		int dy = (MAP_BLOCKSIZE + y) % MAP_BLOCKSIZE;
 		int dz = (MAP_BLOCKSIZE + z) % MAP_BLOCKSIZE;
-		MapNode node = block->getNodeNoCheck(dx, dy, dz, &valid_position);
+		MapNode node = block->getNodeNoCheck(dx, dy, dz, &dummy);
 		if (node.getContent() != CONTENT_IGNORE) {
 			const ContentFeatures &f = m_ndef->get(node);
 			// NOTE: No need to check for flowing nodes with lower liquid level
@@ -152,7 +160,7 @@ inline bool LiquidLogicClassic::isLiquidHorizontallyFlowable(int x, int y, int z
 
 void LiquidLogicClassic::scanColumn(int x, int z)
 {
-	bool valid_position;
+	bool dummy;
 
 	// Is the column inside a loaded block?
 	MapBlock *block = lookupBlock(x, 0, z);
@@ -166,7 +174,7 @@ void LiquidLogicClassic::scanColumn(int x, int z)
 	// Get the state from the node above the scanned block
 	bool was_ignore, was_liquid;
 	if (above) {
-		MapNode node = above->getNodeNoCheck(dx, 0, dz, &valid_position);
+		MapNode node = above->getNodeNoCheck(dx, 0, dz, &dummy);
 		was_ignore = node.getContent() == CONTENT_IGNORE;
 		was_liquid = m_ndef->get(node).isLiquid();
 	} else {
@@ -178,7 +186,7 @@ void LiquidLogicClassic::scanColumn(int x, int z)
 
 	// Scan through the whole block
 	for (s16 y = MAP_BLOCKSIZE - 1; y >= 0; y--) {
-		MapNode node = block->getNodeNoCheck(dx, y, dz, &valid_position);
+		MapNode node = block->getNodeNoCheck(dx, y, dz, &dummy);
 		const ContentFeatures &f = m_ndef->get(node);
 		bool is_ignore = node.getContent() == CONTENT_IGNORE;
 		bool is_liquid = f.isLiquid();
@@ -216,7 +224,7 @@ void LiquidLogicClassic::scanColumn(int x, int z)
 	// Check the node below the current block
 	MapBlock *below = lookupBlock(x, -1, z);
 	if (below) {
-		MapNode node = below->getNodeNoCheck(dx, MAP_BLOCKSIZE - 1, dz, &valid_position);
+		MapNode node = below->getNodeNoCheck(dx, MAP_BLOCKSIZE - 1, dz, &dummy);
 		const ContentFeatures &f = m_ndef->get(node);
 		bool is_ignore = node.getContent() == CONTENT_IGNORE;
 		bool is_liquid = f.isLiquid();
@@ -240,6 +248,95 @@ void LiquidLogicClassic::scanColumn(int x, int z)
 		}
 	}
 }
+
+inline bool LiquidLogicPreserve::isLiquidHorizontallyFlowable(
+	MMVManip *vm, u32 vi, v3s16 em)
+{
+	u32 vi_neg_x = vi;
+	vm->m_area.add_x(em, vi_neg_x, -1);
+	if (vm->m_data[vi_neg_x].getContent() != CONTENT_IGNORE) {
+		const ContentFeatures &c_nx = ndef->get(vm->m_data[vi_neg_x]);
+		if (c_nx.floodable && !c_nx.isLiquid())
+			return true;
+	}
+	u32 vi_pos_x = vi;
+	vm->m_area.add_x(em, vi_pos_x, +1);
+	if (vm->m_data[vi_pos_x].getContent() != CONTENT_IGNORE) {
+		const ContentFeatures &c_px = ndef->get(vm->m_data[vi_pos_x]);
+		if (c_px.floodable && !c_px.isLiquid())
+			return true;
+	}
+	u32 vi_neg_z = vi;
+	vm->m_area.add_z(em, vi_neg_z, -1);
+	if (vm->m_data[vi_neg_z].getContent() != CONTENT_IGNORE) {
+		const ContentFeatures &c_nz = ndef->get(vm->m_data[vi_neg_z]);
+		if (c_nz.floodable && !c_nz.isLiquid())
+			return true;
+	}
+	u32 vi_pos_z = vi;
+	vm->m_area.add_z(em, vi_pos_z, +1);
+	if (vm->m_data[vi_pos_z].getContent() != CONTENT_IGNORE) {
+		const ContentFeatures &c_pz = ndef->get(vm->m_data[vi_pos_z]);
+		if (c_pz.floodable && !c_pz.isLiquid())
+			return true;
+	}
+	return false;
+}
+
+
+// This code is very similar to scanColumn
+// TODO: Factorize
+void LiquidLogicClassic::scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax)
+{
+	bool isignored, isliquid, wasignored, wasliquid, waschecked, waspushed;
+	const v3s16 &em  = vm->m_area.getExtent();
+
+	for (s16 z = nmin.Z + 1; z <= nmax.Z - 1; z++)
+	for (s16 x = nmin.X + 1; x <= nmax.X - 1; x++) {
+		wasignored = true;
+		wasliquid = false;
+		waschecked = false;
+		waspushed = false;
+
+		u32 vi = vm->m_area.index(x, nmax.Y, z);
+		for (s16 y = nmax.Y; y >= nmin.Y; y--) {
+			isignored = vm->m_data[vi].getContent() == CONTENT_IGNORE;
+			isliquid = ndef->get(vm->m_data[vi]).isLiquid();
+
+			if (isignored || wasignored || isliquid == wasliquid) {
+				// Neither topmost node of liquid column nor topmost node below column
+				waschecked = false;
+				waspushed = false;
+			} else if (isliquid) {
+				// This is the topmost node in the column
+				bool ispushed = false;
+				if (isLiquidHorizontallyFlowable(vm, vi, em)) {
+					m_liquid_queue.push_back(v3s16(x, y, z));
+					ispushed = true;
+				}
+				// Remember waschecked and waspushed to avoid repeated
+				// checks/pushes in case the column consists of only this node
+				waschecked = true;
+				waspushed = ispushed;
+			} else {
+				// This is the topmost node below a liquid column
+				u32 vi_above = vi;
+				vm->m_area.add_y(em, vi_above, 1);
+				if (!waspushed && (ndef->get(vm->m_data[vi]).floodable ||
+						(!waschecked && isLiquidHorizontallyFlowable(vm, vi_above, em)))) {
+					// Push back the lowest node in the column which is one
+					// node above this one
+					m_liquid_queue.push_back(v3s16(x, y + 1, z));
+				}
+			}
+
+			wasliquid = isliquid;
+			wasignored = isignored;
+			vm->m_area.add_y(em, vi, -1);
+		}
+	}
+}
+
 
 void LiquidLogicClassic::transform(
 	std::map<v3s16, MapBlock*> &modified_blocks,
