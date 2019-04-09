@@ -511,6 +511,7 @@ void Map::PrintInfo(std::ostream &out)
 	out<<"Map: ";
 }
 
+#if 0
 #define WATER_DROP_BOOST 4
 
 enum NeighborType {
@@ -536,7 +537,7 @@ struct NodeNeighbor {
 		  p(pos)
 	{ }
 };
-
+#endif
 void Map::transforming_liquid_add(v3s16 p) {
         m_transforming_liquid.push_back(p);
 }
