@@ -33,14 +33,14 @@ class MMVManip;
 class LiquidLogic {
 public:
 	LiquidLogic(Map *map, IGameDef *gamedef);
-	void addTransforming(v3s16 p);
-	void scanBlock(MapBlock *block);
-	void scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax);
-	void transform(std::map<v3s16, MapBlock*> &modified_blocks,
+	virtual void addTransforming(v3s16 p);
+	virtual void scanBlock(MapBlock *block);
+	virtual void scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax);
+	virtual void transform(std::map<v3s16, MapBlock*> &modified_blocks,
 		ServerEnvironment *env);
-	void addTransformingFromData(BlockMakeData *data);
+	virtual void addTransformingFromData(BlockMakeData *data);
 
-private:
+protected:
 	Map *m_map = nullptr;
 	IGameDef *m_gamedef = nullptr;
 	INodeDefManager *m_ndef = nullptr;

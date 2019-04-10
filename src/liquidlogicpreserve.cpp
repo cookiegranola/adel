@@ -29,6 +29,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "gamedef.h"
 #include "voxelalgorithms.h"
 
+
+void LiquidLogicPreserve::addTransformingFromData(BlockMakeData *data)
+{}
+
+
 const v3s16 side_4dirs[4] =
 {
 	v3s16( 0, 0, 1), // back

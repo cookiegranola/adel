@@ -39,7 +39,9 @@ void LiquidLogic::scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax)
 
 void LiquidLogic::transform(std::map<v3s16, MapBlock*> &modified_blocks,
 	ServerEnvironment *env)
-{ }
+{
+	printf("LiquidLogic transform\n");
+}
 
 void LiquidLogic::addTransformingFromData(BlockMakeData *data)
 { }

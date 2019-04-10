@@ -48,10 +48,6 @@ private:
 	void scanColumn(int x, int z);
 
 private:
-	Map *m_map = nullptr;
-	IGameDef *m_gamedef = nullptr;
-	INodeDefManager *m_ndef = nullptr;
-
 	UniqueQueue<v3s16> m_liquid_queue;
 	std::deque<v3s16> m_must_reflow;
 	std::vector<std::pair<v3s16, MapNode> > m_changed_nodes;

@@ -337,7 +337,6 @@ void LiquidLogicClassic::scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax)
 	}
 }
 
-
 void LiquidLogicClassic::transform(
 	std::map<v3s16, MapBlock*> &modified_blocks,
 	ServerEnvironment *env)

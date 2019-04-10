@@ -69,6 +69,7 @@ Map::Map(std::ostream &dout, IGameDef *gamedef):
 	m_gamedef(gamedef),
 	m_nodedef(gamedef->ndef())
 {
+	printf("liquid logic classic\n");
 	m_liquid_logic = new LiquidLogicClassic(this, gamedef);
 }
 
