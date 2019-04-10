@@ -46,7 +46,7 @@ class IGameDef;
 class IRollbackManager;
 class EmergeManager;
 class ServerEnvironment;
-class LiquidLogicClassic;
+class LiquidLogic;
 struct BlockMakeData;
 
 /*
@@ -293,6 +293,9 @@ public:
 //	s32 transforming_liquid_size();
 
 	bool isBlockOccluded(MapBlock *block, v3s16 cam_pos_nodes);
+
+	inline LiquidLogic * getLiquidLogic() { return m_liquid_logic; }
+
 protected:
 	friend class LuaVoxelManip;
 
@@ -317,7 +320,7 @@ protected:
 	bool isOccluded(v3s16 p0, v3s16 p1, float step, float stepfac,
 			float start_off, float end_off, u32 needed_count);
 
-	LiquidLogicClassic *m_liquid_logic;
+	LiquidLogic *m_liquid_logic;
 
 private:
 //	f32 m_transforming_liquid_loop_count_multiplier = 1.0f;

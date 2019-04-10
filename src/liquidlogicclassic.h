@@ -19,6 +19,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #pragma once
 
+#include "liquidlogic.h"
 #include "util/container.h"
 #include "irrlichttypes_bloated.h"
 
@@ -30,7 +31,7 @@ class MapBlock;
 class MapNode;
 
 
-class LiquidLogicClassic {
+class LiquidLogicClassic: public LiquidLogic {
 public:
 	LiquidLogicClassic(Map *map, IGameDef *gamedef);
 	void addTransforming(v3s16 p);

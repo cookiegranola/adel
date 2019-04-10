@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "mapblock.h"
 #include "nodedef.h"
 #include "porting.h"
-#include "util/timetaker.h"
+//#include "util/timetaker.h"
 #include "serverenvironment.h"
 #include "script/scripting_server.h"
 #include "rollback_interface.h"
@@ -40,21 +40,12 @@ const v3s16 side_4dirs[4] =
 const v3s16 down_dir = v3s16( 0,-1, 0);
 
 LiquidLogicPreserve::LiquidLogicPreserve(Map *map, IGameDef *gamedef) :
-	m_map(map),
-	m_gamedef(gamedef)
+	LiquidLogic(map, gamedef)
 {
-	m_ndef = m_map->getNodeDefManager();
 }
 
 void LiquidLogicPreserve::addTransforming(v3s16 p) {
 	m_liquid_queue.push_back(p);
-}
-
-void LiquidLogicClassic::addTransformingFromData(BlockMakeData *data)
-	while (data->transforming_liquid.size()) {
-		m_liquid_queue.push_back(data->transforming_liquid.front());
-		data->transforming_liquid.pop_front();
-	}
 }
 
 void LiquidLogicPreserve::scanBlock(MapBlock *block)

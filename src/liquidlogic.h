@@ -19,43 +19,29 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #pragma once
 
-#include "liquidlogic.h"
 #include "util/container.h"
 #include "irrlichttypes_bloated.h"
-#include "mapnode.h"
+#include "mapblock.h"
 
 class ServerEnvironment;
 class IGameDef;
+class INodeDefManager;
 class Map;
 class MapBlock;
-class MapNode;
+class MMVManip;
 
-class LiquidLogicPreserve: public LiquidLogic {
+class LiquidLogic {
 public:
-	LiquidLogicPreserve(Map *map, IGameDef *gamedef);
+	LiquidLogic(Map *map, IGameDef *gamedef);
 	void addTransforming(v3s16 p);
 	void scanBlock(MapBlock *block);
+	void scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax);
 	void transform(std::map<v3s16, MapBlock*> &modified_blocks,
 		ServerEnvironment *env);
 	void addTransformingFromData(BlockMakeData *data);
 
 private:
-	void setNodeLevel(
-		MapNode &n, s8 l, bool flowing_down,
-		content_t c_source, content_t c_flowing, content_t c_empty);
-	s8 getNodeLevel(MapNode &n, content_t c_source);
-	void updateNodeIfChanged(v3s16 pos, MapNode nnew, MapNode nold,
-		std::map<v3s16, MapBlock*> &modified_blocks, ServerEnvironment *env);
-
 	Map *m_map = nullptr;
 	IGameDef *m_gamedef = nullptr;
 	INodeDefManager *m_ndef = nullptr;
-
-	UniqueQueue<v3s16> m_liquid_queue;
-	std::deque<v3s16> m_must_reflow;
-	std::vector<std::pair<v3s16, MapNode> > m_changed_nodes;
-	v3s16 m_block_pos, m_rel_block_pos;
-	u32 m_unprocessed_count = 0;
-	bool m_queue_size_timer_started = false;
-	u64 m_inc_trending_up_start_time = 0; // milliseconds
 };

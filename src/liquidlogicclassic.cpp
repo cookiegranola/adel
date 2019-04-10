@@ -29,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "rollback_interface.h"
 #include "gamedef.h"
 #include "voxelalgorithms.h"
+#include "emerge.h"
 
 
 #define WATER_DROP_BOOST 4
@@ -57,13 +58,12 @@ struct NodeNeighbor {
 };
 
 LiquidLogicClassic::LiquidLogicClassic(Map *map, IGameDef *gamedef) :
-	m_map(map),
-	m_gamedef(gamedef)
+	LiquidLogic(map, gamedef)
 {
-	m_ndef = m_map->getNodeDefManager();
 }
 
 void LiquidLogicClassic::addTransformingFromData(BlockMakeData *data)
+{
 	while (data->transforming_liquid.size()) {
 		m_liquid_queue.push_back(data->transforming_liquid.front());
 		data->transforming_liquid.pop_front();
@@ -249,34 +249,34 @@ void LiquidLogicClassic::scanColumn(int x, int z)
 	}
 }
 
-inline bool LiquidLogicPreserve::isLiquidHorizontallyFlowable(
+inline bool LiquidLogicClassic::isLiquidHorizontallyFlowable(
 	MMVManip *vm, u32 vi, v3s16 em)
 {
 	u32 vi_neg_x = vi;
 	vm->m_area.add_x(em, vi_neg_x, -1);
 	if (vm->m_data[vi_neg_x].getContent() != CONTENT_IGNORE) {
-		const ContentFeatures &c_nx = ndef->get(vm->m_data[vi_neg_x]);
+		const ContentFeatures &c_nx = m_ndef->get(vm->m_data[vi_neg_x]);
 		if (c_nx.floodable && !c_nx.isLiquid())
 			return true;
 	}
 	u32 vi_pos_x = vi;
 	vm->m_area.add_x(em, vi_pos_x, +1);
 	if (vm->m_data[vi_pos_x].getContent() != CONTENT_IGNORE) {
-		const ContentFeatures &c_px = ndef->get(vm->m_data[vi_pos_x]);
+		const ContentFeatures &c_px = m_ndef->get(vm->m_data[vi_pos_x]);
 		if (c_px.floodable && !c_px.isLiquid())
 			return true;
 	}
 	u32 vi_neg_z = vi;
 	vm->m_area.add_z(em, vi_neg_z, -1);
 	if (vm->m_data[vi_neg_z].getContent() != CONTENT_IGNORE) {
-		const ContentFeatures &c_nz = ndef->get(vm->m_data[vi_neg_z]);
+		const ContentFeatures &c_nz = m_ndef->get(vm->m_data[vi_neg_z]);
 		if (c_nz.floodable && !c_nz.isLiquid())
 			return true;
 	}
 	u32 vi_pos_z = vi;
 	vm->m_area.add_z(em, vi_pos_z, +1);
 	if (vm->m_data[vi_pos_z].getContent() != CONTENT_IGNORE) {
-		const ContentFeatures &c_pz = ndef->get(vm->m_data[vi_pos_z]);
+		const ContentFeatures &c_pz = m_ndef->get(vm->m_data[vi_pos_z]);
 		if (c_pz.floodable && !c_pz.isLiquid())
 			return true;
 	}
@@ -301,7 +301,7 @@ void LiquidLogicClassic::scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax)
 		u32 vi = vm->m_area.index(x, nmax.Y, z);
 		for (s16 y = nmax.Y; y >= nmin.Y; y--) {
 			isignored = vm->m_data[vi].getContent() == CONTENT_IGNORE;
-			isliquid = ndef->get(vm->m_data[vi]).isLiquid();
+			isliquid = m_ndef->get(vm->m_data[vi]).isLiquid();
 
 			if (isignored || wasignored || isliquid == wasliquid) {
 				// Neither topmost node of liquid column nor topmost node below column
@@ -322,7 +322,7 @@ void LiquidLogicClassic::scanVoxelManip(MMVManip *vm, v3s16 nmin, v3s16 nmax)
 				// This is the topmost node below a liquid column
 				u32 vi_above = vi;
 				vm->m_area.add_y(em, vi_above, 1);
-				if (!waspushed && (ndef->get(vm->m_data[vi]).floodable ||
+				if (!waspushed && (m_ndef->get(vm->m_data[vi]).floodable ||
 						(!waschecked && isLiquidHorizontallyFlowable(vm, vi_above, em)))) {
 					// Push back the lowest node in the column which is one
 					// node above this one

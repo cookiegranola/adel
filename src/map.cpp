@@ -45,6 +45,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "database/database-dummy.h"
 #include "database/database-sqlite3.h"
 #include "script/scripting_server.h"
+#include "liquidlogic.h"
 #include "liquidlogicclassic.h"
 #include <deque>
 #include <queue>
@@ -68,7 +69,7 @@ Map::Map(std::ostream &dout, IGameDef *gamedef):
 	m_gamedef(gamedef),
 	m_nodedef(gamedef->ndef())
 {
-	m_liquid_logic = LiquidLogicClassic(this, gamedef);
+	m_liquid_logic = new LiquidLogicClassic(this, gamedef);
 }
 
 Map::~Map()
@@ -79,6 +80,8 @@ Map::~Map()
 	for (auto &sector : m_sectors) {
 		delete sector.second;
 	}
+
+	delete m_liquid_logic;
 }
 
 void Map::addEventReceiver(MapEventReceiver *event_receiver)
