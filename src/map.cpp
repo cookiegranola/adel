@@ -1802,29 +1802,51 @@ bool ServerMap::repairBlockLight(v3s16 blockpos,
 	return true;
 }
 
-void ServerMap::backupMap()
+void ServerMap::newSavepoint(const std::string &savepoint_name)
 {
-	((MapDatabaseSQLite3 *)dbase)->backupMap();
+	((MapDatabaseSQLite3 *)dbase)->newSavepoint(savepoint_name);
 }
 
-bool ServerMap::restoreMapReady()
+bool ServerMap::savepointExists(const std::string &savepoint_name)
 {
-	return ((MapDatabaseSQLite3 *)dbase)->restoreMapReady();
+	return ((MapDatabaseSQLite3 *)dbase)->savepointExists(savepoint_name);
 }
 
-void ServerMap::restoreMap()
+void ServerMap::rollbackTo(const std::string &savepoint_name)
 {
-	std::vector<v3s16> unloaded_blocks;
-	unloadUnreferencedBlocks(&unloaded_blocks);
-	((MapDatabaseSQLite3 *)dbase)->restoreMap();
-
-		// Send map event to client
+	// Prepare a map event to tell to client that blocks have changed
 	MapEditEvent event;
 	event.type = MEET_OTHER;
-	std::vector<v3s16>::iterator it;
-	for (it = unloaded_blocks.begin();
-			it != unloaded_blocks.end(); ++it)
-		event.modified_blocks.insert(*it);
+
+	// Delete all map block from memory
+	for (auto &sector_it : m_sectors)
+	{
+		MapSector *sector = sector_it.second; // IL n'aime pas la suppression en fin de boucle...
+		MapBlockVect blocks;
+		sector->getBlocks(blocks);
+
+		for (MapBlock *block : blocks)
+		{
+			if (block->refGet() != 0) continue; // ??
+
+			// Insert block pos into event blocks list
+			event.modified_blocks.insert(block->getPos());
+
+			// Delete from memory
+			sector->deleteBlock(block);
+		}
+
+		// If sector is in sector cache, remove it from there
+		if(m_sector_cache == sector)
+			m_sector_cache = NULL;
+		delete sector;
+	}
+	m_sectors.clear();
+
+	// Restore map table to wanted savepoint state
+	((MapDatabaseSQLite3 *)dbase)->rollbackTo(savepoint_name);
+
+	// Send map event to client
 	dispatchEvent(&event);
 }
 
